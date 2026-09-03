@@ -103,9 +103,11 @@
 
 - прибытие;
 - разрушенный причал;
-- знакомство с 77;
-- запуск первой энергии;
+- раннее знакомство с 77;
+- запуск/восстановление первой энергии;
 - первая ночь/первый сигнал.
+
+Точный порядок `77 reveal` относительно первого power/repair beat не является narrative canon. Active Prototype 0.1 специально тестирует `generator repair -> visible change/area unlock -> discover 77`; production FTUE sequencing пересматривается после P1.
 
 Player question: **Что случилось с островом?**
 

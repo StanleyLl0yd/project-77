@@ -1,22 +1,22 @@
 # Project 77 — Game Design Document
 
-Версия: **0.4 / Prototype Phase**
+Версия: **0.5 / Prototype Phase**
 
 ## Implementation baseline
 
 - Unity 6.3 LTS / C# / URP.
 - Android-first, cross-platform architecture.
-- Первый milestone — **Project 77 Prototype 0.1**: 10–20 коротких puzzles -> ресурсы -> восстановление генератора -> обнаружение 77.
+- Первый milestone — **Project 77 Prototype 0.1**: P0 compares three greybox core variants, then the winner is integrated into a 10–20-level `puzzle -> reward -> island change/discovery` path ending with generator repair and 77 discovery.
 - Production art, monetization и большой backend не являются prerequisite для первого прототипа.
 - Pre-production завершён; активный implementation contract — `28_PROTOTYPE_01_SPEC.md`.
 - До CONTINUE по P0/P1 действует prototype scope freeze и правило data-over-speculation.
-
+- Operational protocol: `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`; telemetry contract: `30_PROTOTYPE_ANALYTICS_CONTRACT.md`; engineering conventions/backlog: `31_ENGINEERING_CONVENTIONS.md` / `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`.
 
 ## 1. Game overview
 
 Project 77 — сюжетная mobile-first F2P puzzle-adventure игра с базой, коллекционированием и LiveOps.
 
-Игрок прибывает на давно заброшенный остров, чтобы восстановить старый исследовательский объект. Почти сразу он находит повреждённого маленького робота с маркировкой **77**. По мере восстановления территории обнаруживаются несоответствия: неизвестный металл, странные сигналы, запечатанные помещения и следы исчезнувшей экспедиции.
+Игрок прибывает на давно заброшенный остров, чтобы восстановить старый исследовательский объект. Робот **77** должен стать ранним компаньоном, но точный production FTUE timing его появления не LOCKED. В активном Prototype 0.1 специально тестируется последовательность `puzzle -> reward -> generator repair -> visible change/area unlock -> discover 77`; после P1 финальный ранний pacing можно скорректировать по данным. По мере восстановления территории обнаруживаются несоответствия: неизвестный металл, странные сигналы, запечатанные помещения и следы исчезнувшей экспедиции.
 
 Под островом находится старый исследовательский комплекс, а ещё глубже — аппарат внеземного происхождения. После его восстановления игра открывает следующий масштаб: орбиту, чужие планеты и сеть древних миров.
 
