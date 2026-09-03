@@ -7,7 +7,10 @@ TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
 
+import p0_batch_report as batch
 import p0_event_schema as schema
+import p0_freeze_manifest as freeze
+import p0_gate_report as gate
 
 
 class P0ContractParityTests(unittest.TestCase):
@@ -15,6 +18,7 @@ class P0ContractParityTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.csharp = (ROOT / "Assets/Project77/Analytics/PrototypeAnalytics.cs").read_text(encoding="utf-8")
         cls.contract = (ROOT / "Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md").read_text(encoding="utf-8")
+        cls.batch_source = (TOOLS / "p0_batch_report.py").read_text(encoding="utf-8")
 
     def _csharp_set(self, name: str) -> set[str]:
         match = re.search(
@@ -64,6 +68,31 @@ class P0ContractParityTests(unittest.TestCase):
         for csharp_name, python_values in parity.items():
             with self.subTest(enum_set=csharp_name):
                 self.assertEqual(python_values, self._csharp_set(csharp_name))
+
+    def test_preregistered_gate_plan_matches_report_implementation(self) -> None:
+        plan = freeze.GATE_PLAN
+        self.assertEqual(plan["fresh_exposures_per_variant"], gate.FRESH_EXPOSURE_TARGET)
+        self.assertEqual(plan["voluntary_window_ms"], batch.DEFAULT_CONTINUE_WINDOW_MS)
+
+        tutorial = re.search(
+            r"_gate\(data\['tutorial_completion'\],\s*([0-9.]+)\)",
+            self.batch_source,
+        )
+        voluntary = re.search(
+            r"_gate\(data\['voluntary_continuation'\],\s*([0-9.]+)\)",
+            self.batch_source,
+        )
+        duration = re.search(
+            r'duration_gate\s*=\s*"PASS"\s+if\s+(\d+)\s*<=\s*seconds\s*<=\s*(\d+)',
+            self.batch_source,
+        )
+        self.assertIsNotNone(tutorial)
+        self.assertIsNotNone(voluntary)
+        self.assertIsNotNone(duration)
+        self.assertEqual(plan["tutorial_completion_min"], float(tutorial.group(1)))
+        self.assertEqual(plan["voluntary_continuation_min"], float(voluntary.group(1)))
+        self.assertEqual(plan["level_duration_target_ms"]["min"], int(duration.group(1)) * 1000)
+        self.assertEqual(plan["level_duration_target_ms"]["max"], int(duration.group(2)) * 1000)
 
 
 if __name__ == "__main__":
