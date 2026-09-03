@@ -35,6 +35,39 @@ def _load_manifest(path: Path) -> dict[str, Any]:
     return value
 
 
+def require_bound_artifact(manifest: dict[str, Any], *, allow_unbound: bool = False) -> None:
+    artifact = manifest.get("artifact")
+    if artifact is None:
+        if allow_unbound:
+            return
+        raise GateReportError(
+            "P0 gate report requires a freeze bound to the exact verified playtest APK; "
+            "artifact-unbound freezes are allowed only for tooling smoke"
+        )
+    required = {
+        "filename": str,
+        "sha256": str,
+        "size_bytes": int,
+        "abis": list,
+        "arm64_elf_16kb_compatible": bool,
+        "apk_uncompressed_libs_16kb_zip_aligned": bool,
+        "signature_marker_present": bool,
+    }
+    if not isinstance(artifact, dict):
+        raise GateReportError("freeze artifact record is malformed")
+    missing = [name for name, expected in required.items() if not isinstance(artifact.get(name), expected)]
+    if missing:
+        raise GateReportError("freeze artifact record is incomplete/malformed: " + ", ".join(missing))
+    if artifact["abis"] != ["arm64-v8a"]:
+        raise GateReportError(f"freeze artifact ABI set is not the P0 baseline: {artifact['abis']!r}")
+    if not artifact["arm64_elf_16kb_compatible"]:
+        raise GateReportError("freeze artifact is not marked ARM64 ELF 16 KB compatible")
+    if not artifact["apk_uncompressed_libs_16kb_zip_aligned"]:
+        raise GateReportError("freeze artifact is not marked 16 KB ZIP aligned")
+    if not artifact["signature_marker_present"]:
+        raise GateReportError("freeze artifact has no signature structure marker")
+
+
 def validate_sessions_against_freeze(
     sessions: list[batch.SessionData],
     manifest: dict[str, Any],
@@ -296,6 +329,20 @@ def _render_order_audit(result: order_audit.OrderAuditResult | None) -> str:
     return "\n".join(lines)
 
 
+def _artifact_header_lines(manifest: dict[str, Any]) -> list[str]:
+    artifact = manifest.get("artifact")
+    if not isinstance(artifact, dict):
+        return ["- Playtest APK: **UNBOUND — tooling smoke only**"]
+    return [
+        f"- Playtest APK: `{artifact.get('filename')}`",
+        f"- Playtest APK SHA-256: `{artifact.get('sha256')}`",
+        f"- Playtest APK ABI: {', '.join(str(value) for value in artifact.get('abis', []))}",
+        f"- Playtest APK 16 KB checks: ELF={'PASS' if artifact.get('arm64_elf_16kb_compatible') else 'FAIL'}, "
+        f"ZIP={'PASS' if artifact.get('apk_uncompressed_libs_16kb_zip_aligned') else 'FAIL'}",
+        "- Playtest APK signature: structural marker present; certificate identity is a separate verification",
+    ]
+
+
 def render_gate_report(
     summary: dict[str, Any],
     manifest: dict[str, Any],
@@ -311,6 +358,7 @@ def render_gate_report(
         f"- Batch fingerprint: `{manifest.get('batch_fingerprint')}`",
         f"- Repository/content fingerprint: `{manifest.get('freeze_fingerprint')}`",
         f"- Frozen commit: `{manifest.get('commit_sha')}`",
+        *_artifact_header_lines(manifest),
         f"- Fresh exposure target: {manifest['gate_plan']['fresh_exposures_per_variant']} per variant",
         f"- Voluntary continuation window: {manifest['gate_plan']['voluntary_window_ms']} ms",
         "",
@@ -343,6 +391,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         type=Path,
         help="Counterbalanced CSV bound into the freeze manifest for crossover batches",
     )
+    parser.add_argument(
+        "--allow-unbound-artifact",
+        action="store_true",
+        help="Tooling smoke only. Real P0 gate reports require a freeze bound to the exact APK.",
+    )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--summary-json", type=Path)
     return parser.parse_args(argv)
@@ -352,6 +405,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
         manifest = _load_manifest(args.freeze_path)
+        require_bound_artifact(manifest, allow_unbound=args.allow_unbound_artifact)
         freeze.verify_order_plan_binding(manifest, args.order_plan)
         sessions = batch.discover_sessions(args.data_dir)
         validate_sessions_against_freeze(sessions, manifest)
@@ -372,6 +426,7 @@ def main(argv: list[str] | None = None) -> int:
             "batch_fingerprint": manifest.get("batch_fingerprint"),
             "freeze_fingerprint": manifest.get("freeze_fingerprint"),
             "gate_plan": manifest.get("gate_plan"),
+            "artifact": manifest.get("artifact"),
         }
         summary["operational_diagnostics"] = diagnostics
         summary["sequence_audit_warnings"] = sequence_warnings
