@@ -122,7 +122,6 @@ Project 77 должен оставаться понятным casual adventure.
 - no loss of purchased cosmetics because of season expiration;
 - no critical progress dependent on watching ads.
 
-
 ## Prototype-first production guardrail
 
 **Риск:** команда начинает с красивого острова, персонажей, магазина, backend и большого количества контента, не доказав, что 30–90-секундный core loop вообще приятен.
@@ -130,7 +129,6 @@ Project 77 должен оставаться понятным casual adventure.
 **Правило:** до прохождения Core Prototype gate запрещено масштабировать art/content production и monetization infrastructure. Placeholder-графика — ожидаемое состояние Prototype 0.1.
 
 **Критерий:** если puzzle не вызывает желания сыграть ещё один уровень без красивого оформления, графика не считается решением проблемы.
-
 
 ## 13. Operating blind spots
 
@@ -149,3 +147,15 @@ Project 77 должен оставаться понятным casual adventure.
 ## 14. False certainty guardrail
 
 Не фиксировать как canon/production commitment числа и ответы, которые можно узнать только из telemetry. Для таких вопросов фиксируются measurement method, initial target и decision rule.
+
+## 15. Prototype architecture astronautics
+
+**Risk:** P0/P1 turns into a production-platform exercise (DI framework, event bus, backend, provider abstractions, generic content platform) before the game loop is proven.
+
+**Guardrail:** follow `31_ENGINEERING_CONVENTIONS.md`; create only deterministic puzzle/domain code, testable config/validation, minimal presentation, minimal telemetry and the small meta state required by `28_PROTOTYPE_01_SPEC.md`. Future architecture described elsewhere is a constraint, not current implementation scope.
+
+## 16. Biased playtest evidence
+
+**Risk:** moderator hints or inconsistent telemetry make weak mechanics look successful.
+
+**Guardrail:** P0/P1 external tests follow `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` and `30_PROTOTYPE_ANALYTICS_CONTRACT.md`. Prompted continuation is not counted as voluntary continuation.

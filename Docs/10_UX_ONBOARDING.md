@@ -1,5 +1,9 @@
 # Project 77 — UX & Onboarding
 
+## Status / current-phase note
+
+The detailed "first 60 seconds" below is a **future FTUE hypothesis**, not the active Prototype 0.1 sequence. During P0/P1, `28_PROTOTYPE_01_SPEC.md` is authoritative and currently tests `puzzle -> reward -> generator repair -> visible island change/area unlock -> discover 77`. Final production timing of the 77 reveal is intentionally not locked until playtest evidence exists.
+
 ## Goal
 
 Игрок должен начать играть почти сразу. Мир и mystery объясняются через действие.
