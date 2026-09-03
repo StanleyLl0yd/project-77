@@ -1,0 +1,22 @@
+{
+  "name": "Project77.Tests.EditMode",
+  "rootNamespace": "Project77.Tests",
+  "references": [
+    "Project77.Puzzle",
+    "Project77.Analytics"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
