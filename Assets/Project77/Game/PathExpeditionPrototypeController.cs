@@ -241,8 +241,16 @@ namespace Project77.Game
 
         private void CommitPlan()
         {
-            if (plannedRoutes.Count != payload.Agents.Count || awaitingRetry || continuationOffered)
+            if (awaitingRetry || continuationOffered)
             {
+                return;
+            }
+
+            if (plannedRoutes.Count != payload.Agents.Count)
+            {
+                invalidInteractionCount++;
+                feedback = "Plan every explorer before launch.";
+                TrackInvalid("tap", "rule_violation");
                 return;
             }
 
@@ -253,6 +261,7 @@ namespace Project77.Game
                 feedback = result.Reason == PathExpeditionInvalidReason.IncompletePlan
                     ? "Plan every explorer before launch."
                     : $"Launch rejected: {result.Reason}";
+                TrackInvalid("tap", "rule_violation");
                 return;
             }
 
@@ -294,6 +303,8 @@ namespace Project77.Game
             var previousAttempt = attemptIndex;
             attemptIndex++;
             runner.Restart();
+            validInteractionCount = 0;
+            invalidInteractionCount = 0;
             foreach (var agent in payload.Agents)
             {
                 if (plannedRoutes.ContainsKey(agent.Id))
@@ -336,6 +347,8 @@ namespace Project77.Game
             continuationOffered = false;
             activeAgentId = null;
             dragPath.Clear();
+            validInteractionCount = 0;
+            invalidInteractionCount = 0;
             levelStartMs = NowMs();
             feedback = "Plan cleared.";
             Track(
