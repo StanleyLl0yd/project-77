@@ -1,6 +1,6 @@
 using System;
 
-namespace Project77.Puzzle.EnergyRouting
+namespace Project77.Puzzle
 {
     public readonly struct GridCell : IEquatable<GridCell>
     {
@@ -15,8 +15,7 @@ namespace Project77.Puzzle.EnergyRouting
 
         public bool IsOrthogonallyAdjacentTo(GridCell other)
         {
-            var distance = Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
-            return distance == 1;
+            return Math.Abs(X - other.X) + Math.Abs(Y - other.Y) == 1;
         }
 
         public bool Equals(GridCell other)

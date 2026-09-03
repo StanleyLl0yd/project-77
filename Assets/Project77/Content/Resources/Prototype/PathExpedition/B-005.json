@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "B-005",
+  "revision": 1,
+  "variant": "path_expedition_routing",
+  "difficultyTag": "easy",
+  "payload": {
+    "width": 5,
+    "height": 5,
+    "agents": [
+      {"id": "red", "start": {"x": 0, "y": 1}, "goal": {"x": 4, "y": 1}},
+      {"id": "blue", "start": {"x": 0, "y": 3}, "goal": {"x": 4, "y": 3}}
+    ],
+    "blocked": [{"x":2,"y":2}]
+  },
+  "validationSolution": {
+    "red": [{"x":0,"y":1},{"x":1,"y":1},{"x":2,"y":1},{"x":3,"y":1},{"x":4,"y":1}],
+    "blue": [{"x":0,"y":3},{"x":1,"y":3},{"x":2,"y":3},{"x":3,"y":3},{"x":4,"y":3}]
+  }
+}
