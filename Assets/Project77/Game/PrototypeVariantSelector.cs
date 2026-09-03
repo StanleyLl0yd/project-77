@@ -22,24 +22,14 @@ namespace Project77.Game
             };
 
             GUI.Label(new Rect(x, 50f, width, 40f), "Project 77 — P0 Core Comparison", titleStyle);
-            GUI.Label(
-                new Rect(x, 96f, width, 62f),
-                "Choose a greybox mechanic. Variant order is a playtest variable and must be recorded.",
-                bodyStyle);
+            GUI.Label(new Rect(x, 96f, width, 62f), "Choose a greybox mechanic. Variant order is a playtest variable and must be recorded.", bodyStyle);
 
             if (GUI.Button(new Rect(x, 180f, width, 56f), "A — Energy Routing"))
-            {
                 Select<EnergyRoutingPrototypeController>();
-            }
-
             if (GUI.Button(new Rect(x, 252f, width, 56f), "B — Path / Expedition Routing"))
-            {
                 Select<PathExpeditionPrototypeController>();
-            }
-
-            GUI.enabled = false;
-            GUI.Button(new Rect(x, 324f, width, 56f), "C — Flow / Network Restoration (in progress)");
-            GUI.enabled = true;
+            if (GUI.Button(new Rect(x, 324f, width, 56f), "C — Flow / Network Restoration"))
+                Select<FlowNetworkPrototypeController>();
         }
 
         private void Select<T>() where T : MonoBehaviour
