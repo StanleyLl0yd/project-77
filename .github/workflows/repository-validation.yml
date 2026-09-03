@@ -29,7 +29,7 @@ jobs:
       - name: Smoke-test P0 batch setup tools
         run: |
           python Tools/p0_order_plan.py --participants 10 --prefix CI-P0 --output PlaytestData/ci/orders.csv --summary-json PlaytestData/ci/orders.json
-          python Tools/p0_freeze_manifest.py generate --batch-id CI-SMOKE --order-plan PlaytestData/ci/orders.csv --output PlaytestData/ci/freeze.json
+          python Tools/p0_freeze_manifest.py generate --batch-id CI-SMOKE --order-plan PlaytestData/ci/orders.csv --allow-unbound-artifact --output PlaytestData/ci/freeze.json
           python Tools/p0_freeze_manifest.py verify PlaytestData/ci/freeze.json --order-plan PlaytestData/ci/orders.csv
 
       - name: Set up .NET
