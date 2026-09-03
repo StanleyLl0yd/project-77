@@ -1,5 +1,34 @@
 # Project 77 — Documentation Changelog
 
+## v0.5 — Prototype Readiness Audit — 2026-09-03
+
+Repository/documentation consistency audit and implementation-readiness pass.
+
+Added:
+
+- root `AGENTS.md` as the coding-agent operating contract;
+- `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`;
+- `30_PROTOTYPE_ANALYTICS_CONTRACT.md`;
+- `31_ENGINEERING_CONVENTIONS.md`;
+- `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`.
+
+Resolved:
+
+- Prototype C is consistently **Flow / Network Restoration**; old `Signal Sequence` definition retired;
+- P0 content is minimum 10 validated levels per variant, with further levels only when a test question needs them;
+- Soft-launch KPI authority is D1 >=30%, D7 8–12%+, D30 4–7%+, crash/ANR-free >99.5%; older 35% / 12–15% / 5% set retired;
+- source hierarchy now explicitly puts owner instruction -> `AGENTS.md` -> Decision Log -> active Prototype spec -> specialized docs -> backlog ideas;
+- 77-reveal sequencing is no longer contradictory: Prototype 0.1 tests repair/unlock -> 77, while exact production FTUE timing is explicitly OPEN (O-012);
+- long-term architecture documents are explicitly non-mandatory implementation scope during P0/P1;
+- Prototype 0.1 now defines deterministic puzzle-domain, stable level ID/revision/config semantics, exact telemetry and Android prototype baseline;
+- documentation index/context/manifest/roadmap/gates synchronized.
+
+Repository hygiene:
+
+- Git LFS remains intentionally disabled until real large-binary need exists;
+- Unity-generated/cache/build artifacts remain ignored while `Assets`/`Packages`/`ProjectSettings` are intended to be tracked;
+- no production backend/store/ads/monetization implementation was added.
+
 ## v0.4 — Prototype Phase
 
 - pre-production formally marked COMPLETE;

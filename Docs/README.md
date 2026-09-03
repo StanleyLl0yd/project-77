@@ -1,6 +1,6 @@
 # Project 77 — Project Documentation
 
-Версия документации: **0.4 Prototype Phase**.
+Версия документации: **0.5 Prototype Readiness Audit**.
 
 Статус: **pre-production завершён; активная фаза — Prototype 0.1**. Implementation baseline и operational guardrails утверждены.
 
@@ -23,13 +23,16 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 - Конкретная core-puzzle механика пока считается проверяемой гипотезой и должна пройти прототипирование.
 - Production stack: **Unity 6.3 LTS + C# + URP**.
 - Первая целевая платформа: **Android**, архитектура сразу cross-platform.
-- Первый milestone: **Project 77 Prototype 0.1** — 10–20 puzzles → ресурсы → восстановление генератора → обнаружение 77.
+- Первый milestone: **Project 77 Prototype 0.1** — P0 сравнивает три greybox-варианта (minimum 10 validated levels each), затем P1 интегрирует победителя в 10–20-level путь → ресурсы → восстановление генератора → area unlock → обнаружение 77.
 - Красивый production-art, магазин и большой backend не делаются до доказательства core/meta loop.
 - Целевая product-аудитория: подростки и взрослые (13+ direction), не child-directed.
 - Launch social: visits/likes/predefined reactions; без free-form chat/UGC.
 - Saves, Remote Config, server authority, incident recovery и performance budgets проектируются до soft launch.
 - Pre-production считается завершённым; дальнейшие неизвестные закрываются прототипами и данными, а не дополнительным speculative design.
 - Активный implementation contract: `28_PROTOTYPE_01_SPEC.md`.
+- Standardized P0/P1 playtests: `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`.
+- Prototype telemetry schema: `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
+- Minimal Unity engineering rules/backlog: `31_ENGINEERING_CONVENTIONS.md` + `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`.
 
 ## Структура пакета
 
@@ -63,7 +66,11 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 28. `26_INCIDENT_ROLLBACK_PLAN.md` — incident severity, containment, rollback/recovery playbooks.
 29. `27_IP_BRAND_NAMING.md` — codename status, commercial naming/IP clearance and asset provenance.
 30. `28_PROTOTYPE_01_SPEC.md` — активный контракт Prototype 0.1: scope, DoD, out-of-scope и gate.
-31. `CHANGELOG.md` — история версий проектной документации.
+31. `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` — operational rules, voluntary-continuation definition and batch-report template.
+32. `30_PROTOTYPE_ANALYTICS_CONTRACT.md` — canonical P0/P1 event names, properties, types and schema version.
+33. `31_ENGINEERING_CONVENTIONS.md` — minimal Unity/C# structure, deterministic-domain/config/test rules.
+34. `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered implementation tasks and Definition of Done.
+35. `CHANGELOG.md` — история версий проектной документации.
 
 ## Текущая рабочая фаза
 
@@ -71,13 +78,15 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 
 Последовательность ближайшей работы:
 
-`core variants -> выбрать победителя -> 10–20 levels -> reward -> repair generator -> unlock area -> discover 77 -> Prototype Gate`.
+`bootstrap -> A/B/C (10 validated levels each) -> P0 playtest -> select winner -> 10–20 integrated levels -> reward -> repair generator -> unlock area -> discover 77 -> P1 playtest -> gate decision`.
+
+Current A/B/C set: Energy Routing / Path-Expedition Routing / Flow-Network Restoration. All remain PROVISIONAL until P0.
 
 До успешного gate production-art, большой backend, store, Season Pass, subscription, планеты и массовое производство контента не являются допустимым приоритетом.
 
 ## Как пользоваться документацией
 
-`13_DECISION_LOG.md` является источником истины по утверждённым решениям. Любая новая идея сначала попадает в `11_BACKLOG_IDEAS.md`. Если идея утверждается, изменения переносятся в профильный документ и отражаются в Decision Log.
+Для coding/AI work сначала применяется root `../AGENTS.md`. `13_DECISION_LOG.md` остаётся источником истины по product/high-level decision status; `28_PROTOTYPE_01_SPEC.md` — active implementation contract. `11_BACKLOG_IDEAS.md` — только неутверждённые идеи и **не committed scope**. Новая идея становится реализацией только через hypothesis/test/decision flow.
 
 GDD не должен превращаться в архив всех идей. В нём хранится только текущая версия игры.
 

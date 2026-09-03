@@ -1,9 +1,28 @@
 {
   "project": "Project 77",
   "status": "prototype_phase",
-  "version": "0.4",
-  "source_of_truth": "13_DECISION_LOG.md",
-  "core_hypothesis": "Energy Routing",
+  "documentation_version": "0.5",
+  "active_milestone": "Prototype 0.1",
+  "source_hierarchy": [
+    "owner_current_instruction",
+    "../AGENTS.md",
+    "13_DECISION_LOG.md",
+    "28_PROTOTYPE_01_SPEC.md",
+    "specialized_docs",
+    "11_BACKLOG_IDEAS.md (uncommitted)"
+  ],
+  "decision_source_of_truth": "13_DECISION_LOG.md",
+  "active_implementation_contract": "28_PROTOTYPE_01_SPEC.md",
+  "playtest_protocol": "29_PROTOTYPE_PLAYTEST_PROTOCOL.md",
+  "prototype_analytics_contract": "30_PROTOTYPE_ANALYTICS_CONTRACT.md",
+  "engineering_conventions": "31_ENGINEERING_CONVENTIONS.md",
+  "implementation_backlog": "32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md",
+  "core_hypotheses": [
+    "Energy Routing",
+    "Path / Expedition Routing",
+    "Flow / Network Restoration"
+  ],
+  "core_favorite": "Energy Routing",
   "macro_arc": [
     "abandoned island",
     "underground complex",
@@ -19,11 +38,15 @@
     "convenience_iap",
     "rewarded_ads"
   ],
-  "forbidden_defaults": [
-    "paid_story_ending",
-    "pay_to_win_pvp",
-    "mandatory_gacha",
-    "realtime_multiplayer_mvp"
-  ],
-  "active_milestone": "Prototype 0.1"
+  "forbidden_before_p0_p1_continue": [
+    "production_backend",
+    "store_iap",
+    "ads_mediation",
+    "subscription",
+    "season_pass",
+    "production_art_scaleup",
+    "planets",
+    "ship_gameplay",
+    "mass_content_production"
+  ]
 }
