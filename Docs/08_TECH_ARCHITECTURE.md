@@ -1,5 +1,11 @@
 # Project 77 — Technical Architecture
 
+## 0. Current-phase boundary
+
+This document describes the production-capable direction, **not the implementation scope of Prototype 0.1**. Until Gate P0 + P1 return CONTINUE, follow `28_PROTOTYPE_01_SPEC.md` and `31_ENGINEERING_CONVENTIONS.md`: implement deterministic puzzle/domain code, placeholder presentation, minimal local prototype telemetry, and only the smallest meta state required for generator repair/77 discovery.
+
+Do **not** implement the production backend, store, ads, cloud/social, LiveOps platform, or provider adapters merely because they are described below. Architecture requirements for future phases are constraints to preserve, not a mandate to build them now.
+
 ## 1. Goals
 
 Архитектура должна поддерживать:
@@ -37,7 +43,7 @@ Godot и Unreal не являются текущими production-кандида
 
 ## 3. Client architecture
 
-Рекомендуем layers/modules:
+Production direction for layers/modules (create only when active scope needs them):
 
 - Core Game / puzzle simulation;
 - Meta Game / island;
@@ -57,7 +63,7 @@ SDK конкретного магазина не должен проникать
 
 ### Platform service boundaries
 
-Core-код с первого дня не должен быть Android-specific. Рекомендуемый контракт:
+Core-код с первого дня не должен быть Android-specific. During Prototype 0.1, do not create empty interfaces/providers for out-of-scope services. When a service enters scope, keep it behind a narrow adapter. Production direction:
 
 ```text
 Project 77 Core
@@ -184,7 +190,7 @@ Providers:
 
 ## 10. Analytics event contract
 
-События не должны формироваться как произвольные строки из десятков мест. Использовать централизованный typed schema/versioning.
+События не должны формироваться как произвольные строки из десятков мест. Использовать централизованный typed schema/versioning. Prototype 0.1 uses the exact minimal schema in `30_PROTOTYPE_ANALYTICS_CONTRACT.md`; long-term production analytics may expand later without changing puzzle-domain rules.
 
 ## 11. Content delivery
 
@@ -223,7 +229,6 @@ Providers:
 - island asset count ограничивается LOD/culling/batching strategy.
 
 Не гнаться за тяжёлой графикой, которая исключает mid-range массовую аудиторию.
-
 
 ## Production-readiness additions (v0.3)
 

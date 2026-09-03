@@ -21,6 +21,8 @@
 
 ### Primary
 
+Product positioning remains teens/adults (13+ direction) per Decision Log; **16–55+ below is the primary marketing/design focus, not a conflicting store-age declaration**.
+
 Массовые мобильные игроки 16–55+, которым нравятся:
 
 - короткие игровые сессии;
@@ -143,7 +145,6 @@ North Star проекта:
 ## 10. Product promise
 
 Project 77 должен быть игрой, которую легко начать за минуту, но невозможно полностью «увидеть» за один вечер.
-
 
 ## Production-readiness clarifications (v0.3)
 
