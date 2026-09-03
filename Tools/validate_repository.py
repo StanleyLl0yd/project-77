@@ -33,8 +33,11 @@ REQUIRED_FILES = [
     "Assets/Project77/Puzzle/PathExpeditionRouting/PathExpeditionRunner.cs",
     "Assets/Project77/Analytics/PrototypeAnalytics.cs",
     "Assets/Project77/Game/Project77.Game.asmdef",
+    "Assets/Project77/Game/PrototypeVariantSelector.cs",
     "Assets/Project77/Game/EnergyRoutingJsonLoader.cs",
     "Assets/Project77/Game/EnergyRoutingPrototypeController.cs",
+    "Assets/Project77/Game/PathExpeditionJsonLoader.cs",
+    "Assets/Project77/Game/PathExpeditionPrototypeController.cs",
     "Assets/Project77/Tests/EditMode/Project77.Tests.EditMode.asmdef",
     "Tools/validate_prototype_content.py",
 ]

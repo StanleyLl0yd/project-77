@@ -7,9 +7,9 @@ namespace Project77.Core
     {
         private void Awake()
         {
-            if (GetComponent<EnergyRoutingPrototypeController>() == null)
+            if (GetComponent<PrototypeVariantSelector>() == null)
             {
-                gameObject.AddComponent<EnergyRoutingPrototypeController>();
+                gameObject.AddComponent<PrototypeVariantSelector>();
             }
         }
     }
