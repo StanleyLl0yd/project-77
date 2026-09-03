@@ -20,6 +20,8 @@
 *.controller text
 *.anim text
 
+# Binary formats are marked binary, but Git LFS is intentionally NOT enabled yet.
+# Add filter=lfs rules only for concrete large asset types after repository evidence justifies it.
 *.png binary
 *.jpg binary
 *.jpeg binary

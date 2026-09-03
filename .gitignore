@@ -1,4 +1,4 @@
-# Unity generated folders
+# Unity generated folders — do not track
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -9,10 +9,10 @@
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
 
-# Asset meta data should only be ignored when the corresponding asset is also ignored
-!/[Aa]ssets/**/*.meta
+# Assets/, Packages/ and ProjectSettings/ are intentionally NOT ignored.
+# Unity .meta files for tracked assets must remain tracked.
 
-# IDE / editor
+# IDE / editor generated state
 .vs/
 .vscode/
 .idea/
@@ -39,15 +39,12 @@ ExportedObj/
 *.mdb.meta
 sysinfo.txt
 
-# Crash reports
-sysinfo.txt
-
-# Builds / packages
+# Build/package artifacts
 *.apk
 *.aab
 *.unitypackage
 
-# Android / Gradle
+# Android / Gradle generated/local
 .gradle/
 **/build/
 local.properties
@@ -57,7 +54,7 @@ local.properties
 Thumbs.db
 Desktop.ini
 
-# Secrets / local config
+# Secrets / local credentials
 .env
 .env.*
 !.env.example

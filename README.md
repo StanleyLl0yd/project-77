@@ -12,11 +12,35 @@ The game begins as a small mystery about restoring an abandoned island. Over tim
 
 Pre-production is complete. The current goal is to validate the core + meta loop before committing to production art, monetization systems, a large backend, or large-scale content production.
 
-Prototype loop:
+Active test flow:
 
-`Puzzle → Reward → Island Action → Discovery → Next Puzzle`
+`Puzzle -> Reward -> Island Change / Discovery -> Next Puzzle`
 
-Prototype 0.1 must include 10–20 short puzzle levels, basic resources, repairing the generator, unlocking part of the island, and discovering robot **77**.
+P0 first compares three greybox hypotheses:
+
+- A — Energy Routing (current favorite)
+- B — Path / Expedition Routing
+- C — Flow / Network Restoration
+
+Each starts with a minimum of 10 validated test levels. After P0 selects a winner, P1 integrates that mechanic into a 10–20-level path ending with generator repair, an island-area unlock, and discovery of robot **77**.
+
+## Start here
+
+Coding agents must read [`AGENTS.md`](AGENTS.md) first.
+
+Current implementation documents:
+
+- [`Docs/28_PROTOTYPE_01_SPEC.md`](Docs/28_PROTOTYPE_01_SPEC.md) — active implementation contract
+- [`Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`](Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md) — ordered tasks and Definition of Done
+- [`Docs/31_ENGINEERING_CONVENTIONS.md`](Docs/31_ENGINEERING_CONVENTIONS.md) — Unity/C# conventions
+- [`Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md`](Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md) — prototype event schema
+- [`Docs/29_PROTOTYPE_PLAYTEST_PROTOCOL.md`](Docs/29_PROTOTYPE_PLAYTEST_PROTOCOL.md) — external playtest protocol
+- [`Docs/18_PRODUCT_GATES.md`](Docs/18_PRODUCT_GATES.md) — P0/P1 gates
+- [`Docs/13_DECISION_LOG.md`](Docs/13_DECISION_LOG.md) — product/high-level decision status
+
+Full documentation index: [`Docs/README.md`](Docs/README.md).
+
+`Docs/11_BACKLOG_IDEAS.md` is not committed scope.
 
 ## Technology baseline
 
@@ -24,28 +48,20 @@ Prototype 0.1 must include 10–20 short puzzle levels, basic resources, repairi
 - C#
 - URP
 - Android-first, cross-platform architecture
-- Android API 26 minimum
-- Google Play target API 36+ at release baseline
-- arm64-v8a required
-- AAB as primary Android release artifact
-- 16 KB memory-page compatibility required for the final native stack
+- Android API 26 minimum baseline
+- targetSdk API 36 baseline; compileSdk >= target and compatible with the current Unity/Android toolchain
+- arm64-v8a mandatory for release
+- AAB primary Android store artifact; APK allowed for development/playtests/direct distribution
+- 16 KB memory-page compatibility required for final 64-bit native dependencies/artifacts
 
-## Documentation
+Gameplay/puzzle rules stay independent from billing, ads, analytics providers, auth, cloud save, notifications, and a specific store.
 
-The full project documentation lives in [`/Docs`](Docs/README.md).
+## Prototype scope rule
 
-Primary sources of truth:
+Until both Gate P0 and Gate P1 return **CONTINUE**, do not build production art, production backend, IAP/store, ads/mediation, subscription, Season Pass, other planets, ship gameplay, or mass content production.
 
-- [`Docs/13_DECISION_LOG.md`](Docs/13_DECISION_LOG.md) — locked, provisional, open, and rejected decisions
-- [`Docs/28_PROTOTYPE_01_SPEC.md`](Docs/28_PROTOTYPE_01_SPEC.md) — active implementation contract
-- [`Docs/07_ROADMAP.md`](Docs/07_ROADMAP.md) — development roadmap and gates
-- [`Docs/08_TECH_ARCHITECTURE.md`](Docs/08_TECH_ARCHITECTURE.md) — technical architecture
-- [`Docs/PROJECT_CONTEXT_FOR_AI.md`](Docs/PROJECT_CONTEXT_FOR_AI.md) — compact context for ChatGPT/Codex
+Placeholder visuals are expected. A running build is not enough: external players must understand the loop and **voluntarily choose to continue**.
 
 ## Commercial name
 
-`Project 77` is a **codename**, not a cleared public product name. Final naming will be selected later through store, trademark, domain, social-handle, and IP clearance.
-
-## Repository phase rule
-
-Until Prototype 0.1 passes its gate, do not prioritize production art, a large backend, IAP/store implementation, Season Pass, subscriptions, planets, or mass content production. The prototype must first prove that players understand the loop and voluntarily want to continue.
+`Project 77` is a codename, not a cleared public product name. Final naming will be selected later through store, trademark, domain, social-handle, and IP clearance.
