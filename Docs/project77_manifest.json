@@ -1,0 +1,29 @@
+{
+  "project": "Project 77",
+  "status": "prototype_phase",
+  "version": "0.4",
+  "source_of_truth": "13_DECISION_LOG.md",
+  "core_hypothesis": "Energy Routing",
+  "macro_arc": [
+    "abandoned island",
+    "underground complex",
+    "ancient vessel",
+    "space",
+    "other planets",
+    "world network"
+  ],
+  "monetization": [
+    "season_pass",
+    "subscription",
+    "cosmetics",
+    "convenience_iap",
+    "rewarded_ads"
+  ],
+  "forbidden_defaults": [
+    "paid_story_ending",
+    "pay_to_win_pvp",
+    "mandatory_gacha",
+    "realtime_multiplayer_mvp"
+  ],
+  "active_milestone": "Prototype 0.1"
+}
