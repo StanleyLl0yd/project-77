@@ -10,6 +10,15 @@ Prototype Phase rule: add tooling only when it directly supports Prototype 0.1, 
 
 `EditorScriptSmoke` extends the same idea to `Assets/Project77/Editor`, including the cloud Pre-Export bootstrap hook. It compiles against small UnityEditor/URP stubs and therefore checks source-level regressions only; actual Unity API behavior, asset serialization and Android build output still require a real Unity build when cloud credits are available.
 
+`verify_android_artifact.py` performs repeatable APK/AAB acceptance checks after a real Android build exists. It validates ZIP integrity, the Project 77 ABI baseline, every ARM64 ELF `PT_LOAD` alignment for 16 KB page compatibility, and 16 KB ZIP data alignment for uncompressed APK native libraries. It also requires the expected APK/AAB signature structure marker by default, but that marker is not cryptographic certificate verification; use `apksigner`/`jarsigner` for certificate identity and signature validity.
+
+Example:
+
+```bash
+python Tools/verify_android_artifact.py Project77.apk --json PlaytestData/artifacts/apk.json
+python Tools/verify_android_artifact.py Project77.aab --json PlaytestData/artifacts/aab.json
+```
+
 `p0_order_plan.py` creates anonymous P0 playtest IDs and a counterbalanced A/B/C order. A complete six-participant block uses every permutation once, balancing all three variants across first/second/third position and all directed carryover pairs. Partial blocks keep each position count within one. Use the same generated `playtest_id` when one participant launches each assigned variant.
 
 Example:

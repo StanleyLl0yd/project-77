@@ -1,0 +1,90 @@
+import struct
+import tempfile
+import unittest
+import zipfile
+from pathlib import Path
+import sys
+
+TOOLS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TOOLS))
+
+import verify_android_artifact as verify
+
+
+def elf64(load_alignment: int) -> bytes:
+    data = bytearray(64 + 56)
+    data[0:4] = b"\x7fELF"
+    data[4] = 2
+    data[5] = 1
+    data[6] = 1
+    struct.pack_into("<Q", data, 32, 64)
+    struct.pack_into("<H", data, 52, 64)
+    struct.pack_into("<H", data, 54, 56)
+    struct.pack_into("<H", data, 56, 1)
+    struct.pack_into("<I", data, 64, 1)
+    struct.pack_into("<Q", data, 64 + 48, load_alignment)
+    return bytes(data)
+
+
+def write_aab(path: Path, alignment: int = 0x4000, extra_abi: bool = False) -> None:
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("base/lib/arm64-v8a/libunity.so", elf64(alignment))
+        if extra_abi:
+            archive.writestr("base/lib/x86_64/libunity.so", elf64(alignment))
+        archive.writestr("META-INF/KEY0.SF", b"signature file")
+        archive.writestr("META-INF/KEY0.RSA", b"signature block")
+
+
+class VerifyAndroidArtifactTests(unittest.TestCase):
+    def test_signed_aab_with_arm64_16kb_elf_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "project77.aab"
+            write_aab(path)
+            result = verify.inspect_artifact(path)
+        self.assertEqual(["arm64-v8a"], result["abis"])
+        self.assertTrue(result["arm64_elf_16kb_compatible"])
+        self.assertTrue(result["signature_marker_present"])
+        self.assertFalse(result["signature_marker_is_cryptographic_verification"])
+
+    def test_aab_with_4kb_pt_load_alignment_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "bad.aab"
+            write_aab(path, alignment=0x1000)
+            with self.assertRaises(verify.ArtifactError):
+                verify.inspect_artifact(path)
+
+    def test_extra_abi_is_rejected_by_project_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "extra.aab"
+            write_aab(path, extra_abi=True)
+            with self.assertRaises(verify.ArtifactError):
+                verify.inspect_artifact(path)
+
+    def test_aab_without_signature_markers_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "unsigned.aab"
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("base/lib/arm64-v8a/libunity.so", elf64(0x4000))
+            with self.assertRaises(verify.ArtifactError):
+                verify.inspect_artifact(path)
+
+    def test_uncompressed_apk_library_must_be_16kb_zip_aligned(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "unaligned.apk"
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr("lib/arm64-v8a/libunity.so", elf64(0x4000))
+            with self.assertRaises(verify.ArtifactError):
+                verify.inspect_artifact(path, require_signature_marker=False)
+
+    def test_compressed_apk_skips_uncompressed_zip_alignment_rule(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "compressed.apk"
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("lib/arm64-v8a/libunity.so", elf64(0x4000))
+            result = verify.inspect_artifact(path, require_signature_marker=False)
+        self.assertTrue(result["arm64_elf_16kb_compatible"])
+        self.assertTrue(result["apk_uncompressed_libs_16kb_zip_aligned"])
+
+
+if __name__ == "__main__":
+    unittest.main()
