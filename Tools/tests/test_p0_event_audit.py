@@ -80,6 +80,28 @@ class P0EventAuditTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertTrue(any("previous_attempt_index + 1" in error for error in result.errors))
 
+    def test_retry_after_completed_attempt_is_rejected(self) -> None:
+        events = [
+            event("prototype_start"),
+            event("level_start", level_id="A-001", level_revision=1, attempt_index=1),
+            event("level_complete", level_id="A-001", level_revision=1, attempt_index=1),
+            event(
+                "next_puzzle_offered",
+                level_id="A-001",
+                level_revision=1,
+                offer_context="post_level",
+                next_level_id="A-002",
+                offer_sequence_index=1,
+            ),
+            event("level_retry", level_id="A-001", level_revision=1, previous_attempt_index=1, new_attempt_index=2),
+            event("level_start", level_id="A-001", level_revision=1, attempt_index=2),
+            event("level_quit", level_id="A-001", level_revision=1, attempt_index=2),
+            event("session_end"),
+        ]
+        result = audit.audit_event_sequence(events)
+        self.assertFalse(result.ok)
+        self.assertTrue(any("no active/retryable previous attempt" in error for error in result.errors))
+
     def test_missing_session_end_is_warning_not_structural_failure(self) -> None:
         events = [
             event("prototype_start"),
