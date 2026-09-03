@@ -218,13 +218,9 @@ namespace Project77.Puzzle.PathExpeditionRouting
                     return PuzzleActionResult.Reject(PathExpeditionInvalidReason.Blocked);
                 }
 
-                if (endpointOwners.TryGetValue(cell, out var owner))
+                if (endpointOwners.TryGetValue(cell, out var owner) && owner != agent.Id)
                 {
-                    var ownEndpoint = owner == agent.Id && (index == 0 || index == route.Count - 1);
-                    if (!ownEndpoint)
-                    {
-                        return PuzzleActionResult.Reject(PathExpeditionInvalidReason.WrongTarget);
-                    }
+                    return PuzzleActionResult.Reject(PathExpeditionInvalidReason.WrongTarget);
                 }
 
                 if (index == 0)
