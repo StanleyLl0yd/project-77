@@ -33,6 +33,8 @@ python Tools/p0_order_plan.py \
 
 `p0_order_audit.py` cross-checks exported sessions and moderator `variant_order_index` values against that generated order plan. Wrong variant/position assignments, duplicate slots and unknown `playtest_id` values are hard errors; incomplete crossover or missing moderation positions remain explicit warnings rather than being silently invented.
 
+`P0_MODERATION_TEMPLATE.csv` is the compact structured join table consumed by the reporting tools. `P0_SESSION_NOTES_TEMPLATE.md` is the companion per-session observation sheet for protocol details that should not be squeezed into the CSV: first gesture/timing, help interventions, hesitation/frustration, voluntary quit, verbatim comments and the post-session open questions. Keep observations separate from interpretation and keep both files anonymous.
+
 `p0_freeze_manifest.py` creates the immutable batch-side freeze record required before external P0 testing. It binds one clean Git commit and build version to Unity/URP versions, event/metadata schemas, all 30 level IDs/revisions/content hashes, the governing P0 contracts, the preregistered quantitative gate plan, and—when using crossover testing—the exact order-plan file hash. Generated playtest data belongs under the ignored `PlaytestData/` folder, not in Git.
 
 Example freeze flow after a real test APK exists for the current commit:
