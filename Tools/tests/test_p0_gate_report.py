@@ -94,6 +94,7 @@ class P0GateReportTests(unittest.TestCase):
         diagnostics = gate.build_operational_diagnostics([session], moderation)["energy_routing"]
         self.assertEqual(2, diagnostics["attempts_started"])
         self.assertEqual(2, diagnostics["attempts_terminal"])
+        self.assertEqual(0, diagnostics["attempts_restarted_before_terminal"])
         self.assertEqual(0, diagnostics["open_attempts"])
         self.assertEqual(1, diagnostics["first_level_completed_sessions"])
         self.assertEqual(1, diagnostics["invalid_interactions"])
@@ -110,6 +111,43 @@ class P0GateReportTests(unittest.TestCase):
         )
         diagnostics = gate.build_operational_diagnostics([session], {})["path_expedition_routing"]
         self.assertEqual(1, diagnostics["open_attempts"])
+
+    def test_manual_retry_closes_previous_attempt_without_false_gap(self) -> None:
+        manifest = self._manifest()
+        first_level = manifest["levels"]["flow_network_restoration"][0]["id"]
+        events = [
+            {
+                "event_name": "level_start",
+                "level_id": first_level,
+                "level_revision": 1,
+                "attempt_index": 1,
+            },
+            {
+                "event_name": "level_retry",
+                "level_id": first_level,
+                "level_revision": 1,
+                "previous_attempt_index": 1,
+                "new_attempt_index": 2,
+            },
+            {
+                "event_name": "level_start",
+                "level_id": first_level,
+                "level_revision": 1,
+                "attempt_index": 2,
+            },
+            {
+                "event_name": "level_quit",
+                "level_id": first_level,
+                "level_revision": 1,
+                "attempt_index": 2,
+            },
+        ]
+        session = self._session(manifest, "flow_network_restoration", events)
+        diagnostics = gate.build_operational_diagnostics([session], {})["flow_network_restoration"]
+        self.assertEqual(2, diagnostics["attempts_started"])
+        self.assertEqual(1, diagnostics["attempts_terminal"])
+        self.assertEqual(1, diagnostics["attempts_restarted_before_terminal"])
+        self.assertEqual(0, diagnostics["open_attempts"])
 
 
 if __name__ == "__main__":
