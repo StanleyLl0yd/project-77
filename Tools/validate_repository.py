@@ -111,7 +111,9 @@ def main() -> None:
         fail(f"expected URP {EXPECTED_URP_MAJOR_MINOR}x, found {urp!r}")
 
     bootstrap = (ROOT / "Assets/Project77/Editor/Project77ProjectBootstrap.cs").read_text(encoding="utf-8")
-    android_source_invariants = {
+    bootstrap_source_invariants = {
+        "public Unity cloud pre-export class": "public static class Project77ProjectBootstrap",
+        "public Unity cloud pre-export method": "public static void ApplyBaselineForBuild()",
         "prototype application id": 'private const string PrototypeApplicationId = "com.sl.project77.prototype";',
         "prototype bundle version": 'PlayerSettings.bundleVersion = "0.0.1-prototype";',
         "Android application identifier assignment": "PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, PrototypeApplicationId);",
@@ -120,13 +122,13 @@ def main() -> None:
         "Android targetSdk API 36": "PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;",
         "Android ARM64-only architecture": "PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;",
     }
-    missing_android_invariants = [
-        name for name, fragment in android_source_invariants.items() if fragment not in bootstrap
+    missing_bootstrap_invariants = [
+        name for name, fragment in bootstrap_source_invariants.items() if fragment not in bootstrap
     ]
-    if missing_android_invariants:
+    if missing_bootstrap_invariants:
         fail(
-            "Project77ProjectBootstrap.cs is missing Android prototype baseline: "
-            + ", ".join(missing_android_invariants)
+            "Project77ProjectBootstrap.cs is missing required cloud/Android prototype baseline: "
+            + ", ".join(missing_bootstrap_invariants)
         )
 
     project_manifest = json.loads((ROOT / "Docs/project77_manifest.json").read_text(encoding="utf-8"))
@@ -159,7 +161,8 @@ def main() -> None:
     summary = ", ".join(f"{name}={count}" for name, count in sorted(content_counts.items()))
     print(
         f"Repository validation passed: Unity {editor_version}, URP {urp}, "
-        f"Android source baseline locked, Prototype 0.1 governance present, validated content: {summary}."
+        f"cloud pre-export/Android source baseline locked, Prototype 0.1 governance present, "
+        f"validated content: {summary}."
     )
 
 
