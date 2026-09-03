@@ -38,12 +38,21 @@ namespace Project77.Tests
                 Is.False);
         }
 
-        [TestCase(PuzzleRunStatus.NotLoaded)]
-        [TestCase(PuzzleRunStatus.Ready)]
-        public void NonInteractiveState_CannotRestartOrModify(PuzzleRunStatus status)
+        [Test]
+        public void NonInteractiveStates_CannotRestartOrModify()
         {
-            Assert.That(PrototypeAttemptPolicy.CanRestartAttempt(status, continuationOffered: false), Is.False);
-            Assert.That(PrototypeAttemptPolicy.CanModifyActiveAttempt(status, continuationOffered: false), Is.False);
+            Assert.That(
+                PrototypeAttemptPolicy.CanRestartAttempt(PuzzleRunStatus.NotLoaded, continuationOffered: false),
+                Is.False);
+            Assert.That(
+                PrototypeAttemptPolicy.CanModifyActiveAttempt(PuzzleRunStatus.NotLoaded, continuationOffered: false),
+                Is.False);
+            Assert.That(
+                PrototypeAttemptPolicy.CanRestartAttempt(PuzzleRunStatus.Ready, continuationOffered: false),
+                Is.False);
+            Assert.That(
+                PrototypeAttemptPolicy.CanModifyActiveAttempt(PuzzleRunStatus.Ready, continuationOffered: false),
+                Is.False);
         }
     }
 }
