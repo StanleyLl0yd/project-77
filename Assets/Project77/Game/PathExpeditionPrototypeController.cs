@@ -58,7 +58,7 @@ namespace Project77.Game
 
         private void Update()
         {
-            if (setComplete || awaitingRetry || runner.Status != PuzzleRunStatus.Active)
+            if (setComplete || continuationOffered || awaitingRetry || runner.Status != PuzzleRunStatus.Active)
             {
                 return;
             }
@@ -218,7 +218,8 @@ namespace Project77.Game
 
         private void ChangeDelay(string agentId, int delta)
         {
-            if (!plannedRoutes.ContainsKey(agentId) || awaitingRetry)
+            if (!PrototypeAttemptPolicy.CanModifyActiveAttempt(runner.Status, continuationOffered) ||
+                !plannedRoutes.ContainsKey(agentId) || awaitingRetry)
             {
                 return;
             }
@@ -335,6 +336,11 @@ namespace Project77.Game
 
         private void ResetPlan()
         {
+            if (!PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered))
+            {
+                return;
+            }
+
             var previousAttempt = attemptIndex;
             attemptIndex++;
             runner.Restart();
@@ -502,7 +508,7 @@ namespace Project77.Game
 
         private void DrawDelayControls()
         {
-            if (payload == null)
+            if (payload == null || !PrototypeAttemptPolicy.CanModifyActiveAttempt(runner.Status, continuationOffered))
             {
                 return;
             }
@@ -531,7 +537,8 @@ namespace Project77.Game
         private void DrawBottomControls()
         {
             var y = Screen.height - 64f;
-            if (GUI.Button(new Rect(20f, y, 120f, 40f), "Reset plan"))
+            if (PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered) &&
+                GUI.Button(new Rect(20f, y, 120f, 40f), "Reset plan"))
             {
                 ResetPlan();
             }
