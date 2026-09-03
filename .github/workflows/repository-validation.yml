@@ -26,6 +26,11 @@ jobs:
       - name: Test P0 batch reporting tools
         run: python -m unittest discover -s Tools/tests -p "test_*.py"
 
+      - name: Smoke-test P0 freeze manifest
+        run: |
+          python Tools/p0_freeze_manifest.py generate --batch-id CI-SMOKE --output PlaytestData/ci/freeze.json
+          python Tools/p0_freeze_manifest.py verify PlaytestData/ci/freeze.json
+
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:

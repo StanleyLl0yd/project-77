@@ -22,12 +22,15 @@ python Tools/p0_freeze_manifest.py generate \
 python Tools/p0_freeze_manifest.py verify PlaytestData/P0-001/freeze.json
 ```
 
-`p0_batch_report.py` validates exported P0 `*_metadata.json` + `*_events.jsonl` session pairs, enforces a single frozen build/commit/schema and stable per-variant level revisions, joins optional moderator records from `P0_MODERATION_TEMPLATE.csv`, and produces a gate-ready Markdown/JSON summary. Telemetry next-clicks are kept separate from the formal voluntary-continuation metric, which requires moderator/exclusion data from the playtest protocol.
+`p0_batch_report.py` validates exported P0 `*_metadata.json` + `*_events.jsonl` session pairs, enforces a single build/commit/schema and stable per-variant level revisions, joins optional moderator records from `P0_MODERATION_TEMPLATE.csv`, and produces a gate-ready Markdown/JSON summary. Telemetry next-clicks are kept separate from the formal voluntary-continuation metric, which requires moderator/exclusion data from the playtest protocol.
+
+`p0_gate_report.py` is the preferred final P0 batch command. It first rejects telemetry that does not match the freeze manifest's build, commit, Unity version, schema or level revisions, then delegates metric/report generation to `p0_batch_report.py`.
 
 Example:
 
 ```bash
-python Tools/p0_batch_report.py PlaytestData/P0-001 \
+python Tools/p0_gate_report.py PlaytestData/P0-001 \
+  --freeze PlaytestData/P0-001/freeze.json \
   --moderation PlaytestData/P0-001/moderation.csv \
   --output PlaytestData/P0-001/report.md \
   --summary-json PlaytestData/P0-001/summary.json
