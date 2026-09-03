@@ -31,6 +31,8 @@ python Tools/p0_order_plan.py \
   --summary-json PlaytestData/P0-001/orders.json
 ```
 
+`p0_order_audit.py` cross-checks exported sessions and moderator `variant_order_index` values against that generated order plan. Wrong variant/position assignments, duplicate slots and unknown `playtest_id` values are hard errors; incomplete crossover or missing moderation positions remain explicit warnings rather than being silently invented.
+
 `p0_freeze_manifest.py` creates the immutable batch-side freeze record required before external P0 testing. It binds one clean Git commit and build version to Unity/URP versions, event/metadata schemas, all 30 level IDs/revisions/content hashes, and the governing P0 contracts. Generated playtest data belongs under the ignored `PlaytestData/` folder, not in Git.
 
 Example freeze flow after a real test APK exists for the current commit:
@@ -45,11 +47,11 @@ python Tools/p0_freeze_manifest.py verify PlaytestData/P0-001/freeze.json
 
 `p0_batch_report.py` validates exported P0 `*_metadata.json` + `*_events.jsonl` session pairs, enforces a single build/commit/schema and stable per-variant level revisions, joins optional moderator records from `P0_MODERATION_TEMPLATE.csv`, and produces a gate-ready Markdown/JSON summary. Telemetry next-clicks are kept separate from the formal voluntary-continuation metric, which requires moderator/exclusion data from the playtest protocol.
 
-`p0_event_schema.py` mirrors the Prototype Analytics Contract in a provider-independent Python validator. Before gate metrics are accepted it re-validates every exported JSONL event envelope, required event-specific fields, integer bounds and canonical enum values, so malformed telemetry cannot quietly enter the report even if the producer-side C# validation regresses.
+`p0_event_schema.py` mirrors the Prototype Analytics Contract in a provider-independent Python validator. Before gate metrics are accepted it re-validates every exported JSONL event envelope, required event-specific fields, integer bounds and canonical enum values, so malformed telemetry cannot quietly enter the report even if the producer-side C# validation regresses. CI also checks that its canonical event names, schema version and enum sets stay in lockstep with `PrototypeAnalytics.cs` and the analytics contract document.
 
-`p0_event_audit.py` is the event-order/state-machine audit used before final P0 metrics are accepted. It detects impossible sequences such as overlapping attempts, bad retry indices, terminal events for the wrong attempt, continuation clicks without a matching offer, and a next level that does not match the clicked offer. Incomplete/crash-like endings are reported as warnings rather than silently converted into product failures.
+`p0_event_audit.py` is the event-order/state-machine audit used before final P0 metrics are accepted. It detects impossible sequences such as overlapping attempts, bad retry indices, retry after completion, terminal events for the wrong attempt, continuation clicks without a matching offer, and a next level that does not match the clicked offer. Incomplete/crash-like endings are reported as warnings rather than silently converted into product failures.
 
-`p0_gate_report.py` is the preferred final P0 batch command. It first rejects telemetry that does not match the freeze manifest's build, commit, Unity version, schema or level revisions, then validates the strict event schema, runs the event-sequence audit and delegates the formal metrics to `p0_batch_report.py`. It also reports operational diagnostics such as fresh-exposure sample sufficiency, first-level/full-set completion, continuation-offer reach, terminal/restarted/open attempts, attempt outcome rates and invalid interactions per attempt. These diagnostics do not automatically make the gate decision.
+`p0_gate_report.py` is the preferred final P0 batch command. It first rejects telemetry that does not match the freeze manifest's build, commit, Unity version, schema or level revisions, then validates the strict event schema, runs the event-sequence audit, optionally verifies the counterbalanced assignment plan, and delegates the formal metrics to `p0_batch_report.py`. It also reports operational diagnostics such as fresh-exposure sample sufficiency, first-level/full-set completion, continuation-offer reach, terminal/restarted/open attempts, attempt outcome rates and invalid interactions per attempt. These diagnostics do not automatically make the gate decision.
 
 Example:
 
@@ -57,6 +59,7 @@ Example:
 python Tools/p0_gate_report.py PlaytestData/P0-001 \
   --freeze PlaytestData/P0-001/freeze.json \
   --moderation PlaytestData/P0-001/moderation.csv \
+  --order-plan PlaytestData/P0-001/orders.csv \
   --output PlaytestData/P0-001/report.md \
   --summary-json PlaytestData/P0-001/summary.json
 ```
