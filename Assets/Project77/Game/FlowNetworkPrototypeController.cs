@@ -135,6 +135,11 @@ namespace Project77.Game
 
         private void RestartLevel()
         {
+            if (!PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered))
+            {
+                return;
+            }
+
             var previousAttempt = attemptIndex;
             attemptIndex++;
             runner.Restart();
@@ -296,7 +301,8 @@ namespace Project77.Game
         private void DrawControls()
         {
             var y = Screen.height - 64f;
-            if (GUI.Button(new Rect(20f, y, 130f, 40f), "Reset"))
+            if (PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered) &&
+                GUI.Button(new Rect(20f, y, 130f, 40f), "Reset"))
             {
                 RestartLevel();
             }
