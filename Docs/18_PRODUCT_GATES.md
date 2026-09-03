@@ -6,19 +6,19 @@
 
 Project 77 не должен развиваться по принципу «вроде нравится — делаем дальше». Каждый крупный этап имеет заранее определённый вопрос, набор измерений и одно из решений: **CONTINUE / ITERATE / PIVOT / STOP**.
 
-Сами gates — LOCKED как процесс. Численные пороги являются **initial targets** и могут быть пересмотрены только после документированного теста и записи причины в Decision Log.
+Сами gates — LOCKED как процесс. Численные пороги являются **initial targets** и могут быть пересмотрены только после документированного теста и записи причины в Decision Log. P0/P1 sessions следуют `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`; prototype telemetry следует `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
 
 ## 2. Gate P0 — Core Prototype
 
 Вопрос: хочется ли играть в 30–90-секундную механику без production-art и сюжета?
 
-Проверяем минимум на внешних тестировщиках, которые не участвовали в разработке.
+Проверяем на fresh external testers по playtest protocol. Начальный ориентир сравнения — минимум 10 fresh exposures на вариант, если variant не остановлен досрочно из-за повторяемого severe usability failure. Assisted sessions не засчитываются как unaided comprehension/voluntary continuation без соответствующей маркировки.
 
 Initial targets:
 
 - tutorial completion: **>= 85%**;
 - игрок понимает правило без устного объяснения разработчика;
-- **>= 70%** добровольно запускают следующий puzzle;
+- **>= 70%** добровольно запускают следующий puzzle по формальному определению `voluntary continue` из playtest protocol;
 - медианное время уровня попадает в целевой диапазон 30–90 секунд;
 - нет систематической путаницы с input/goal/fail state;
 - qualitative: большинство может своими словами объяснить, почему им было приятно/интересно продолжить.
@@ -40,7 +40,7 @@ Loop:
 
 Initial targets:
 
-- **>= 50%** тестировщиков хотят продолжить после первого meaningful island reward;
+- **>= 50%** тестировщиков добровольно продолжают после первого meaningful island reward по формальному `voluntary continue` definition;
 - игрок понимает, зачем нужны полученные ресурсы;
 - первое заметное изменение острова происходит в первой сессии;
 - открытие 77 воспринимается как reward/reveal, а не как очередной tutorial popup;
@@ -135,4 +135,4 @@ Pre-production считается завершённым. Prototype Phase не �
 
 После начала Prototype Phase вопросы, которые можно проверить playtest/telemetry, не должны закрываться дополнительным speculative design вместо теста.
 
-Ориентация, difficulty curve, pacing mystery, levels-per-story-beat, реальные retention targets, prices и content velocity могут оставаться provisional/open до появления данных.
+Ориентация, difficulty curve, pacing mystery, levels-per-story-beat, фактические retention results/validated thresholds, prices и content velocity могут оставаться provisional/open до появления данных. Initial Gate P4 targets уже определены в этом документе и Decision Log и не должны дублироваться другим набором чисел.

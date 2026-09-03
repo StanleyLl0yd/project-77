@@ -2,9 +2,11 @@
 
 ## 1. Principle
 
-Ни один крупный системный спор после soft launch не должен решаться только ощущением команды, если его можно измерить.
+Ни один крупный системный спор не должен решаться только ощущением команды, если его можно измерить. Для Prototype 0.1 canonical event schema находится в `30_PROTOTYPE_ANALYTICS_CONTRACT.md`; этот документ описывает более широкий KPI/analytics контур продукта.
 
-## 2. Event taxonomy
+## 2. Product event taxonomy
+
+Ниже — long-term taxonomy direction. Она **не означает**, что все эти события/SDK должны быть реализованы в Prototype 0.1. Для P0/P1 реализуется только минимальный contract из `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
 
 ### Lifecycle
 
@@ -131,21 +133,30 @@ Segment by:
 
 Это рабочие цели, а не обещания и не «средние по рынку».
 
-### Prototype/vertical slice
+### Prototype / Gate P0 + P1
 
-- ≥80% понимают basic gesture без повторного текстового объяснения;
-- большинство тестеров добровольно хотят пройти ещё 5 уровней;
-- первые 10 уровней не имеют rage-quit spikes.
+Authoritative initial targets are defined in `18_PRODUCT_GATES.md` and measured using `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` + `30_PROTOTYPE_ANALYTICS_CONTRACT.md`. Current P0/P1 anchors:
 
-### Soft launch
+- P0 tutorial/core comprehension target: **>= 85%**;
+- P0 voluntary next-puzzle target: **>= 70%**;
+- P1 voluntary continuation after first meaningful island reward: **>= 50%**;
+- instrumentation/help/exclusions must be recorded so an assisted action is not counted as unaided comprehension or voluntary continuation.
 
-- tutorial completion ≥80%;
-- D1 target ≥35%;
-- D7 target ≥12–15%;
-- D30 target ≥5%;
-- crash-free sessions ≥99.5%;
+These are prototype decision aids, not market-retention claims.
+
+### Soft launch / Gate P4
+
+Current initial decision targets from `13_DECISION_LOG.md` / `18_PRODUCT_GATES.md`:
+
+- D1 **>= 30%**;
+- D7 **8–12%+**;
+- D30 **4–7%+**;
+- crash-free sessions/users **> 99.5%**;
+- ANR-free **> 99.5%**;
 - payment success rate контролируется отдельно по store provider;
 - ad exposure не коррелирует с заметным retention collapse.
+
+The older 35% / 12–15% / 5% retention set is retired as an authoritative target as of documentation v0.5; do not use it as a second gate.
 
 ## 6. Puzzle health
 
@@ -209,8 +220,7 @@ Weekly Engaged Explorers:
 
 Это лучше отражает здоровье всей игры, чем DAU сам по себе.
 
-
-## Product gate dashboard
+## 11. Product gate dashboard
 
 Отдельный dashboard должен напрямую поддерживать `18_PRODUCT_GATES.md`:
 
