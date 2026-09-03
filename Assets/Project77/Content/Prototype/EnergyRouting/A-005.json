@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "A-005",
+  "revision": 1,
+  "variant": "energy_routing",
+  "difficultyTag": "easy",
+  "payload": {
+    "width": 5,
+    "height": 5,
+    "pairs": [
+      {"id": "red", "start": [1, 0], "end": [1, 4]},
+      {"id": "blue", "start": [3, 0], "end": [3, 4]}
+    ],
+    "blocked": [[2, 2]]
+  }
+}
