@@ -15,9 +15,20 @@ from validate_flow_network import validate_flow_network_levels
 from validate_prototype_content import validate_all
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_SCHEMA_VERSION = 1
+MANIFEST_SCHEMA_VERSION = 2
 EVENT_SCHEMA_VERSION = 1
 METADATA_SCHEMA_VERSION = 1
+
+GATE_PLAN = {
+    "fresh_exposures_per_variant": 10,
+    "tutorial_completion_min": 0.85,
+    "voluntary_continuation_min": 0.70,
+    "voluntary_window_ms": 15_000,
+    "level_duration_target_ms": {
+        "min": 30_000,
+        "max": 90_000,
+    },
+}
 
 VARIANTS = {
     "energy_routing": ("Assets/Project77/Content/Resources/Prototype/EnergyRouting", "A"),
@@ -39,9 +50,12 @@ class FreezeError(ValueError):
 
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            digest.update(chunk)
+    try:
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(65536), b""):
+                digest.update(chunk)
+    except OSError as exc:
+        raise FreezeError(f"cannot hash {path}: {exc}") from exc
     return digest.hexdigest()
 
 
@@ -158,12 +172,33 @@ def build_repository_snapshot(root: Path = ROOT) -> dict[str, Any]:
     }
 
 
+def _order_plan_record(path: Path | None) -> dict[str, str] | None:
+    if path is None:
+        return None
+    return {
+        "filename": path.name,
+        "sha256": _sha256(path),
+    }
+
+
+def _batch_identity(manifest: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "batch_id": manifest.get("batch_id"),
+        "build_version": manifest.get("build_version"),
+        "commit_sha": manifest.get("commit_sha"),
+        "freeze_fingerprint": manifest.get("freeze_fingerprint"),
+        "gate_plan": manifest.get("gate_plan"),
+        "order_plan": manifest.get("order_plan"),
+    }
+
+
 def build_manifest(
     batch_id: str,
     commit_sha: str,
     build_version: str,
     created_utc: str,
     root: Path = ROOT,
+    order_plan_path: Path | None = None,
 ) -> dict[str, Any]:
     batch_id = batch_id.strip()
     commit_sha = commit_sha.strip().lower()
@@ -178,17 +213,43 @@ def build_manifest(
         raise FreezeError("build_version must end with +<first 12 commit characters>")
 
     snapshot = build_repository_snapshot(root)
-    return {
+    manifest = {
         "freeze_manifest_schema_version": MANIFEST_SCHEMA_VERSION,
         "batch_id": batch_id,
         "created_utc": created_utc,
         "build_version": build_version,
         "commit_sha": commit_sha,
+        "gate_plan": GATE_PLAN,
+        "order_plan": _order_plan_record(order_plan_path),
         **snapshot,
     }
+    manifest["batch_fingerprint"] = _canonical_hash(_batch_identity(manifest))
+    return manifest
 
 
-def verify_manifest(manifest: dict[str, Any], current_commit: str, root: Path = ROOT) -> None:
+def verify_order_plan_binding(manifest: dict[str, Any], order_plan_path: Path | None) -> None:
+    expected = manifest.get("order_plan")
+    if expected is None:
+        if order_plan_path is not None:
+            raise FreezeError("an order plan was supplied but the freeze manifest did not bind one")
+        return
+    if not isinstance(expected, dict) or not isinstance(expected.get("sha256"), str):
+        raise FreezeError("freeze order_plan record is malformed")
+    if order_plan_path is None:
+        raise FreezeError("freeze manifest is bound to an order plan; --order-plan is required")
+    actual_hash = _sha256(order_plan_path)
+    if actual_hash != expected["sha256"]:
+        raise FreezeError(
+            f"order plan hash mismatch: {actual_hash} != frozen {expected['sha256']}"
+        )
+
+
+def verify_manifest(
+    manifest: dict[str, Any],
+    current_commit: str,
+    root: Path = ROOT,
+    order_plan_path: Path | None = None,
+) -> None:
     if manifest.get("freeze_manifest_schema_version") != MANIFEST_SCHEMA_VERSION:
         raise FreezeError("unsupported freeze manifest schema")
     expected_commit = manifest.get("commit_sha")
@@ -197,6 +258,8 @@ def verify_manifest(manifest: dict[str, Any], current_commit: str, root: Path = 
     expected_build = manifest.get("build_version")
     if not isinstance(expected_build, str) or not expected_build.endswith("+" + current_commit[:12]):
         raise FreezeError("freeze build_version is not bound to the checkout commit")
+    if manifest.get("gate_plan") != GATE_PLAN:
+        raise FreezeError("freeze gate_plan does not match the preregistered P0 gate plan")
 
     snapshot = build_repository_snapshot(root)
     for key in (
@@ -210,6 +273,11 @@ def verify_manifest(manifest: dict[str, Any], current_commit: str, root: Path = 
     ):
         if manifest.get(key) != snapshot[key]:
             raise FreezeError(f"freeze mismatch: {key} changed after the batch was frozen")
+
+    verify_order_plan_binding(manifest, order_plan_path)
+    expected_batch_fingerprint = _canonical_hash(_batch_identity(manifest))
+    if manifest.get("batch_fingerprint") != expected_batch_fingerprint:
+        raise FreezeError("batch_fingerprint does not match the frozen batch identity")
 
 
 def _git(root: Path, *args: str) -> str:
@@ -262,9 +330,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     generate.add_argument("--batch-id", required=True)
     generate.add_argument("--output", type=Path, required=True)
     generate.add_argument("--build-version")
+    generate.add_argument(
+        "--order-plan",
+        type=Path,
+        help="Counterbalanced CSV to bind into this experiment freeze",
+    )
 
     verify = sub.add_parser("verify", help="Verify a freeze manifest against the current checkout")
     verify.add_argument("manifest", type=Path)
+    verify.add_argument(
+        "--order-plan",
+        type=Path,
+        help="Required when the freeze manifest is bound to a counterbalanced order plan",
+    )
     return parser.parse_args(argv)
 
 
@@ -276,15 +354,25 @@ def main(argv: list[str] | None = None) -> int:
         commit = current_commit(ROOT)
         if args.command == "generate":
             build_version = args.build_version or (_bundle_version(ROOT) + "+" + commit[:12])
-            manifest = build_manifest(args.batch_id, commit, build_version, _created_now(), ROOT)
+            manifest = build_manifest(
+                args.batch_id,
+                commit,
+                build_version,
+                _created_now(),
+                ROOT,
+                args.order_plan,
+            )
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             print(f"P0 freeze manifest written: {args.output}")
-            print(f"commit={commit} build={build_version} fingerprint={manifest['freeze_fingerprint']}")
+            print(
+                f"commit={commit} build={build_version} "
+                f"fingerprint={manifest['batch_fingerprint']}"
+            )
             return 0
 
         manifest = _read_json(args.manifest)
-        verify_manifest(manifest, commit, ROOT)
+        verify_manifest(manifest, commit, ROOT, args.order_plan)
         print(f"P0 freeze verified: {args.manifest}")
         return 0
     except FreezeError as exc:
