@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from validate_flow_network import validate_flow_network_levels
 from validate_prototype_content import validate_all
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +32,8 @@ REQUIRED_FILES = [
     "Assets/Project77/Puzzle/EnergyRouting/EnergyRoutingRunner.cs",
     "Assets/Project77/Puzzle/PathExpeditionRouting/PathExpeditionLevel.cs",
     "Assets/Project77/Puzzle/PathExpeditionRouting/PathExpeditionRunner.cs",
+    "Assets/Project77/Puzzle/FlowNetworkRestoration/FlowNetworkLevel.cs",
+    "Assets/Project77/Puzzle/FlowNetworkRestoration/FlowNetworkRunner.cs",
     "Assets/Project77/Analytics/PrototypeAnalytics.cs",
     "Assets/Project77/Game/Project77.Game.asmdef",
     "Assets/Project77/Game/PrototypeVariantSelector.cs",
@@ -40,6 +43,7 @@ REQUIRED_FILES = [
     "Assets/Project77/Game/PathExpeditionPrototypeController.cs",
     "Assets/Project77/Tests/EditMode/Project77.Tests.EditMode.asmdef",
     "Tools/validate_prototype_content.py",
+    "Tools/validate_flow_network.py",
 ]
 
 EXPECTED_EDITOR = "6000.3.22f1"
@@ -84,6 +88,7 @@ def main() -> None:
 
     try:
         content_counts = validate_all()
+        content_counts["flow_network_restoration"] = validate_flow_network_levels()
     except ValueError as exc:
         fail(str(exc))
 
