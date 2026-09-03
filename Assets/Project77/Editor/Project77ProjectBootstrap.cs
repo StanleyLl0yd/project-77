@@ -12,7 +12,7 @@ using UnityEngine.Rendering.Universal;
 namespace Project77.Editor
 {
     [InitializeOnLoad]
-    internal static class Project77ProjectBootstrap
+    public static class Project77ProjectBootstrap
     {
         private const string Root = "Assets/Project77";
         private const string SettingsRoot = Root + "/Settings";
