@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Text;
 using Project77.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -16,9 +17,11 @@ namespace Project77.Editor
         private const string Root = "Assets/Project77";
         private const string SettingsRoot = Root + "/Settings";
         private const string ScenesRoot = Root + "/Scenes";
+        private const string ResourcesRoot = Root + "/Content/Resources";
         private const string RendererPath = SettingsRoot + "/Project77Renderer.asset";
         private const string PipelinePath = SettingsRoot + "/Project77URP.asset";
         private const string ScenePath = ScenesRoot + "/Bootstrap.unity";
+        private const string BuildInfoPath = ResourcesRoot + "/PrototypeBuildInfo.json";
         private const string PrototypeApplicationId = "com.sl.project77.prototype";
 
         static Project77ProjectBootstrap()
@@ -51,6 +54,9 @@ namespace Project77.Editor
         public static void ApplyBaselineForBuild()
         {
             ApplyBaselineInternal();
+            WritePrototypeBuildInfo();
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            AssetDatabase.SaveAssets();
         }
 
         private static void ApplyBaselineInternal()
@@ -137,6 +143,30 @@ namespace Project77.Editor
             }
         }
 
+        private static void WritePrototypeBuildInfo()
+        {
+            EnsureDirectory(ResourcesRoot);
+            var revision = Environment.GetEnvironmentVariable("BUILD_REVISION");
+            if (string.IsNullOrWhiteSpace(revision))
+            {
+                revision = "local";
+            }
+
+            var compactRevision = revision.Length > 12 ? revision.Substring(0, 12) : revision;
+            var info = new PrototypeBuildInfoData
+            {
+                schema_version = 1,
+                build_version = PlayerSettings.bundleVersion + "+" + compactRevision,
+                commit_sha = revision,
+                unity_version = Application.unityVersion
+            };
+
+            File.WriteAllText(
+                BuildInfoPath,
+                JsonUtility.ToJson(info, true),
+                new UTF8Encoding(false));
+        }
+
         private static void EnsureDirectory(string assetPath)
         {
             if (AssetDatabase.IsValidFolder(assetPath))
@@ -146,6 +176,15 @@ namespace Project77.Editor
 
             Directory.CreateDirectory(assetPath);
             AssetDatabase.Refresh();
+        }
+
+        [Serializable]
+        private sealed class PrototypeBuildInfoData
+        {
+            public int schema_version;
+            public string build_version;
+            public string commit_sha;
+            public string unity_version;
         }
     }
 }

@@ -7,6 +7,11 @@ namespace Project77.Core
     {
         private void Awake()
         {
+            if (GetComponent<PrototypePlaytestRuntime>() == null)
+            {
+                gameObject.AddComponent<PrototypePlaytestRuntime>();
+            }
+
             if (GetComponent<PrototypeVariantSelector>() == null)
             {
                 gameObject.AddComponent<PrototypeVariantSelector>();
