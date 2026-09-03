@@ -120,7 +120,7 @@ def audit_event_sequence(events: list[dict[str, Any]]) -> AuditResult:
             if active is not None:
                 source = active
                 active = None
-            elif last_attempt is not None and last_attempt[3] != "level_quit":
+            elif last_attempt is not None and last_attempt[3] == "level_fail":
                 source = last_attempt[:3]
             if source is None:
                 errors.append(f"{prefix}: retry has no active/retryable previous attempt")
