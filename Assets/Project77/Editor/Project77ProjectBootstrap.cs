@@ -37,19 +37,29 @@ namespace Project77.Editor
 
             try
             {
-                EnsureDirectory(SettingsRoot);
-                EnsureDirectory(ScenesRoot);
-                ConfigurePlayerSettings();
-                ConfigureUrp();
-                EnsureBootstrapScene();
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-                Debug.Log("Project 77 prototype baseline is configured. Verify Console, Android module availability, and an actual Android build before marking P77-001/P77-003 complete.");
+                ApplyBaselineInternal();
             }
             catch (Exception exception)
             {
                 Debug.LogException(exception);
             }
+        }
+
+        public static void ApplyBaselineForBuild()
+        {
+            ApplyBaselineInternal();
+        }
+
+        private static void ApplyBaselineInternal()
+        {
+            EnsureDirectory(SettingsRoot);
+            EnsureDirectory(ScenesRoot);
+            ConfigurePlayerSettings();
+            ConfigureUrp();
+            EnsureBootstrapScene();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("Project 77 prototype baseline is configured. Verify Console, Android module availability, and an actual Android build before marking P77-001/P77-003 complete.");
         }
 
         private static void ConfigurePlayerSettings()
