@@ -11,11 +11,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import verify_android_artifact as android_artifact
 from validate_flow_network import validate_flow_network_levels
 from validate_prototype_content import validate_all
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_SCHEMA_VERSION = 2
+MANIFEST_SCHEMA_VERSION = 3
 EVENT_SCHEMA_VERSION = 1
 METADATA_SCHEMA_VERSION = 1
 
@@ -181,6 +182,30 @@ def _order_plan_record(path: Path | None) -> dict[str, str] | None:
     }
 
 
+def _artifact_record(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        result = android_artifact.inspect_artifact(path)
+    except android_artifact.ArtifactError as exc:
+        raise FreezeError(f"playtest artifact failed Android acceptance checks: {exc}") from exc
+    if result["kind"] != "apk":
+        raise FreezeError("P0 external playtest freeze requires an installable APK, not an AAB")
+    return {
+        "filename": path.name,
+        "sha256": result["sha256"],
+        "size_bytes": result["size_bytes"],
+        "abis": result["abis"],
+        "native_library_count": result["native_library_count"],
+        "arm64_elf_16kb_compatible": result["arm64_elf_16kb_compatible"],
+        "apk_uncompressed_libs_16kb_zip_aligned": result["apk_uncompressed_libs_16kb_zip_aligned"],
+        "signature_marker_present": result["signature_marker_present"],
+        "signature_marker_is_cryptographic_verification": result[
+            "signature_marker_is_cryptographic_verification"
+        ],
+    }
+
+
 def _batch_identity(manifest: dict[str, Any]) -> dict[str, Any]:
     return {
         "batch_id": manifest.get("batch_id"),
@@ -189,6 +214,7 @@ def _batch_identity(manifest: dict[str, Any]) -> dict[str, Any]:
         "freeze_fingerprint": manifest.get("freeze_fingerprint"),
         "gate_plan": manifest.get("gate_plan"),
         "order_plan": manifest.get("order_plan"),
+        "artifact": manifest.get("artifact"),
     }
 
 
@@ -199,6 +225,7 @@ def build_manifest(
     created_utc: str,
     root: Path = ROOT,
     order_plan_path: Path | None = None,
+    artifact_path: Path | None = None,
 ) -> dict[str, Any]:
     batch_id = batch_id.strip()
     commit_sha = commit_sha.strip().lower()
@@ -221,6 +248,7 @@ def build_manifest(
         "commit_sha": commit_sha,
         "gate_plan": GATE_PLAN,
         "order_plan": _order_plan_record(order_plan_path),
+        "artifact": _artifact_record(artifact_path),
         **snapshot,
     }
     manifest["batch_fingerprint"] = _canonical_hash(_batch_identity(manifest))
@@ -244,11 +272,27 @@ def verify_order_plan_binding(manifest: dict[str, Any], order_plan_path: Path | 
         )
 
 
+def verify_artifact_binding(manifest: dict[str, Any], artifact_path: Path | None) -> None:
+    expected = manifest.get("artifact")
+    if expected is None:
+        if artifact_path is not None:
+            raise FreezeError("an artifact was supplied but the freeze manifest did not bind one")
+        return
+    if not isinstance(expected, dict) or not isinstance(expected.get("sha256"), str):
+        raise FreezeError("freeze artifact record is malformed")
+    if artifact_path is None:
+        raise FreezeError("freeze manifest is bound to a playtest APK; --artifact is required")
+    actual = _artifact_record(artifact_path)
+    if actual != expected:
+        raise FreezeError("playtest APK does not match the frozen artifact acceptance record")
+
+
 def verify_manifest(
     manifest: dict[str, Any],
     current_commit: str,
     root: Path = ROOT,
     order_plan_path: Path | None = None,
+    artifact_path: Path | None = None,
 ) -> None:
     if manifest.get("freeze_manifest_schema_version") != MANIFEST_SCHEMA_VERSION:
         raise FreezeError("unsupported freeze manifest schema")
@@ -275,6 +319,7 @@ def verify_manifest(
             raise FreezeError(f"freeze mismatch: {key} changed after the batch was frozen")
 
     verify_order_plan_binding(manifest, order_plan_path)
+    verify_artifact_binding(manifest, artifact_path)
     expected_batch_fingerprint = _canonical_hash(_batch_identity(manifest))
     if manifest.get("batch_fingerprint") != expected_batch_fingerprint:
         raise FreezeError("batch_fingerprint does not match the frozen batch identity")
@@ -335,6 +380,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         type=Path,
         help="Counterbalanced CSV to bind into this experiment freeze",
     )
+    generate.add_argument(
+        "--artifact",
+        type=Path,
+        help="Exact signed APK distributed to P0 testers; also runs ABI/16 KB/signature-structure checks",
+    )
+    generate.add_argument(
+        "--allow-unbound-artifact",
+        action="store_true",
+        help="CI/tooling smoke only. External P0 batches must bind the exact APK.",
+    )
 
     verify = sub.add_parser("verify", help="Verify a freeze manifest against the current checkout")
     verify.add_argument("manifest", type=Path)
@@ -342,6 +397,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--order-plan",
         type=Path,
         help="Required when the freeze manifest is bound to a counterbalanced order plan",
+    )
+    verify.add_argument(
+        "--artifact",
+        type=Path,
+        help="Required when the freeze manifest is bound to a playtest APK",
     )
     return parser.parse_args(argv)
 
@@ -353,6 +413,11 @@ def main(argv: list[str] | None = None) -> int:
         validate_current_content()
         commit = current_commit(ROOT)
         if args.command == "generate":
+            if args.artifact is None and not args.allow_unbound_artifact:
+                raise FreezeError(
+                    "external P0 freeze requires --artifact with the exact signed APK; "
+                    "use --allow-unbound-artifact only for CI/tooling smoke"
+                )
             build_version = args.build_version or (_bundle_version(ROOT) + "+" + commit[:12])
             manifest = build_manifest(
                 args.batch_id,
@@ -361,6 +426,7 @@ def main(argv: list[str] | None = None) -> int:
                 _created_now(),
                 ROOT,
                 args.order_plan,
+                args.artifact,
             )
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -372,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         manifest = _read_json(args.manifest)
-        verify_manifest(manifest, commit, ROOT, args.order_plan)
+        verify_manifest(manifest, commit, ROOT, args.order_plan, args.artifact)
         print(f"P0 freeze verified: {args.manifest}")
         return 0
     except FreezeError as exc:
