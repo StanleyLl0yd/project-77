@@ -22,6 +22,21 @@ class P0GateReportTests(unittest.TestCase):
             ROOT,
         )
 
+    def _bound_manifest(self) -> dict:
+        manifest = self._manifest()
+        manifest["artifact"] = {
+            "filename": "Project77.apk",
+            "sha256": "a" * 64,
+            "size_bytes": 123456,
+            "abis": ["arm64-v8a"],
+            "native_library_count": 2,
+            "arm64_elf_16kb_compatible": True,
+            "apk_uncompressed_libs_16kb_zip_aligned": True,
+            "signature_marker_present": True,
+            "signature_marker_is_cryptographic_verification": False,
+        }
+        return manifest
+
     def _session(self, manifest: dict, variant: str, events=None) -> batch.SessionData:
         levels = [
             {"id": record["id"], "revision": record["revision"]}
@@ -61,6 +76,29 @@ class P0GateReportTests(unittest.TestCase):
         session.metadata["levels"][0]["revision"] += 1
         with self.assertRaises(gate.GateReportError):
             gate.validate_sessions_against_freeze([session], manifest)
+
+    def test_unbound_artifact_is_rejected_for_real_gate_report(self) -> None:
+        with self.assertRaises(gate.GateReportError):
+            gate.require_bound_artifact(self._manifest())
+
+    def test_unbound_artifact_can_be_explicitly_allowed_for_tooling_smoke(self) -> None:
+        gate.require_bound_artifact(self._manifest(), allow_unbound=True)
+
+    def test_bound_artifact_identity_is_accepted_and_rendered(self) -> None:
+        manifest = self._bound_manifest()
+        gate.require_bound_artifact(manifest)
+        header = "\n".join(gate._artifact_header_lines(manifest))
+        self.assertIn("Project77.apk", header)
+        self.assertIn("a" * 64, header)
+        self.assertIn("ELF=PASS", header)
+        self.assertIn("ZIP=PASS", header)
+        self.assertIn("certificate identity is a separate verification", header)
+
+    def test_malformed_bound_artifact_is_rejected(self) -> None:
+        manifest = self._bound_manifest()
+        manifest["artifact"]["abis"] = ["arm64-v8a", "x86_64"]
+        with self.assertRaises(gate.GateReportError):
+            gate.require_bound_artifact(manifest)
 
     def test_operational_diagnostics_count_attempt_quality(self) -> None:
         manifest = self._manifest()
