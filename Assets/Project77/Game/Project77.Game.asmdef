@@ -1,0 +1,17 @@
+{
+  "name": "Project77.Game",
+  "rootNamespace": "Project77.Game",
+  "references": [
+    "Project77.Puzzle",
+    "Project77.Analytics"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

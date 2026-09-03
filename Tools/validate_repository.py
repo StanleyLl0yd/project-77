@@ -28,12 +28,15 @@ REQUIRED_FILES = [
     "Assets/Project77/Puzzle/EnergyRouting/EnergyRoutingLevel.cs",
     "Assets/Project77/Puzzle/EnergyRouting/EnergyRoutingRunner.cs",
     "Assets/Project77/Analytics/PrototypeAnalytics.cs",
+    "Assets/Project77/Game/Project77.Game.asmdef",
+    "Assets/Project77/Game/EnergyRoutingJsonLoader.cs",
+    "Assets/Project77/Game/EnergyRoutingPrototypeController.cs",
     "Assets/Project77/Tests/EditMode/Project77.Tests.EditMode.asmdef",
 ]
 
 EXPECTED_EDITOR = "6000.3.22f1"
 EXPECTED_URP_MAJOR_MINOR = "17.3."
-ENERGY_LEVEL_DIR = ROOT / "Assets/Project77/Content/Prototype/EnergyRouting"
+ENERGY_LEVEL_DIR = ROOT / "Assets/Project77/Content/Resources/Prototype/EnergyRouting"
 
 
 def fail(message: str) -> None:
@@ -42,9 +45,12 @@ def fail(message: str) -> None:
 
 
 def require_cell(value: object, width: int, height: int, context: str) -> tuple[int, int]:
-    if not isinstance(value, list) or len(value) != 2 or not all(isinstance(v, int) for v in value):
-        fail(f"{context}: expected [x, y] integer cell")
-    x, y = value
+    if not isinstance(value, dict) or set(value) != {"x", "y"}:
+        fail(f"{context}: expected {{x, y}} cell object")
+    x = value.get("x")
+    y = value.get("y")
+    if not isinstance(x, int) or not isinstance(y, int):
+        fail(f"{context}: x and y must be integers")
     if not (0 <= x < width and 0 <= y < height):
         fail(f"{context}: cell {(x, y)} is outside {width}x{height} board")
     return x, y
@@ -70,7 +76,7 @@ def is_energy_level_solvable(
         if pair_index == len(pairs):
             return True
 
-        pair_id, start, end = pairs[pair_index]
+        _, start, end = pairs[pair_index]
         visited = {start}
         path = [start]
 
@@ -211,7 +217,7 @@ def main() -> None:
     energy_level_count = validate_energy_routing_levels()
     print(
         f"Repository validation passed: Unity {editor_version}, URP {urp}, "
-        f"Prototype 0.1 governance present, Energy Routing levels validated/solvable: {energy_level_count}."
+        f"Prototype 0.1 governance present, Energy Routing runtime levels validated/solvable: {energy_level_count}."
     )
 
 

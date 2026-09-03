@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "A-002",
+  "id": "A-001",
   "revision": 1,
   "variant": "energy_routing",
   "difficultyTag": "intro",
@@ -8,8 +8,8 @@
     "width": 4,
     "height": 4,
     "pairs": [
-      {"id": "red", "start": [0, 0], "end": [0, 3]},
-      {"id": "blue", "start": [3, 0], "end": [3, 3]}
+      {"id": "red", "start": {"x": 0, "y": 0}, "end": {"x": 3, "y": 0}},
+      {"id": "blue", "start": {"x": 0, "y": 3}, "end": {"x": 3, "y": 3}}
     ],
     "blocked": []
   }
