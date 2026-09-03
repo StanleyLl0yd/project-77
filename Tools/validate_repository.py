@@ -66,6 +66,7 @@ REQUIRED_FILES = [
     "Tools/p0_freeze_manifest.py",
     "Tools/p0_gate_report.py",
     "Tools/P0_MODERATION_TEMPLATE.csv",
+    "Tools/P0_SESSION_NOTES_TEMPLATE.md",
     "Tools/tests/test_verify_android_artifact.py",
     "Tools/tests/test_p0_order_plan.py",
     "Tools/tests/test_p0_order_audit.py",
@@ -91,6 +92,13 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def _require_fragments(path: str, required: dict[str, str]) -> None:
+    text = (ROOT / path).read_text(encoding="utf-8")
+    missing = [name for name, fragment in required.items() if fragment not in text]
+    if missing:
+        fail(f"{path} is missing required invariants: " + ", ".join(missing))
+
+
 def main() -> None:
     missing = [path for path in REQUIRED_FILES if not (ROOT / path).is_file()]
     if missing:
@@ -110,26 +118,37 @@ def main() -> None:
     if not isinstance(urp, str) or not urp.startswith(EXPECTED_URP_MAJOR_MINOR):
         fail(f"expected URP {EXPECTED_URP_MAJOR_MINOR}x, found {urp!r}")
 
-    bootstrap = (ROOT / "Assets/Project77/Editor/Project77ProjectBootstrap.cs").read_text(encoding="utf-8")
-    bootstrap_source_invariants = {
-        "public Unity cloud pre-export class": "public static class Project77ProjectBootstrap",
-        "public Unity cloud pre-export method": "public static void ApplyBaselineForBuild()",
-        "prototype application id": 'private const string PrototypeApplicationId = "com.sl.project77.prototype";',
-        "prototype bundle version": 'PlayerSettings.bundleVersion = "0.0.1-prototype";',
-        "Android application identifier assignment": "PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, PrototypeApplicationId);",
-        "Android IL2CPP backend": "PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);",
-        "Android minSdk API 26": "PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;",
-        "Android targetSdk API 36": "PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;",
-        "Android ARM64-only architecture": "PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;",
-    }
-    missing_bootstrap_invariants = [
-        name for name, fragment in bootstrap_source_invariants.items() if fragment not in bootstrap
-    ]
-    if missing_bootstrap_invariants:
-        fail(
-            "Project77ProjectBootstrap.cs is missing required cloud/Android prototype baseline: "
-            + ", ".join(missing_bootstrap_invariants)
-        )
+    _require_fragments(
+        "Assets/Project77/Editor/Project77ProjectBootstrap.cs",
+        {
+            "public Unity cloud pre-export class": "public static class Project77ProjectBootstrap",
+            "public Unity cloud pre-export method": "public static void ApplyBaselineForBuild()",
+            "prototype application id": 'private const string PrototypeApplicationId = "com.sl.project77.prototype";',
+            "prototype bundle version": 'PlayerSettings.bundleVersion = "0.0.1-prototype";',
+            "Android application identifier assignment": "PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, PrototypeApplicationId);",
+            "Android IL2CPP backend": "PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);",
+            "Android minSdk API 26": "PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;",
+            "Android targetSdk API 36": "PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;",
+            "Android ARM64-only architecture": "PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;",
+        },
+    )
+
+    restart_guard = "PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered)"
+    _require_fragments(
+        "Assets/Project77/Game/EnergyRoutingPrototypeController.cs",
+        {"post-completion restart guard": restart_guard},
+    )
+    _require_fragments(
+        "Assets/Project77/Game/PathExpeditionPrototypeController.cs",
+        {
+            "post-completion reset guard": restart_guard,
+            "active-attempt delay guard": "PrototypeAttemptPolicy.CanModifyActiveAttempt(runner.Status, continuationOffered)",
+        },
+    )
+    _require_fragments(
+        "Assets/Project77/Game/FlowNetworkPrototypeController.cs",
+        {"post-completion reset guard": restart_guard},
+    )
 
     project_manifest = json.loads((ROOT / "Docs/project77_manifest.json").read_text(encoding="utf-8"))
     if project_manifest.get("status") != "prototype_phase":
@@ -161,8 +180,8 @@ def main() -> None:
     summary = ", ".join(f"{name}={count}" for name, count in sorted(content_counts.items()))
     print(
         f"Repository validation passed: Unity {editor_version}, URP {urp}, "
-        f"cloud pre-export/Android source baseline locked, Prototype 0.1 governance present, "
-        f"validated content: {summary}."
+        f"cloud pre-export/Android source baseline and P0 control guards locked, "
+        f"Prototype 0.1 governance present, validated content: {summary}."
     )
 
 
