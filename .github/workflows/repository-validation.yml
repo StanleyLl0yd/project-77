@@ -30,3 +30,6 @@ jobs:
 
       - name: Compile and smoke-test pure puzzle domains
         run: dotnet run --project Tools/DomainSmoke/Project77.DomainSmoke.csproj --configuration Release
+
+      - name: Compile Unity-facing runtime scripts with API stubs
+        run: dotnet build Tools/UnityScriptSmoke/Project77.UnityScriptSmoke.csproj --configuration Release

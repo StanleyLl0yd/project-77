@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="UnityEngineStubs.cs" />
+    <Compile Include="../../Assets/Project77/Puzzle/**/*.cs" />
+    <Compile Include="../../Assets/Project77/Analytics/**/*.cs" />
+    <Compile Include="../../Assets/Project77/Game/**/*.cs" />
+  </ItemGroup>
+</Project>
