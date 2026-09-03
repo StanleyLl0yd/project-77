@@ -23,6 +23,9 @@ jobs:
       - name: Validate Project 77 repository baseline
         run: python Tools/validate_repository.py
 
+      - name: Test P0 batch reporting tools
+        run: python -m unittest discover -s Tools/tests -p "test_*.py"
+
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
