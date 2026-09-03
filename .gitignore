@@ -64,9 +64,10 @@ Desktop.ini
 *.pem
 *.key
 
-# Test / coverage artifacts
+# Test / coverage / anonymous playtest data
 coverage/
 TestResults/
+/PlaytestData/
 
 # Misc
 *.log

@@ -10,6 +10,18 @@ Prototype Phase rule: add tooling only when it directly supports Prototype 0.1, 
 
 `EditorScriptSmoke` extends the same idea to `Assets/Project77/Editor`, including the cloud Pre-Export bootstrap hook. It compiles against small UnityEditor/URP stubs and therefore checks source-level regressions only; actual Unity API behavior, asset serialization and Android build output still require a real Unity build when cloud credits are available.
 
+`p0_freeze_manifest.py` creates the immutable batch-side freeze record required before external P0 testing. It binds one clean Git commit and build version to Unity/URP versions, event/metadata schemas, all 30 level IDs/revisions/content hashes, and the governing P0 contracts. Generated playtest data belongs under the ignored `PlaytestData/` folder, not in Git.
+
+Example freeze flow after a real test APK exists for the current commit:
+
+```bash
+python Tools/p0_freeze_manifest.py generate \
+  --batch-id P0-001 \
+  --output PlaytestData/P0-001/freeze.json
+
+python Tools/p0_freeze_manifest.py verify PlaytestData/P0-001/freeze.json
+```
+
 `p0_batch_report.py` validates exported P0 `*_metadata.json` + `*_events.jsonl` session pairs, enforces a single frozen build/commit/schema and stable per-variant level revisions, joins optional moderator records from `P0_MODERATION_TEMPLATE.csv`, and produces a gate-ready Markdown/JSON summary. Telemetry next-clicks are kept separate from the formal voluntary-continuation metric, which requires moderator/exclusion data from the playtest protocol.
 
 Example:

@@ -56,7 +56,10 @@ REQUIRED_FILES = [
     "Tools/validate_prototype_content.py",
     "Tools/validate_flow_network.py",
     "Tools/p0_batch_report.py",
+    "Tools/p0_freeze_manifest.py",
     "Tools/P0_MODERATION_TEMPLATE.csv",
+    "Tools/tests/test_p0_batch_report.py",
+    "Tools/tests/test_p0_freeze_manifest.py",
     "Tools/DomainSmoke/Project77.DomainSmoke.csproj",
     "Tools/UnityScriptSmoke/Project77.UnityScriptSmoke.csproj",
     "Tools/UnityScriptSmoke/UnityEngineStubs.cs",
@@ -99,10 +102,19 @@ def main() -> None:
         fail("active milestone must remain Prototype 0.1")
 
     gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
-    required_ignore_fragments = ["/[Ll]ibrary/", "/[Tt]emp/", "/[Oo]bj/", "/[Ll]ogs/", "/[Uu]ser[Ss]ettings/", "*.keystore", "*.jks"]
+    required_ignore_fragments = [
+        "/[Ll]ibrary/",
+        "/[Tt]emp/",
+        "/[Oo]bj/",
+        "/[Ll]ogs/",
+        "/[Uu]ser[Ss]ettings/",
+        "/PlaytestData/",
+        "*.keystore",
+        "*.jks",
+    ]
     absent = [fragment for fragment in required_ignore_fragments if fragment not in gitignore]
     if absent:
-        fail(".gitignore is missing required Unity/security entries: " + ", ".join(absent))
+        fail(".gitignore is missing required Unity/security/playtest entries: " + ", ".join(absent))
 
     try:
         content_counts = validate_all()
