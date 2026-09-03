@@ -79,29 +79,10 @@ namespace Project77.Editor
             var pipelineAsset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(PipelinePath);
             if (pipelineAsset == null)
             {
-                pipelineAsset = ScriptableObject.CreateInstance<UniversalRenderPipelineAsset>();
+                pipelineAsset = UniversalRenderPipelineAsset.Create(rendererData);
                 pipelineAsset.name = "Project77URP";
                 AssetDatabase.CreateAsset(pipelineAsset, PipelinePath);
             }
-
-            var serializedPipeline = new SerializedObject(pipelineAsset);
-            var rendererList = serializedPipeline.FindProperty("m_RendererDataList");
-            if (rendererList == null)
-            {
-                throw new InvalidOperationException("URP renderer-data list was not found. Do not guess around an incompatible URP serialization layout; update the bootstrap for the installed Unity/URP version.");
-            }
-
-            rendererList.arraySize = 1;
-            rendererList.GetArrayElementAtIndex(0).objectReferenceValue = rendererData;
-
-            var defaultRendererIndex = serializedPipeline.FindProperty("m_DefaultRendererIndex");
-            if (defaultRendererIndex != null)
-            {
-                defaultRendererIndex.intValue = 0;
-            }
-
-            serializedPipeline.ApplyModifiedPropertiesWithoutUndo();
-            EditorUtility.SetDirty(pipelineAsset);
 
             GraphicsSettings.defaultRenderPipeline = pipelineAsset;
             QualitySettings.renderPipeline = pipelineAsset;
