@@ -4,6 +4,7 @@ namespace UnityEngine
 {
     public class Object
     {
+        public string name { get; set; }
     }
 
     public class Component : Object
@@ -25,12 +26,57 @@ namespace UnityEngine
     {
     }
 
+    public class ScriptableObject : Object
+    {
+        public static T CreateInstance<T>() where T : ScriptableObject, new()
+        {
+            return new T();
+        }
+    }
+
     public sealed class GameObject : Object
     {
+        public GameObject()
+        {
+        }
+
+        public GameObject(string name, params Type[] components)
+        {
+            this.name = name;
+        }
+
+        public string tag { get; set; }
+        public Transform transform { get; } = new Transform();
+
         public T AddComponent<T>() where T : Component
         {
             return default;
         }
+
+        public T GetComponent<T>() where T : Component
+        {
+            return default;
+        }
+    }
+
+    public sealed class Transform
+    {
+        public Vector3 position { get; set; }
+    }
+
+    public class Camera : Behaviour
+    {
+        public CameraClearFlags clearFlags { get; set; }
+        public Color backgroundColor { get; set; }
+    }
+
+    public class AudioListener : Behaviour
+    {
+    }
+
+    public enum CameraClearFlags
+    {
+        SolidColor
     }
 
     public sealed class TextAsset : Object
@@ -64,6 +110,7 @@ namespace UnityEngine
         public static string version => "stub";
         public static string unityVersion => "stub";
         public static string persistentDataPath => ".";
+        public static bool isBatchMode => false;
     }
 
     public static class SystemInfo
@@ -167,6 +214,20 @@ namespace UnityEngine
         }
     }
 
+    public struct Vector3
+    {
+        public Vector3(float x, float y, float z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public float x;
+        public float y;
+        public float z;
+    }
+
     public struct Rect
     {
         public Rect(float x, float y, float width, float height)
@@ -244,5 +305,55 @@ namespace UnityEngine
         Stationary,
         Ended,
         Canceled
+    }
+
+    public static class Debug
+    {
+        public static void Log(object message)
+        {
+        }
+
+        public static void LogException(Exception exception)
+        {
+        }
+    }
+
+    public static class QualitySettings
+    {
+        public static UnityEngine.Rendering.RenderPipelineAsset renderPipeline { get; set; }
+    }
+}
+
+namespace UnityEngine.Rendering
+{
+    public class RenderPipelineAsset : UnityEngine.ScriptableObject
+    {
+    }
+
+    public static class GraphicsSettings
+    {
+        public static RenderPipelineAsset defaultRenderPipeline { get; set; }
+    }
+}
+
+namespace UnityEngine.Rendering.Universal
+{
+    public class UniversalRendererData : UnityEngine.ScriptableObject
+    {
+    }
+
+    public class UniversalRenderPipelineAsset : UnityEngine.Rendering.RenderPipelineAsset
+    {
+        public static UniversalRenderPipelineAsset Create(UniversalRendererData rendererData)
+        {
+            return new UniversalRenderPipelineAsset();
+        }
+    }
+}
+
+namespace UnityEngine.SceneManagement
+{
+    public struct Scene
+    {
     }
 }

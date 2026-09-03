@@ -55,6 +55,13 @@ REQUIRED_FILES = [
     "Assets/Project77/Tests/EditMode/FlowNetworkRunnerTests.cs",
     "Tools/validate_prototype_content.py",
     "Tools/validate_flow_network.py",
+    "Tools/p0_batch_report.py",
+    "Tools/P0_MODERATION_TEMPLATE.csv",
+    "Tools/DomainSmoke/Project77.DomainSmoke.csproj",
+    "Tools/UnityScriptSmoke/Project77.UnityScriptSmoke.csproj",
+    "Tools/UnityScriptSmoke/UnityEngineStubs.cs",
+    "Tools/EditorScriptSmoke/Project77.EditorScriptSmoke.csproj",
+    "Tools/EditorScriptSmoke/UnityEditorStubs.cs",
 ]
 
 EXPECTED_EDITOR = "6000.3.22f1"

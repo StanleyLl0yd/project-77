@@ -6,13 +6,16 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);CS0649</NoWarn>
+    <DefineConstants>UNITY_EDITOR</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="UnityEngineStubs.cs" />
+    <Compile Include="../UnityScriptSmoke/UnityEngineStubs.cs" Link="UnityEngineStubs.cs" />
+    <Compile Include="UnityEditorStubs.cs" />
     <Compile Include="../../Assets/Project77/Puzzle/**/*.cs" />
     <Compile Include="../../Assets/Project77/Analytics/**/*.cs" />
     <Compile Include="../../Assets/Project77/Game/**/*.cs" />
     <Compile Include="../../Assets/Project77/Core/**/*.cs" />
+    <Compile Include="../../Assets/Project77/Editor/**/*.cs" />
   </ItemGroup>
 </Project>
