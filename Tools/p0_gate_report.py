@@ -9,6 +9,7 @@ from typing import Any
 
 import p0_batch_report as batch
 import p0_event_audit as event_audit
+import p0_event_schema as event_schema
 import p0_freeze_manifest as freeze
 
 FRESH_EXPOSURE_TARGET = 10
@@ -77,6 +78,11 @@ def validate_sessions_against_freeze(
 def audit_session_sequences(sessions: list[batch.SessionData]) -> dict[str, list[str]]:
     warnings: dict[str, list[str]] = {}
     for session in sessions:
+        schema_errors = event_schema.validate_events(session.events)
+        if schema_errors:
+            joined = "; ".join(schema_errors)
+            raise GateReportError(f"{session.events_path}: invalid event schema: {joined}")
+
         result = event_audit.audit_event_sequence(session.events)
         if result.errors:
             joined = "; ".join(result.errors)
@@ -257,7 +263,7 @@ def _render_sequence_audit(warnings: dict[str, list[str]]) -> str:
     lines = [
         "## Telemetry sequence audit",
         "",
-        "Structural event-order errors: **0** (otherwise this report would fail closed).",
+        "Structural event-schema/order errors: **0** (otherwise this report would fail closed).",
         f"Sessions with non-fatal sequence warnings: **{len(warnings)}**.",
         "",
     ]
