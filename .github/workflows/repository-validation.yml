@@ -22,3 +22,11 @@ jobs:
 
       - name: Validate Project 77 repository baseline
         run: python Tools/validate_repository.py
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Compile and smoke-test pure puzzle domains
+        run: dotnet run --project Tools/DomainSmoke/Project77.DomainSmoke.csproj --configuration Release
