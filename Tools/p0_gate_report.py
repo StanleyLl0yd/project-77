@@ -12,6 +12,7 @@ import p0_event_audit as event_audit
 import p0_freeze_manifest as freeze
 
 FRESH_EXPOSURE_TARGET = 10
+TERMINAL_EVENTS = {"level_complete", "level_fail", "level_quit"}
 
 
 class GateReportError(ValueError):
@@ -89,6 +90,49 @@ def _event_count(session: batch.SessionData, event_name: str) -> int:
     return sum(1 for event in session.events if event.get("event_name") == event_name)
 
 
+def _attempt_identity(event: dict[str, Any], index_field: str) -> tuple[Any, Any, Any]:
+    return (
+        event.get("level_id"),
+        event.get("level_revision"),
+        event.get(index_field),
+    )
+
+
+def _attempt_lifecycle(events: list[dict[str, Any]]) -> dict[str, int]:
+    starts = 0
+    terminals = 0
+    restarted_before_terminal = 0
+    active: tuple[Any, Any, Any] | None = None
+
+    for event in events:
+        name = event.get("event_name")
+        if name == "level_start":
+            starts += 1
+            active = _attempt_identity(event, "attempt_index")
+            continue
+
+        if name in TERMINAL_EVENTS:
+            terminals += 1
+            identity = _attempt_identity(event, "attempt_index")
+            if active == identity:
+                active = None
+            continue
+
+        if name == "level_retry":
+            previous = _attempt_identity(event, "previous_attempt_index")
+            if active == previous:
+                restarted_before_terminal += 1
+                active = None
+
+    open_attempts = max(0, starts - terminals - restarted_before_terminal)
+    return {
+        "started": starts,
+        "terminal": terminals,
+        "restarted_before_terminal": restarted_before_terminal,
+        "open": open_attempts,
+    }
+
+
 def _safe_rate(numerator: int, denominator: int) -> float | None:
     return None if denominator <= 0 else numerator / denominator
 
@@ -109,14 +153,16 @@ def build_operational_diagnostics(
             if moderation.get(session.session_id) is not None
             and moderation[session.session_id].cohort == "fresh"
         ]
-        starts = sum(_event_count(session, "level_start") for session in variant_sessions)
+        lifecycles = [_attempt_lifecycle(session.events) for session in variant_sessions]
+        starts = sum(item["started"] for item in lifecycles)
+        terminals = sum(item["terminal"] for item in lifecycles)
+        restarted_before_terminal = sum(item["restarted_before_terminal"] for item in lifecycles)
+        open_attempts = sum(item["open"] for item in lifecycles)
         completes = sum(_event_count(session, "level_complete") for session in variant_sessions)
         fails = sum(_event_count(session, "level_fail") for session in variant_sessions)
         quits = sum(_event_count(session, "level_quit") for session in variant_sessions)
         retries = sum(_event_count(session, "level_retry") for session in variant_sessions)
         invalid = sum(_event_count(session, "invalid_interaction") for session in variant_sessions)
-        terminals = completes + fails + quits
-        open_attempts = max(0, starts - terminals)
 
         first_level_id = None
         levels = variant_sessions[0].metadata.get("levels")
@@ -148,6 +194,7 @@ def build_operational_diagnostics(
             "fresh_exposure_target_met": len(fresh_sessions) >= FRESH_EXPOSURE_TARGET,
             "attempts_started": starts,
             "attempts_terminal": terminals,
+            "attempts_restarted_before_terminal": restarted_before_terminal,
             "open_attempts": open_attempts,
             "completions": completes,
             "fails": fails,
@@ -196,7 +243,8 @@ def _render_operational_diagnostics(diagnostics: dict[str, Any]) -> str:
                 f"- First-level completion by session: {data['first_level_completed_sessions']}/{data['sessions']} ({_format_rate(data['first_level_completion_rate'])})",
                 f"- Full 10-level set completion by session: {data['prototype_complete_sessions']}/{data['sessions']} ({_format_rate(data['prototype_complete_rate'])})",
                 f"- Reached a continuation offer: {data['sessions_reaching_continuation_offer']}/{data['sessions']} ({_format_rate(data['continuation_offer_reach_rate'])})",
-                f"- Attempts: {data['attempts_started']} started, {data['attempts_terminal']} terminal, {data['open_attempts']} without a recorded terminal event",
+                f"- Attempts: {data['attempts_started']} started, {data['attempts_terminal']} terminal, "
+                f"{data['attempts_restarted_before_terminal']} restarted before terminal, {data['open_attempts']} still open/incomplete",
                 f"- Attempt outcomes: complete {_format_rate(data['completion_per_attempt'])}, fail {_format_rate(data['fail_per_attempt'])}, quit {_format_rate(data['quit_per_attempt'])}",
                 invalid_line,
                 "",
