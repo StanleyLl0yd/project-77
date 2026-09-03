@@ -35,18 +35,20 @@ python Tools/p0_order_plan.py \
 
 `P0_MODERATION_TEMPLATE.csv` is the compact structured join table consumed by the reporting tools. `P0_SESSION_NOTES_TEMPLATE.md` is the companion per-session observation sheet for protocol details that should not be squeezed into the CSV: first gesture/timing, help interventions, hesitation/frustration, voluntary quit, verbatim comments and the post-session open questions. Keep observations separate from interpretation and keep both files anonymous.
 
-`p0_freeze_manifest.py` creates the immutable batch-side freeze record required before external P0 testing. It binds one clean Git commit and build version to Unity/URP versions, event/metadata schemas, all 30 level IDs/revisions/content hashes, the governing P0 contracts, the preregistered quantitative gate plan, and—when using crossover testing—the exact order-plan file hash. Generated playtest data belongs under the ignored `PlaytestData/` folder, not in Git.
+`p0_freeze_manifest.py` creates the immutable batch-side freeze record required before external P0 testing. It binds one clean Git commit and build version to Unity/URP versions, event/metadata schemas, all 30 level IDs/revisions/content hashes, the governing P0 contracts, the preregistered quantitative gate plan, the exact order-plan file hash, and the exact APK distributed to testers. Binding an APK also runs the Project 77 ABI/16 KB/signature-structure acceptance checks. Structural signature presence is still not certificate-identity verification, so the release JKS certificate must separately be checked with `apksigner`/`keytool` before distribution. `--allow-unbound-artifact` exists only for CI/tooling smoke and must not be used for an external P0 batch.
 
-Example freeze flow after a real test APK exists for the current commit:
+Example freeze flow after the signed test APK exists for the current commit:
 
 ```bash
 python Tools/p0_freeze_manifest.py generate \
   --batch-id P0-001 \
   --order-plan PlaytestData/P0-001/orders.csv \
+  --artifact Project77.apk \
   --output PlaytestData/P0-001/freeze.json
 
 python Tools/p0_freeze_manifest.py verify PlaytestData/P0-001/freeze.json \
-  --order-plan PlaytestData/P0-001/orders.csv
+  --order-plan PlaytestData/P0-001/orders.csv \
+  --artifact Project77.apk
 ```
 
 `p0_batch_report.py` validates exported P0 `*_metadata.json` + `*_events.jsonl` session pairs, enforces a single build/commit/schema and stable per-variant level revisions, joins optional moderator records from `P0_MODERATION_TEMPLATE.csv`, and produces a gate-ready Markdown/JSON summary. Telemetry next-clicks are kept separate from the formal voluntary-continuation metric, which requires moderator/exclusion data from the playtest protocol.
