@@ -45,7 +45,9 @@ python Tools/p0_freeze_manifest.py verify PlaytestData/P0-001/freeze.json
 
 `p0_batch_report.py` validates exported P0 `*_metadata.json` + `*_events.jsonl` session pairs, enforces a single build/commit/schema and stable per-variant level revisions, joins optional moderator records from `P0_MODERATION_TEMPLATE.csv`, and produces a gate-ready Markdown/JSON summary. Telemetry next-clicks are kept separate from the formal voluntary-continuation metric, which requires moderator/exclusion data from the playtest protocol.
 
-`p0_gate_report.py` is the preferred final P0 batch command. It first rejects telemetry that does not match the freeze manifest's build, commit, Unity version, schema or level revisions, then delegates the formal metrics to `p0_batch_report.py`. It also reports operational diagnostics such as fresh-exposure sample sufficiency, first-level/full-set completion, continuation-offer reach, terminal/open attempts, attempt outcome rates and invalid interactions per attempt. These diagnostics do not automatically make the gate decision.
+`p0_event_audit.py` is the event-order/state-machine audit used before final P0 metrics are accepted. It detects impossible sequences such as overlapping attempts, bad retry indices, terminal events for the wrong attempt, continuation clicks without a matching offer, and a next level that does not match the clicked offer. Incomplete/crash-like endings are reported as warnings rather than silently converted into product failures.
+
+`p0_gate_report.py` is the preferred final P0 batch command. It first rejects telemetry that does not match the freeze manifest's build, commit, Unity version, schema or level revisions, then runs the event-sequence audit and delegates the formal metrics to `p0_batch_report.py`. It also reports operational diagnostics such as fresh-exposure sample sufficiency, first-level/full-set completion, continuation-offer reach, terminal/open attempts, attempt outcome rates and invalid interactions per attempt. These diagnostics do not automatically make the gate decision.
 
 Example:
 

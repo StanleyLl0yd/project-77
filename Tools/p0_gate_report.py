@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import p0_batch_report as batch
+import p0_event_audit as event_audit
 import p0_freeze_manifest as freeze
 
 FRESH_EXPOSURE_TARGET = 10
@@ -70,6 +71,18 @@ def validate_sessions_against_freeze(
         ]
         if metadata.get("levels") != expected_identity:
             raise GateReportError(f"{prefix}: level IDs/revisions do not match frozen variant content")
+
+
+def audit_session_sequences(sessions: list[batch.SessionData]) -> dict[str, list[str]]:
+    warnings: dict[str, list[str]] = {}
+    for session in sessions:
+        result = event_audit.audit_event_sequence(session.events)
+        if result.errors:
+            joined = "; ".join(result.errors)
+            raise GateReportError(f"{session.events_path}: invalid event sequence: {joined}")
+        if result.warnings:
+            warnings[session.session_id] = list(result.warnings)
+    return warnings
 
 
 def _event_count(session: batch.SessionData, event_name: str) -> int:
@@ -168,6 +181,13 @@ def _render_operational_diagnostics(diagnostics: dict[str, Any]) -> str:
     ]
     for variant, data in diagnostics.items():
         target_state = "MET" if data["fresh_exposure_target_met"] else "NOT YET MET"
+        if data["invalid_interactions_per_attempt"] is None:
+            invalid_line = f"- Retries: {data['retries']}; invalid interactions: {data['invalid_interactions']} (n/a per attempt)"
+        else:
+            invalid_line = (
+                f"- Retries: {data['retries']}; invalid interactions: {data['invalid_interactions']} "
+                f"({data['invalid_interactions_per_attempt']:.2f}/attempt)"
+            )
         lines.extend(
             [
                 f"### {variant}",
@@ -178,10 +198,25 @@ def _render_operational_diagnostics(diagnostics: dict[str, Any]) -> str:
                 f"- Reached a continuation offer: {data['sessions_reaching_continuation_offer']}/{data['sessions']} ({_format_rate(data['continuation_offer_reach_rate'])})",
                 f"- Attempts: {data['attempts_started']} started, {data['attempts_terminal']} terminal, {data['open_attempts']} without a recorded terminal event",
                 f"- Attempt outcomes: complete {_format_rate(data['completion_per_attempt'])}, fail {_format_rate(data['fail_per_attempt'])}, quit {_format_rate(data['quit_per_attempt'])}",
-                f"- Retries: {data['retries']}; invalid interactions: {data['invalid_interactions']} ({data['invalid_interactions_per_attempt']:.2f}/attempt)" if data["invalid_interactions_per_attempt"] is not None else f"- Retries: {data['retries']}; invalid interactions: {data['invalid_interactions']} (n/a per attempt)",
+                invalid_line,
                 "",
             ]
         )
+    return "\n".join(lines)
+
+
+def _render_sequence_audit(warnings: dict[str, list[str]]) -> str:
+    lines = [
+        "## Telemetry sequence audit",
+        "",
+        "Structural event-order errors: **0** (otherwise this report would fail closed).",
+        f"Sessions with non-fatal sequence warnings: **{len(warnings)}**.",
+        "",
+    ]
+    for session_id, session_warnings in sorted(warnings.items()):
+        lines.append(f"- `{session_id}`: " + "; ".join(session_warnings))
+    if not warnings:
+        lines.append("- None.")
     return "\n".join(lines)
 
 
@@ -189,6 +224,7 @@ def render_gate_report(
     summary: dict[str, Any],
     manifest: dict[str, Any],
     diagnostics: dict[str, Any],
+    sequence_warnings: dict[str, list[str]],
 ) -> str:
     report = batch.render_report(summary)
     header = [
@@ -204,7 +240,13 @@ def render_gate_report(
         report = marker + "\n" + "\n".join(header) + "\n" + report[len(marker):].lstrip("\n")
     else:
         report = "\n".join(header) + "\n" + report
-    return report.rstrip() + "\n\n" + _render_operational_diagnostics(diagnostics).rstrip()
+    return (
+        report.rstrip()
+        + "\n\n"
+        + _render_operational_diagnostics(diagnostics).rstrip()
+        + "\n\n"
+        + _render_sequence_audit(sequence_warnings).rstrip()
+    )
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -225,6 +267,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest = _load_manifest(args.freeze_path)
         sessions = batch.discover_sessions(args.data_dir)
         validate_sessions_against_freeze(sessions, manifest)
+        sequence_warnings = audit_session_sequences(sessions)
         moderation = batch.load_moderation(args.moderation)
         summary = batch.summarize_batch(sessions, moderation)
         diagnostics = build_operational_diagnostics(sessions, moderation)
@@ -233,7 +276,8 @@ def main(argv: list[str] | None = None) -> int:
             "freeze_fingerprint": manifest.get("freeze_fingerprint"),
         }
         summary["operational_diagnostics"] = diagnostics
-        report_text = render_gate_report(summary, manifest, diagnostics)
+        summary["sequence_audit_warnings"] = sequence_warnings
+        report_text = render_gate_report(summary, manifest, diagnostics, sequence_warnings)
     except (GateReportError, batch.BatchError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
