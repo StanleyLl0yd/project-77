@@ -1,18 +1,26 @@
 # Project 77 — Prototype 0.1 Specification
 
-Статус: **ACTIVE IMPLEMENTATION CONTRACT**.
+Status: **ACTIVE IMPLEMENTATION CONTRACT**.
 
-Этот документ определяет ближайший обязательный scope Project 77 после завершения pre-production. Его задача — не доказать красоту, масштаб вселенной или монетизацию, а проверить, работает ли фундаментальный игровой опыт.
+This document defines the nearest mandatory scope after conceptual pre-production. It exists to answer whether the fundamental Project 77 experience works, not to prove final art, monetization, backend, or the size of the future universe.
+
+Related operational documents:
+
+- `18_PRODUCT_GATES.md` — P0/P1 decision gates and initial thresholds;
+- `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` — how external tests are run;
+- `30_PROTOTYPE_ANALYTICS_CONTRACT.md` — exact Prototype 0.1 telemetry schema;
+- `31_ENGINEERING_CONVENTIONS.md` — minimal Unity/C# implementation conventions;
+- `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered executable backlog.
 
 ## 1. Phase status
 
-**Pre-production завершён. Project 77 находится в Prototype Phase.**
+**Pre-production is complete. Project 77 is in Prototype Phase.**
 
-До прохождения Prototype Gate проект не расширяется в production scope.
+Until both P0 and P1 return **CONTINUE**, the project does not expand into production scope.
 
-## 2. Главная гипотеза
+## 2. Main product hypothesis
 
-Игроку должен быть приятен и понятен цикл:
+The player should understand and enjoy:
 
 ```text
 Launch
@@ -32,175 +40,299 @@ Discovery
 Next Puzzle
 ```
 
-Ключевой вопрос Prototype 0.1:
+Key question:
 
-> Хочет ли игрок сам нажать «продолжить» после того, как puzzle превратился в заметный прогресс на острове?
+> Does the player choose to continue after puzzle success becomes visible island progress/discovery?
 
-## 3. Цель Prototype 0.1
+## 3. What Prototype 0.1 must prove
 
-Проверить две связанные вещи:
+Two sequential hypotheses:
 
-1. Core puzzle приятно играть даже на placeholder-графике.
-2. Meta loop острова усиливает желание пройти следующий puzzle.
+### P0 — Core
 
-Прототип не обязан выглядеть как финальная игра. Он обязан быть достаточно целостным, чтобы внешний тестировщик понял правила без разработчика рядом.
+At least one 30–90 second one-finger puzzle variant is understandable, repeatable, and produces genuine "one more level" behavior without production art/story carrying it.
 
-## 4. Technical baseline
+### P1 — Core + Meta
+
+For the P0 winner, rewards and visible island change make the player more willing to continue, and the discovery of 77 feels like a reward/reveal rather than tutorial overhead.
+
+A technically functional build is not a product success if these hypotheses fail.
+
+## 4. Technical baseline for the prototype
 
 - Unity 6.3 LTS.
 - C#.
 - URP.
-- Android build target.
-- Android-first, platform-neutral core code.
-- Placeholder art/UI допускается и предпочтителен.
-- Базовая telemetry обязательна до внешних playtests.
-- GitHub repository `project-77`.
-- Документация хранится в `/Docs`.
+- Android-first; gameplay/puzzle domain remains platform-neutral.
+- `minSdk`: API 26.
+- Prototype Android target baseline: `targetSdk 36`; `compileSdk >= 36` and supported by the installed Unity/Android toolchain.
+- APK is acceptable/preferred for local and external prototype distribution.
+- AAB remains the primary future store-release format; producing an AAB is not a P0 requirement.
+- P1 external Android build must exercise an ARM64-capable path; final release remains `arm64-v8a` mandatory.
+- No additional native SDKs should be added for analytics/store/ads solely for P0/P1.
+- Placeholder art/UI is expected.
+- Prototype telemetry is mandatory before external P0/P1 sessions.
+- Repository: `StanleyLl0yd/project-77`.
 
-## 5. Core mechanic test
+Development iteration may use the fastest Unity-supported scripting/build configuration. Before P1 gate evidence is accepted, at least one representative Android device/emulator build must install and run successfully; any untested final-release-specific property must be reported as a limitation, not assumed.
 
-До окончательной фиксации core реализуются и сравниваются минимум три дешёвых варианта:
+## 5. Exact P0 prototype variants
 
-- **A — Energy Routing**: текущий фаворит.
-- **B — Path / Expedition Routing**.
-- **C — Flow / Network Restoration**.
+All three are **PROVISIONAL test hypotheses**, not LOCKED game design.
 
-Для каждого варианта достаточно примерно 10–20 технических уровней, если меньшего количества недостаточно для уверенного вывода.
+### A — Energy Routing
 
-Выбор делается по измерениям и playtests, а не по вкусу автора/разработчика.
+Current favorite. Connect/route energy/signal between required nodes under board constraints.
 
-## 6. Prototype 0.1 minimum content
+### B — Path / Expedition Routing
 
-После выбора core-механики сборка должна содержать:
+Plan routes for explorers/drones to reach goals while respecting collisions/constraints.
 
-- очень короткое вступление;
-- 10–20 коротких puzzle levels;
-- простой reward screen;
-- два базовых ресурса как минимум в тестовом виде: Scrap и Energy или их эквиваленты;
-- минимальный остров/карта из placeholders;
-- повреждённый генератор;
-- один закрытый участок острова;
-- восстановление генератора за заработанные ресурсы;
-- видимое изменение мира после ремонта;
-- открытие нового участка;
-- обнаружение повреждённого робота **77**;
-- переход к следующему puzzle;
-- базовые analytics events для FTUE, level start/finish/fail/retry, reward, repair, discovery и next-level intent/action.
+### C — Flow / Network Restoration
 
-## 7. Definition of Done
+Restore a network/flow state by activating or redirecting relationships between nodes so required parts of the network become functional. C must test network/flow state and restoration order strongly enough that it is not merely Energy Routing with another skin.
 
-Prototype 0.1 считается функционально законченным, если новый игрок без устных подсказок разработчика способен:
+`Signal Sequence` is retired as the current Prototype C definition as of documentation v0.5.
 
-1. запустить игру;
-2. понять цель первого puzzle;
-3. пройти первый уровень;
-4. понять, что получил награду;
-5. понять, зачем нужен хотя бы один из ресурсов;
-6. потратить ресурс на восстановление генератора;
-7. увидеть причинно-следственную связь «puzzle → ресурс → изменение острова»;
-8. открыть новый участок;
-9. обнаружить 77;
-10. получить понятный следующий игровой шаг.
+## 6. Minimum P0 content
 
-Но продуктовый Definition of Done требует ещё одного пункта:
+For the first comparison:
 
-> Игрок **сам хочет продолжить**, а не продолжает потому, что тестировщик/разработчик попросил.
+- minimum **10 validated levels per variant**;
+- stable level IDs and revisions;
+- onboarding examples plus enough non-trivial cases to expose the mechanic's real interaction loop;
+- add more than 10 only when a pre-registered question cannot be answered with the existing set.
 
-## 8. Prototype Gate metrics
+Do not create 20 levels by habit if 10 already reveal that a mechanic is weak. Do not create 100 levels to avoid making a P0 decision.
 
-Процесс и стартовые ориентиры описаны в `18_PRODUCT_GATES.md`.
+## 7. What is shared between variants
 
-Для core отдельно проверяем:
+Share only what materially improves fair comparison and testability:
 
-- tutorial/core comprehension без устного объяснения;
-- `next puzzle` voluntary rate;
-- среднее/медианное время уровня;
-- retry/frustration;
-- частые ошибки input/goal comprehension;
-- субъективное «ещё один уровень»;
-- удобство на разных размерах Android-экранов.
+- prototype/session shell;
+- level envelope (`schemaVersion`, `id`, `revision`, `variant`, payload);
+- input handoff where practical;
+- retry/next affordances;
+- analytics interface/event envelope;
+- build/version metadata;
+- common test/reset tooling;
+- deterministic domain/test conventions.
 
-Для meta проверяем:
+Do **not** force unrelated puzzle rules into one inheritance tree simply to maximize code reuse.
 
-- понимает ли игрок ценность ресурсов;
-- является ли ремонт заметным reward;
-- усиливает ли island action желание пройти новый puzzle;
-- воспринимается ли открытие 77 как discovery/reward, а не tutorial-popup;
-- нет ли ощущения двух несвязанных игр: puzzle отдельно, остров отдельно.
+## 8. Throwaway vs survivor code
 
-## 9. Explicitly OUT of scope
+Expected/allowed to be throwaway:
 
-До успешного Prototype Gate **не реализовывать как production systems**:
+- greybox visuals;
+- temporary variant-selection UI;
+- presentation code for rejected variants;
+- moderator/debug controls;
+- prototype-only local telemetry viewers/export helpers.
+
+Expected to survive only if proven useful:
+
+- winning deterministic puzzle-domain logic;
+- stable level ID/revision/config semantics;
+- validators and meaningful tests;
+- project-owned analytics interface/event contract;
+- minimal meta domain after P1 validates it.
+
+Do not polish a "survivor" merely because it might survive.
+
+## 9. Deterministic puzzle-domain requirement
+
+For a given:
+
+- level definition;
+- initial state/seed (if randomness is truly necessary);
+- ordered player actions;
+
+the puzzle-domain outcome must be reproducible.
+
+Success/fail/game rules should be testable independently of MonoBehaviour, rendering, animation timing, and UI as far as practical.
+
+Randomness should be avoided in P0 unless it is itself part of the mechanic under test. If used, the seed is explicit and recorded.
+
+## 10. Minimum data/config contract
+
+Prototype levels are data-driven and validated.
+
+Shared minimum envelope:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "A-001",
+  "revision": 1,
+  "variant": "energy_routing",
+  "difficultyTag": "intro",
+  "payload": {}
+}
+```
+
+The exact variant payload may differ by mechanic. Do not build a generic CMS/content pipeline. Detailed conventions are in `31_ENGINEERING_CONVENTIONS.md`.
+
+## 11. Minimum prototype telemetry
+
+Implement only the events required by `30_PROTOTYPE_ANALYTICS_CONTRACT.md`, covering at minimum:
+
+- prototype/session start/end;
+- tutorial exposure;
+- level start/complete/fail/retry/quit;
+- meaningful invalid interaction where practical;
+- reward shown/claimed;
+- resource spend;
+- generator repair;
+- visible island change;
+- area unlock;
+- 77 discovery;
+- next-puzzle offered/clicked.
+
+No PII or production attribution/monetization stack is required.
+
+## 12. P0 testing and selection
+
+External playtests use `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`.
+
+Initial comparison intent:
+
+- aim for at least 10 fresh exposures per variant across batches unless a severe repeated failure justifies early stopping;
+- record help/exclusions;
+- do not count moderator-prompted continuation as voluntary;
+- compare variants using the same P0 gate definitions.
+
+The core is selected by observed evidence, not by concept-art appeal or author's preference.
+
+## 13. P1 integrated Prototype 0.1 content
+
+Only after P0 CONTINUE, integrate the selected mechanic into the meta prototype.
+
+The resulting P1 build contains:
+
+- very short intro;
+- **10–20** short selected-core puzzle levels for the integrated path;
+- simple reward screen;
+- two prototype resources, currently Scrap and Energy or explicitly approved equivalents;
+- placeholder island/map;
+- damaged generator;
+- one blocked island area;
+- generator repair using earned resources;
+- obvious visible world change after repair;
+- area unlock;
+- discovery of damaged robot **77**;
+- genuine player-controlled continuation to another puzzle;
+- Prototype Analytics Contract events.
+
+The resource values are test fixtures, not a production economy.
+
+## 14. Definition of Done
+
+### Engineering DoD
+
+- project opens/builds in the documented environment;
+- three P0 variants are playable and validated at the required content minimum;
+- deterministic rule tests exist for implemented core rules;
+- level/config validation exists;
+- telemetry contract can be validated on the intended paths;
+- selected-core P1 path runs through reward -> repair -> island change -> unlock -> 77 -> next puzzle;
+- at least one representative Android prototype build installs/runs before P1 evidence is accepted.
+
+### Player-experience DoD
+
+A fresh player without oral rule explanation can:
+
+1. identify the first puzzle goal;
+2. make meaningful input;
+3. complete the first level or demonstrate clear rule understanding;
+4. understand they received a reward;
+5. understand at least one resource use;
+6. spend it on generator repair;
+7. perceive `puzzle -> reward -> repair -> world change` causality;
+8. unlock an area;
+9. discover 77;
+10. understand that another puzzle is available.
+
+### Product DoD
+
+> The player voluntarily chooses to continue under the definition in `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`.
+
+If this behavior is not supported by P0/P1 evidence, the result is ITERATE/PIVOT/STOP rather than automatic CONTINUE.
+
+## 15. Gate metrics
+
+Authoritative initial thresholds are in `18_PRODUCT_GATES.md`.
+
+Prototype reports must include enough evidence to interpret:
+
+- unaided comprehension;
+- voluntary next-puzzle rate;
+- level duration;
+- fail/retry/quit;
+- invalid/wrong interaction patterns;
+- help required;
+- resource/repair/world-change comprehension;
+- post-island voluntary continuation;
+- 77 discovery comprehension/reaction.
+
+Do not import D1/D7/D30 soft-launch metrics into P0/P1 as if they were prototype-session metrics.
+
+## 16. Explicitly OUT of scope before P0 + P1 CONTINUE
+
+Do not implement as production systems:
 
 - IAP/store;
-- реальные цены;
-- rewarded/interstitial ads;
+- real price points;
+- rewarded/interstitial ads or mediation;
 - Season Pass;
 - Explorer Club subscription;
 - production backend/microservices;
-- полноценные cloud/social systems;
+- production cloud save/auth/social;
+- remote LiveOps platform;
 - realtime multiplayer;
-- большой island map;
-- десятки персонажей;
-- сотни props/decorations;
-- полноценные cinematics;
-- другие планеты;
-- корабль как игровой слой;
+- large island map;
+- dozens of characters;
+- hundreds of props/decorations;
+- production cinematics;
+- other planets;
+- ship gameplay layer;
 - production-quality VFX/audio/content;
-- большой narrative content pack;
-- expensive marketing asset production.
+- large narrative pack;
+- mass localization;
+- expensive marketing production;
+- speculative architecture for any of the above.
 
-Допустимы только минимальные mocks/stubs, если они нужны для архитектурной проверки и не расширяют scope.
+Minimal mocks/stubs are allowed only when they directly unblock P0/P1 testing.
 
-## 10. No-premature-production guardrail
+## 17. Deliberately unresolved
 
-До решения **CONTINUE** по Gate P0 и P1 нельзя использовать аргументы:
+These are not documentation defects:
 
-- «потом графика вытянет»;
-- «когда добавим сюжет, станет интереснее»;
-- «мы уже много сделали, надо продолжать»;
-- «нужно ещё 100 уровней, чтобы понять»;
-- «монетизация компенсирует слабое удержание».
-
-Если core/meta loop не работает на дешёвой версии, сначала меняется loop.
-
-## 11. Deliberately unresolved after pre-production
-
-Следующие вопросы **не являются пробелом документации**. Они намеренно оставлены для экспериментов и данных:
-
-- победившая core mechanic;
-- точная difficulty curve;
+- winning core mechanic;
+- exact early difficulty curve;
 - portrait vs landscape;
-- точный темп mystery reveal;
-- количество уровней между story beats;
-- реальные IAP price points;
-- реальные D1/D7/D30;
+- exact mystery-reveal pacing;
+- levels per story beat;
+- real IAP prices;
+- actual D1/D7/D30 results and validated market thresholds;
 - production content velocity;
-- оптимальный season cadence;
-- финальное коммерческое название;
-- долгосрочный content plan на годы.
+- optimal season cadence;
+- final commercial title;
+- multi-year content specifics.
 
-## 12. Data-over-speculation rule
+Resolve cheap-to-test questions by experiment, then update Decision Log/specialized docs.
 
-После старта Prototype Phase новая крупная design-идея не должна автоматически становиться committed scope.
+## 18. After successful P0 + P1
 
-Порядок:
+Only then begin Vertical Slice work such as:
 
-`Idea -> Backlog -> Hypothesis -> Prototype/Test -> Decision -> Documentation update`.
-
-Если вопрос можно дешёво проверить поведением игроков, тест имеет приоритет над дальнейшим теоретическим проектированием.
-
-## 13. What happens after a successful Prototype Gate
-
-Только после подтверждения P0/P1 начинается Vertical Slice:
-
-- один production-quality island sector;
-- финализируемый UI language;
-- silhouette/animation 77;
-- 15–25 polished levels;
-- один законченный narrative beat;
-- один mystery clue/anomaly;
+- one production-quality island sector;
+- finalizing UI language;
+- 77 silhouette/animation;
+- polished selected-core levels;
+- one finished narrative beat/mystery clue;
 - save/load prototype;
-- reference-device profiling.
+- reference-device profiling;
+- carefully scoped platform-service sandboxes where the Roadmap requires them.
 
-Следующий пакет документации после реальных тестов должен обновляться **по данным**, а не ради увеличения объёма GDD.
+The next documentation baseline must be updated from actual playtest findings rather than additional speculative design.

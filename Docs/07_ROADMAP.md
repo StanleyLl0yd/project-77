@@ -14,7 +14,7 @@ Roadmap разбит по продуктовым воротам, а не тол�
 
 Зафиксировать продукт, не тратя производство на спорные детали.
 
-**Статус на v0.4: завершено. Проект перешёл в Prototype Phase.**
+**Статус на v0.5: завершено. Проект находится в Prototype Phase.**
 
 ## Deliverables
 
@@ -42,21 +42,13 @@ Roadmap разбит по продуктовым воротам, а не тол�
 
 # Phase 1 — Core Prototype — ACTIVE
 
-Активная спецификация: `28_PROTOTYPE_01_SPEC.md`.
+Активная спецификация: `28_PROTOTYPE_01_SPEC.md`. Исполняемый порядок задач: `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`. Playtests и telemetry: `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` + `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
 
 Ориентир: 4–6 недель для маленькой команды, но gate важнее срока.
 
 ## Stage 1A — Repository / Bootstrap
 
-Создать GitHub repository `project-77` и базовую структуру:
-
-```text
-/Assets
-/Docs
-/Tools
-/Tests
-/Build
-```
+Repository `project-77` создан. После Unity bootstrap version-controlled структура включает `Assets/`, `Packages/`, `ProjectSettings/`, `Docs/` и project-owned `Assets/Project77/...`. Build outputs остаются ignored и не требуют tracked `/Build` directory.
 
 На старте:
 
@@ -64,7 +56,7 @@ Roadmap разбит по продуктовым воротам, а не тол�
 - C#;
 - URP;
 - Android build target;
-- Git LFS для крупных binary assets при необходимости;
+- Git LFS **не включать автоматически**; добавлять только для конкретных крупных binary asset types после появления реальной необходимости;
 - базовый CI build;
 - документация Project 77 хранится в `/Docs`;
 - никакой store/backend зависимости в core gameplay.
@@ -75,9 +67,9 @@ Build:
 
 - Prototype A: Energy Routing.
 - Prototype B: Path / Expedition Routing.
-- Prototype C: Flow / Network restoration.
-- 10–20 уровней на вариант.
-- минимальная telemetry.
+- Prototype C: Flow / Network Restoration.
+- минимум **10 validated levels на вариант** для P0; расширять только если этого требует конкретная гипотеза.
+- telemetry по `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
 - placeholder UI/art only.
 - no store, no subscription, no production backend.
 
@@ -88,7 +80,8 @@ Tests:
 - retry frustration;
 - управление на разных размерах экранов;
 - возможность контентного расширения;
-- связь puzzle с фантазией ремонта/исследования мира.
+- связь puzzle с фантазией ремонта/исследования мира;
+- external sessions по `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`.
 
 ## Stage 1C — Meta prototype / Project 77 Prototype 0.1
 
@@ -217,13 +210,16 @@ Tests:
 Внутренние ориентиры, не универсальные нормы:
 
 - tutorial completion ≥ 80%;
-- D1: стремиться ≥ 35%;
-- D7: стремиться ≥ 12–15%;
-- D30: стремиться ≥ 5%;
-- crash-free sessions ≥ 99.5%;
+- D1: initial decision target **>= 30%**;
+- D7: initial decision target **8–12%+**;
+- D30: initial decision target **4–7%+**;
+- crash-free sessions/users **> 99.5%**;
+- ANR-free **> 99.5%**;
 - meaningful rewarded-ad opt-in without retention damage;
 - first purchase conversion показывает жизнеспособность IAP;
 - organic reviews не сигнализируют «слишком много рекламы/paywall».
+
+Эти значения синхронизированы с `13_DECISION_LOG.md` / Gate P4 в `18_PRODUCT_GATES.md`. Более старый набор 35% / 12–15% / 5% retired в v0.5 и не является отдельным gate.
 
 Если D1/D7 слабы, нельзя лечить проблему новыми IAP.
 
@@ -336,7 +332,6 @@ Retention, stability и content production позволяют увеличива
 - analytics;
 - save integrity;
 - performance.
-
 
 ## Production-readiness workstream (v0.3)
 

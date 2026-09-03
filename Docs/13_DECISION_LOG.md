@@ -72,7 +72,6 @@ Production baseline: **Unity 6.3 LTS + C#**.
 
 Первый реальный milestone: игрок запускает игру, проходит 10–20 коротких puzzle levels, получает ресурсы, восстанавливает генератор и обнаруживает робота 77.
 
-
 ### D-018 — Audience direction
 
 Project 77 проектируется прежде всего для подростков и взрослых (13+ product positioning), а не как приложение специально для детей. Финальная store age/target declaration определяется по фактическому контенту и policy requirements.
@@ -137,8 +136,6 @@ User-facing text не hardcode-ится. Localization keys/formatting/text expan
 
 Accessibility (readability, color independence, touch targets, text/subtitles, reduced motion where practical) учитывается в UI system до production масштабирования.
 
-
-
 ### D-034 — Pre-production completion
 
 Начиная с документации v0.4, **pre-production считается завершённым**. Текущая активная стадия разработки — Project 77 Prototype 0.1 / Core Prototype.
@@ -165,7 +162,7 @@ Accessibility (readability, color independence, touch targets, text/subtitles, r
 
 Основной кандидат: Energy Routing puzzle.
 
-Статус изменится на LOCKED только после прототипов.
+Статус изменится на LOCKED только после сравнения P0 variants и решения Gate P0. Текущий comparison set определён в P-009.
 
 ### P-002 — Art direction
 
@@ -187,15 +184,23 @@ Stylized 2.5D/isometric island + readable alien biomes.
 
 77 связан с древней сетью, а его номер имеет большее значение, чем простой serial ID.
 
-
 ### P-007 — Initial soft-launch gates
 
-Рабочие ориентиры: D1 >= 30%, D7 8–12%+, D30 4–7%+, crash/ANR-free >99.5%. Это initial decision targets, а не вечные market truths; пересмотр требует данных и записи причины.
+Рабочие ориентиры: D1 >= 30%, D7 8–12%+, D30 4–7%+, crash/ANR-free >99.5%. Это initial decision targets, а не вечные market truths; пересмотр требует данных и записи причины. Более старый набор D1 35% / D7 12–15% / D30 5% retired в документации v0.5 и не является вторым gate/stretch-набором.
 
 ### P-008 — Performance numeric targets
 
 Initial targets: mid-tier 60 FPS, low-tier >=30 FPS, cold start <5 s, ordinary scene transition <2 s, base download желательно <150 MB. Финальные memory/device budgets уточняются на Vertical Slice profiling.
 
+### P-009 — P0 core comparison set
+
+Для Gate P0 сравниваются три PROVISIONAL hypotheses:
+
+- A — **Energy Routing** (current favorite);
+- B — **Path / Expedition Routing**;
+- C — **Flow / Network Restoration**.
+
+`Signal Sequence` больше не является текущим Prototype C. Ни один из A/B/C не LOCKED до решения P0. Для первичного сравнения implementation contract требует minimum 10 validated levels per variant, а playtest process определяется `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`.
 
 ## OPEN — требуется решение
 
@@ -238,6 +243,10 @@ RuStore / Google Play / iOS sequencing определяется отдельно
 ### O-011 — Exact IAP price points
 
 Не фиксировать до economy model + store/market experiments.
+
+### O-012 — Exact production timing of 77 reveal
+
+77 должен стать ранним компаньоном, но точная production FTUE секунда/порядок относительно первого power/repair beat не LOCKED. Active Prototype 0.1 тестирует `generator repair -> visible change/area unlock -> discover 77`; финальный pacing решить после P1/FTUE tests.
 
 ## REJECTED / NOT FOR MVP
 
