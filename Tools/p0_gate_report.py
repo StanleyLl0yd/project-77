@@ -13,7 +13,7 @@ import p0_event_schema as event_schema
 import p0_freeze_manifest as freeze
 import p0_order_audit as order_audit
 
-FRESH_EXPOSURE_TARGET = 10
+DEFAULT_FRESH_EXPOSURE_TARGET = 10
 TERMINAL_EVENTS = {"level_complete", "level_fail", "level_quit"}
 
 
@@ -32,7 +32,14 @@ def _load_manifest(path: Path) -> dict[str, Any]:
         raise GateReportError("unsupported freeze manifest schema")
     if value.get("gate_plan") != freeze.GATE_PLAN:
         raise GateReportError("freeze manifest gate_plan does not match the preregistered P0 gate plan")
+    verify_batch_fingerprint(value)
     return value
+
+
+def verify_batch_fingerprint(manifest: dict[str, Any]) -> None:
+    expected = freeze._canonical_hash(freeze._batch_identity(manifest))
+    if manifest.get("batch_fingerprint") != expected:
+        raise GateReportError("freeze batch_fingerprint does not match the frozen batch identity")
 
 
 def require_bound_artifact(manifest: dict[str, Any], *, allow_unbound: bool = False) -> None:
@@ -182,7 +189,11 @@ def _safe_rate(numerator: int, denominator: int) -> float | None:
 def build_operational_diagnostics(
     sessions: list[batch.SessionData],
     moderation: dict[str, batch.ModerationRecord],
+    fresh_exposure_target: int = DEFAULT_FRESH_EXPOSURE_TARGET,
 ) -> dict[str, Any]:
+    if fresh_exposure_target < 1:
+        raise GateReportError("fresh exposure target must be >= 1")
+
     diagnostics: dict[str, Any] = {}
     for variant in batch.VARIANTS:
         variant_sessions = [session for session in sessions if session.variant == variant]
@@ -232,8 +243,8 @@ def build_operational_diagnostics(
         diagnostics[variant] = {
             "sessions": len(variant_sessions),
             "fresh_exposures_with_moderation": len(fresh_sessions),
-            "fresh_exposure_target": FRESH_EXPOSURE_TARGET,
-            "fresh_exposure_target_met": len(fresh_sessions) >= FRESH_EXPOSURE_TARGET,
+            "fresh_exposure_target": fresh_exposure_target,
+            "fresh_exposure_target_met": len(fresh_sessions) >= fresh_exposure_target,
             "attempts_started": starts,
             "attempts_terminal": terminals,
             "attempts_restarted_before_terminal": restarted_before_terminal,
@@ -420,7 +431,8 @@ def main(argv: list[str] | None = None) -> int:
                 raise GateReportError("invalid variant assignment order: " + "; ".join(order_result.errors))
 
         summary = batch.summarize_batch(sessions, moderation)
-        diagnostics = build_operational_diagnostics(sessions, moderation)
+        fresh_target = int(manifest["gate_plan"]["fresh_exposures_per_variant"])
+        diagnostics = build_operational_diagnostics(sessions, moderation, fresh_target)
         summary["freeze"] = {
             "batch_id": manifest.get("batch_id"),
             "batch_fingerprint": manifest.get("batch_fingerprint"),
