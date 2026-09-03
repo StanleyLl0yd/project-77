@@ -23,7 +23,10 @@ namespace Project77.Editor
 
         static Project77ProjectBootstrap()
         {
-            EditorApplication.delayCall += ApplyBaseline;
+            if (!Application.isBatchMode)
+            {
+                EditorApplication.delayCall += ApplyBaseline;
+            }
         }
 
         [MenuItem("Project 77/Validate and Apply Prototype Baseline")]
