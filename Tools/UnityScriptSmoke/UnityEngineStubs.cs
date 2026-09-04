@@ -105,6 +105,22 @@ namespace UnityEngine
         }
     }
 
+    public sealed class AndroidJavaClass : IDisposable
+    {
+        public AndroidJavaClass(string className)
+        {
+        }
+
+        public T GetStatic<T>(string fieldName)
+        {
+            return default;
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
     public static class Application
     {
         public static string version => "stub";

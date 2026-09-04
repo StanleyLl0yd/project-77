@@ -5,6 +5,7 @@
     <Nullable>disable</Nullable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DefineConstants>$(DefineConstants);UNITY_ANDROID</DefineConstants>
     <NoWarn>$(NoWarn);CS0649</NoWarn>
   </PropertyGroup>
 

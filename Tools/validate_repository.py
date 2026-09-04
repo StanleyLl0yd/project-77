@@ -118,6 +118,10 @@ def main() -> None:
     if not isinstance(urp, str) or not urp.startswith(EXPECTED_URP_MAJOR_MINOR):
         fail(f"expected URP {EXPECTED_URP_MAJOR_MINOR}x, found {urp!r}")
 
+    android_jni = dependencies.get("com.unity.modules.androidjni")
+    if android_jni != "1.0.0":
+        fail(f"expected built-in Android JNI module 1.0.0, found {android_jni!r}")
+
     _require_fragments(
         "Assets/Project77/Editor/Project77ProjectBootstrap.cs",
         {
@@ -179,7 +183,7 @@ def main() -> None:
 
     summary = ", ".join(f"{name}={count}" for name, count in sorted(content_counts.items()))
     print(
-        f"Repository validation passed: Unity {editor_version}, URP {urp}, "
+        f"Repository validation passed: Unity {editor_version}, URP {urp}, Android JNI {android_jni}, "
         f"cloud pre-export/Android source baseline and P0 control guards locked, "
         f"Prototype 0.1 governance present, validated content: {summary}."
     )
