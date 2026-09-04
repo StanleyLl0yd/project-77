@@ -14,6 +14,7 @@ import p0_freeze_manifest as freeze
 import p0_order_audit as order_audit
 
 DEFAULT_FRESH_EXPOSURE_TARGET = 10
+FRESH_EXPOSURE_TARGET = DEFAULT_FRESH_EXPOSURE_TARGET
 TERMINAL_EVENTS = {"level_complete", "level_fail", "level_quit"}
 
 
