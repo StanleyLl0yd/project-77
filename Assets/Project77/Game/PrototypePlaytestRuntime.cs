@@ -70,7 +70,21 @@ namespace Project77.Game
                 return;
             }
 
-            DrawExportControls();
+            var selector = GetComponent<PrototypeVariantSelector>();
+            if (selector != null && selector.enabled)
+            {
+                return;
+            }
+
+            PrototypeGuiLayout.Begin();
+            try
+            {
+                DrawExportControls();
+            }
+            finally
+            {
+                PrototypeGuiLayout.End();
+            }
         }
 
         public bool TryBeginVariant(string requestedPlaytestId, string variant, out string error)
@@ -482,20 +496,37 @@ namespace Project77.Game
 
         private void DrawExportControls()
         {
-            var width = Mathf.Min(360f, Screen.width - 40f);
-            var x = Screen.width - width - 20f;
-            var y = Screen.height - 122f;
-            GUI.Box(new Rect(x, y, width, 102f), string.Empty);
-            GUI.Label(new Rect(x + 10f, y + 8f, width - 20f, 22f), $"P0 data · schema v{PrototypeAnalyticsEvent.CurrentSchemaVersion}");
+            var width = PrototypeGuiLayout.ContentWidth(480f, 16f);
+            var x = (PrototypeGuiLayout.Width - width) * 0.5f;
+            var y = Mathf.Max(96f, PrototypeGuiLayout.Height - 214f);
+            var titleStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 18,
+                fontStyle = FontStyle.Bold
+            };
+            var statusStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 16
+            };
 
+            GUI.Box(new Rect(x, y, width, 142f), string.Empty);
+            GUI.Label(
+                new Rect(x + 10f, y + 8f, width - 20f, 30f),
+                $"P0 data · schema v{PrototypeAnalyticsEvent.CurrentSchemaVersion}",
+                titleStyle);
+
+            var gap = 10f;
+            var buttonWidth = (width - 30f - gap) * 0.5f;
             GUI.enabled = !string.IsNullOrEmpty(latestEventsPath) && File.Exists(latestEventsPath);
-            if (GUI.Button(new Rect(x + 10f, y + 36f, (width - 30f) * 0.5f, 30f), "Copy events"))
+            if (GUI.Button(new Rect(x + 15f, y + 46f, buttonWidth, 50f), "Copy events"))
             {
                 CopyFile(latestEventsPath, "Events copied");
             }
 
             GUI.enabled = !string.IsNullOrEmpty(latestMetadataPath) && File.Exists(latestMetadataPath);
-            if (GUI.Button(new Rect(x + 20f + (width - 30f) * 0.5f, y + 36f, (width - 30f) * 0.5f, 30f), "Copy metadata"))
+            if (GUI.Button(new Rect(x + 15f + buttonWidth + gap, y + 46f, buttonWidth, 50f), "Copy metadata"))
             {
                 CopyFile(latestMetadataPath, "Metadata copied");
             }
@@ -503,7 +534,7 @@ namespace Project77.Game
 
             if (Time.realtimeSinceStartup < clipboardStatusUntil)
             {
-                GUI.Label(new Rect(x + 10f, y + 72f, width - 20f, 22f), clipboardStatus);
+                GUI.Label(new Rect(x + 10f, y + 104f, width - 20f, 28f), clipboardStatus, statusStyle);
             }
         }
 

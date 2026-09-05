@@ -9,6 +9,7 @@ namespace Project77.Game
         private PrototypePlaytestRuntime playtestRuntime;
         private string playtestId;
         private string setupError = string.Empty;
+        private Vector2 setupScroll;
 
         private void Awake()
         {
@@ -23,45 +24,119 @@ namespace Project77.Game
 
         private void OnGUI()
         {
-            var width = Mathf.Min(560f, Screen.width - 40f);
-            var x = (Screen.width - width) * 0.5f;
+            PrototypeGuiLayout.Begin();
+            try
+            {
+                DrawSetup();
+            }
+            finally
+            {
+                PrototypeGuiLayout.End();
+            }
+        }
+
+        private void DrawSetup()
+        {
+            var width = PrototypeGuiLayout.ContentWidth(640f, 16f);
+            var viewportHeight = Mathf.Max(220f, PrototypeGuiLayout.Height - 24f);
+            var viewport = new Rect(
+                (PrototypeGuiLayout.Width - width) * 0.5f,
+                12f,
+                width,
+                viewportHeight);
+
+            var contentWidth = Mathf.Max(220f, width - 20f);
+            var contentHeight = string.IsNullOrEmpty(setupError) ? 500f : 566f;
+            setupScroll = GUI.BeginScrollView(
+                viewport,
+                setupScroll,
+                new Rect(0f, 0f, contentWidth, contentHeight));
+
             var titleStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 24,
-                fontStyle = FontStyle.Bold
+                fontSize = 28,
+                fontStyle = FontStyle.Bold,
+                wordWrap = true
             };
             var bodyStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 14,
+                fontSize = 18,
                 wordWrap = true
             };
+            var captionStyle = new GUIStyle(bodyStyle)
+            {
+                fontSize = 16
+            };
+            var buttonStyle = new GUIStyle(GUI.skin.button)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 20,
+                fontStyle = FontStyle.Bold,
+                wordWrap = true
+            };
+            var textFieldStyle = new GUIStyle(GUI.skin.textField)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 20
+            };
 
-            GUI.Label(new Rect(x, 36f, width, 40f), "Project 77 — P0 Playtest Setup", titleStyle);
+            var y = 8f;
+            GUI.Label(new Rect(0f, y, contentWidth, 48f), "Project 77", titleStyle);
+            y += 48f;
+            GUI.Label(new Rect(0f, y, contentWidth, 34f), "P0 Playtest Setup", titleStyle);
+            y += 42f;
+
             GUI.Label(
-                new Rect(x, 82f, width, 52f),
-                "Moderator setup. Record variant order, select the assigned mechanic, then hand the device to the tester.",
+                new Rect(8f, y, contentWidth - 16f, 60f),
+                "Moderator setup: record the assigned order, choose the mechanic, then hand the device to the tester.",
                 bodyStyle);
+            y += 68f;
+
             GUI.Label(
-                new Rect(x, 136f, width, 24f),
-                $"Build: {playtestRuntime.BuildVersion} · schema v{Project77.Analytics.PrototypeAnalyticsEvent.CurrentSchemaVersion}",
-                bodyStyle);
+                new Rect(8f, y, contentWidth - 16f, 42f),
+                $"Build {playtestRuntime.BuildVersion}\nSchema v{Project77.Analytics.PrototypeAnalyticsEvent.CurrentSchemaVersion}",
+                captionStyle);
+            y += 50f;
 
-            GUI.Label(new Rect(x, 166f, width, 22f), "Anonymous playtest ID", bodyStyle);
-            playtestId = GUI.TextField(new Rect(x, 190f, width, 40f), playtestId ?? string.Empty, 64);
+            GUI.Label(new Rect(0f, y, contentWidth, 28f), "Anonymous playtest ID", bodyStyle);
+            y += 32f;
+            playtestId = GUI.TextField(
+                new Rect(8f, y, contentWidth - 16f, 48f),
+                playtestId ?? string.Empty,
+                64,
+                textFieldStyle);
+            y += 66f;
 
-            if (GUI.Button(new Rect(x, 250f, width, 54f), "A — Energy Routing"))
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 62f), "A — Energy Routing", buttonStyle))
+            {
                 Select<EnergyRoutingPrototypeController>(PrototypeVariant.EnergyRouting);
-            if (GUI.Button(new Rect(x, 316f, width, 54f), "B — Path / Expedition Routing"))
+            }
+            y += 72f;
+
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 62f), "B — Path / Expedition Routing", buttonStyle))
+            {
                 Select<PathExpeditionPrototypeController>(PrototypeVariant.PathExpeditionRouting);
-            if (GUI.Button(new Rect(x, 382f, width, 54f), "C — Flow / Network Restoration"))
+            }
+            y += 72f;
+
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 62f), "C — Flow / Network Restoration", buttonStyle))
+            {
                 Select<FlowNetworkPrototypeController>(PrototypeVariant.FlowNetworkRestoration);
+            }
+            y += 72f;
 
             if (!string.IsNullOrEmpty(setupError))
             {
-                GUI.Label(new Rect(x, 446f, width, 48f), setupError, bodyStyle);
+                var errorStyle = new GUIStyle(bodyStyle)
+                {
+                    fontStyle = FontStyle.Bold
+                };
+                GUI.Label(new Rect(8f, y, contentWidth - 16f, 58f), setupError, errorStyle);
             }
+
+            GUI.EndScrollView();
         }
 
         private void Select<T>(string variant) where T : MonoBehaviour

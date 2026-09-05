@@ -35,7 +35,7 @@ namespace Project77.Game
                 Application.version,
                 PrototypeVariant.FlowNetworkRestoration,
                 "unknown",
-                Screen.width >= Screen.height ? "landscape" : "portrait");
+                PrototypeGuiLayout.Width >= PrototypeGuiLayout.Height ? "landscape" : "portrait");
 
             Track(
                 PrototypeAnalyticsEventName.PrototypeStart,
@@ -64,14 +64,22 @@ namespace Project77.Game
 
         private void OnGUI()
         {
-            DrawHeader();
-            if (setComplete)
+            PrototypeGuiLayout.Begin();
+            try
             {
-                DrawSetComplete();
-                return;
+                DrawHeader();
+                if (setComplete)
+                {
+                    DrawSetComplete();
+                    return;
+                }
+                DrawNetwork();
+                DrawControls();
             }
-            DrawNetwork();
-            DrawControls();
+            finally
+            {
+                PrototypeGuiLayout.End();
+            }
         }
 
         private void LoadLevel(int number)
@@ -256,10 +264,10 @@ namespace Project77.Game
 
         private void DrawHeader()
         {
-            var titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 22, fontStyle = FontStyle.Bold };
-            var bodyStyle = new GUIStyle(GUI.skin.label) { fontSize = 14 };
-            GUI.Label(new Rect(20f, 12f, Screen.width - 40f, 32f), "Project 77 — Prototype C: Flow / Network Restoration", titleStyle);
-            GUI.Label(new Rect(20f, 44f, Screen.width - 40f, 24f), setComplete ? "Initial 10-level set complete." : $"Level C-{levelNumber:000} · {feedback}", bodyStyle);
+            var titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 24, fontStyle = FontStyle.Bold, wordWrap = true };
+            var bodyStyle = new GUIStyle(GUI.skin.label) { fontSize = 18, wordWrap = true };
+            GUI.Label(new Rect(20f, 12f, PrototypeGuiLayout.Width - 40f, 32f), "Project 77 — Prototype C: Flow / Network Restoration", titleStyle);
+            GUI.Label(new Rect(20f, 46f, PrototypeGuiLayout.Width - 40f, 46f), setComplete ? "Initial 10-level set complete." : $"Level C-{levelNumber:000} · {feedback}", bodyStyle);
         }
 
         private void DrawNetwork()
@@ -300,13 +308,13 @@ namespace Project77.Game
 
         private void DrawControls()
         {
-            var y = Screen.height - 64f;
+            var y = PrototypeGuiLayout.Height - 72f;
             if (PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered) &&
-                GUI.Button(new Rect(20f, y, 130f, 40f), "Reset"))
+                GUI.Button(new Rect(20f, y, 142f, 50f), "Reset"))
             {
                 RestartLevel();
             }
-            if (continuationOffered && GUI.Button(new Rect(Screen.width - 170f, y, 150f, 40f), "Next level"))
+            if (continuationOffered && GUI.Button(new Rect(PrototypeGuiLayout.Width - 172f, y, 152f, 50f), "Next level"))
             {
                 NextLevel();
             }
@@ -314,9 +322,9 @@ namespace Project77.Game
 
         private void DrawSetComplete()
         {
-            var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 20, wordWrap = true };
-            GUI.Label(new Rect(30f, 100f, Screen.width - 60f, Screen.height - 200f), "Prototype C initial set complete.\nThis is a greybox P0 comparison build.", style);
-            if (GUI.Button(new Rect(Screen.width * 0.5f - 90f, Screen.height - 80f, 180f, 44f), "Restart set"))
+            var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 22, wordWrap = true };
+            GUI.Label(new Rect(30f, 100f, PrototypeGuiLayout.Width - 60f, PrototypeGuiLayout.Height - 200f), "Prototype C initial set complete.\nThis is a greybox P0 comparison build.", style);
+            if (GUI.Button(new Rect(PrototypeGuiLayout.Width * 0.5f - 90f, PrototypeGuiLayout.Height - 88f, 180f, 52f), "Restart set"))
             {
                 setComplete = false;
                 LoadLevel(FirstLevel);
@@ -325,8 +333,8 @@ namespace Project77.Game
 
         private float GetCellSize()
         {
-            var widthFit = (Screen.width - 40f) / payload.Width;
-            var heightFit = (Screen.height - 170f) / payload.Height;
+            var widthFit = (PrototypeGuiLayout.Width - 40f) / payload.Width;
+            var heightFit = (PrototypeGuiLayout.Height - 230f) / payload.Height;
             return Mathf.Clamp(Mathf.Min(widthFit, heightFit), 44f, 100f);
         }
 
@@ -334,7 +342,7 @@ namespace Project77.Game
         {
             var width = payload.Width * cellSize;
             var height = payload.Height * cellSize;
-            return new Rect((Screen.width - width) * 0.5f, 78f + (Screen.height - 170f - height) * 0.5f, width, height);
+            return new Rect((PrototypeGuiLayout.Width - width) * 0.5f, 104f + (PrototypeGuiLayout.Height - 230f - height) * 0.5f, width, height);
         }
 
         private Rect GetCellRect(GridCell cell, Rect boardRect, float cellSize)
@@ -347,7 +355,7 @@ namespace Project77.Game
         {
             var cellSize = GetCellSize();
             var boardRect = GetBoardRect(cellSize);
-            var guiPosition = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
+            var guiPosition = PrototypeGuiLayout.ScreenToGui(screenPosition);
             if (!boardRect.Contains(guiPosition))
             {
                 cell = default;

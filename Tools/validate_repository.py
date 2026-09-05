@@ -38,6 +38,7 @@ REQUIRED_FILES = [
     "Assets/Project77/Analytics/PrototypeAnalytics.cs",
     "Assets/Project77/Analytics/PrototypeAnalyticsJson.cs",
     "Assets/Project77/Game/Project77.Game.asmdef",
+    "Assets/Project77/Game/PrototypeGuiLayout.cs",
     "Assets/Project77/Game/PrototypePlaytestRuntime.cs",
     "Assets/Project77/Game/PrototypeVariantSelector.cs",
     "Assets/Project77/Game/EnergyRoutingJsonLoader.cs",
@@ -134,6 +135,24 @@ def main() -> None:
             "Android minSdk API 26": "PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;",
             "Android targetSdk API 36": "PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;",
             "Android ARM64-only architecture": "PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;",
+        },
+    )
+
+    _require_fragments(
+        "Assets/Project77/Game/PrototypeGuiLayout.cs",
+        {
+            "DPI-aware scaling": "Screen.dpi",
+            "safe-area support": "Screen.safeArea",
+            "touch remapping": "ScreenToGui",
+            "scaled GUI matrix": "Matrix4x4.TRS",
+        },
+    )
+    _require_fragments(
+        "Assets/Project77/Game/PrototypeVariantSelector.cs",
+        {
+            "responsive setup width": "PrototypeGuiLayout.ContentWidth",
+            "scrollable setup": "GUI.BeginScrollView",
+            "large variant buttons": "fontSize = 20",
         },
     )
 
