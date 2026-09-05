@@ -43,5 +43,8 @@ jobs:
       - name: Compile Unity-facing runtime scripts with API stubs
         run: dotnet build Tools/UnityScriptSmoke/Project77.UnityScriptSmoke.csproj --configuration Release
 
+      - name: Test responsive GUI scaling profiles
+        run: dotnet run --project Tools/ResponsiveGuiSmoke/Project77.ResponsiveGuiSmoke.csproj --configuration Release
+
       - name: Compile Unity editor/build scripts with API stubs
         run: dotnet build Tools/EditorScriptSmoke/Project77.EditorScriptSmoke.csproj --configuration Release
