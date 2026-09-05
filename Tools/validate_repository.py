@@ -80,6 +80,8 @@ REQUIRED_FILES = [
     "Tools/DomainSmoke/Project77.DomainSmoke.csproj",
     "Tools/UnityScriptSmoke/Project77.UnityScriptSmoke.csproj",
     "Tools/UnityScriptSmoke/UnityEngineStubs.cs",
+    "Tools/ResponsiveGuiSmoke/Project77.ResponsiveGuiSmoke.csproj",
+    "Tools/ResponsiveGuiSmoke/Program.cs",
     "Tools/EditorScriptSmoke/Project77.EditorScriptSmoke.csproj",
     "Tools/EditorScriptSmoke/UnityEditorStubs.cs",
 ]
