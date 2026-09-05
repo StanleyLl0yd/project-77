@@ -41,7 +41,7 @@ namespace Project77.Game
                 Application.version,
                 PrototypeVariant.PathExpeditionRouting,
                 "unknown",
-                Screen.width >= Screen.height ? "landscape" : "portrait");
+                PrototypeGuiLayout.Width >= PrototypeGuiLayout.Height ? "landscape" : "portrait");
 
             Track(
                 PrototypeAnalyticsEventName.PrototypeStart,
@@ -82,16 +82,24 @@ namespace Project77.Game
 
         private void OnGUI()
         {
-            DrawHeader();
-            if (setComplete)
+            PrototypeGuiLayout.Begin();
+            try
             {
-                DrawSetComplete();
-                return;
-            }
+                DrawHeader();
+                if (setComplete)
+                {
+                    DrawSetComplete();
+                    return;
+                }
 
-            DrawBoard();
-            DrawDelayControls();
-            DrawBottomControls();
+                DrawBoard();
+                DrawDelayControls();
+                DrawBottomControls();
+            }
+            finally
+            {
+                PrototypeGuiLayout.End();
+            }
         }
 
         private void LoadLevel(int number)
@@ -466,10 +474,10 @@ namespace Project77.Game
 
         private void DrawHeader()
         {
-            var titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 22, fontStyle = FontStyle.Bold };
-            var bodyStyle = new GUIStyle(GUI.skin.label) { fontSize = 14 };
-            GUI.Label(new Rect(20f, 12f, Screen.width - 40f, 32f), "Project 77 — Prototype B: Path / Expedition Routing", titleStyle);
-            GUI.Label(new Rect(20f, 44f, Screen.width - 40f, 24f), setComplete ? "Initial 10-level set complete." : $"Level B-{levelNumber:000} · {feedback}", bodyStyle);
+            var titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 24, fontStyle = FontStyle.Bold, wordWrap = true };
+            var bodyStyle = new GUIStyle(GUI.skin.label) { fontSize = 18, wordWrap = true };
+            GUI.Label(new Rect(20f, 12f, PrototypeGuiLayout.Width - 40f, 32f), "Project 77 — Prototype B: Path / Expedition Routing", titleStyle);
+            GUI.Label(new Rect(20f, 46f, PrototypeGuiLayout.Width - 40f, 46f), setComplete ? "Initial 10-level set complete." : $"Level B-{levelNumber:000} · {feedback}", bodyStyle);
         }
 
         private void DrawBoard()
@@ -512,52 +520,65 @@ namespace Project77.Game
             {
                 return;
             }
-            var y = Screen.height - 122f;
-            var x = 20f;
+
+            var availableWidth = Mathf.Max(180f, PrototypeGuiLayout.Width - 40f);
+            var columns = availableWidth >= 660f ? 3 : availableWidth >= 430f ? 2 : 1;
+            var columnWidth = availableWidth / columns;
+            var visibleIndex = 0;
+
             foreach (var agent in payload.Agents)
             {
                 if (!plannedRoutes.ContainsKey(agent.Id))
                 {
                     continue;
                 }
+
+                var column = visibleIndex % columns;
+                var row = visibleIndex / columns;
+                var x = 20f + column * columnWidth;
+                var y = PrototypeGuiLayout.Height - 132f - row * 40f;
+                var labelWidth = Mathf.Max(94f, columnWidth - 82f);
                 var label = $"{agent.Id}: wait {startDelays[agent.Id]}";
-                GUI.Label(new Rect(x, y, 110f, 28f), label);
-                if (GUI.Button(new Rect(x + 110f, y, 34f, 28f), "-"))
+                GUI.Label(new Rect(x, y, labelWidth, 34f), label);
+
+                var minusX = x + labelWidth + 4f;
+                if (GUI.Button(new Rect(minusX, y, 34f, 34f), "-"))
                 {
                     ChangeDelay(agent.Id, -1);
                 }
-                if (GUI.Button(new Rect(x + 148f, y, 34f, 28f), "+"))
+                if (GUI.Button(new Rect(minusX + 38f, y, 34f, 34f), "+"))
                 {
                     ChangeDelay(agent.Id, 1);
                 }
-                x += 200f;
+
+                visibleIndex++;
             }
         }
 
         private void DrawBottomControls()
         {
-            var y = Screen.height - 64f;
+            var y = PrototypeGuiLayout.Height - 72f;
             if (PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered) &&
-                GUI.Button(new Rect(20f, y, 120f, 40f), "Reset plan"))
+                GUI.Button(new Rect(20f, y, 132f, 50f), "Reset plan"))
             {
                 ResetPlan();
             }
 
             if (awaitingRetry)
             {
-                if (GUI.Button(new Rect(Screen.width * 0.5f - 70f, y, 140f, 40f), "Retry plan"))
+                if (GUI.Button(new Rect(PrototypeGuiLayout.Width * 0.5f - 70f, y, 150f, 50f), "Retry plan"))
                 {
                     RetryPlan();
                 }
                 return;
             }
 
-            if (!continuationOffered && GUI.Button(new Rect(Screen.width * 0.5f - 70f, y, 140f, 40f), "Launch"))
+            if (!continuationOffered && GUI.Button(new Rect(PrototypeGuiLayout.Width * 0.5f - 70f, y, 150f, 50f), "Launch"))
             {
                 CommitPlan();
             }
 
-            if (continuationOffered && GUI.Button(new Rect(Screen.width - 170f, y, 150f, 40f), "Next level"))
+            if (continuationOffered && GUI.Button(new Rect(PrototypeGuiLayout.Width - 170f, y, 152f, 50f), "Next level"))
             {
                 NextLevel();
             }
@@ -565,9 +586,9 @@ namespace Project77.Game
 
         private void DrawSetComplete()
         {
-            var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 20, wordWrap = true };
-            GUI.Label(new Rect(30f, 100f, Screen.width - 60f, Screen.height - 200f), "Prototype B initial set complete.\nThis is a greybox P0 comparison build.", style);
-            if (GUI.Button(new Rect(Screen.width * 0.5f - 90f, Screen.height - 80f, 180f, 44f), "Restart set"))
+            var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 22, wordWrap = true };
+            GUI.Label(new Rect(30f, 100f, PrototypeGuiLayout.Width - 60f, PrototypeGuiLayout.Height - 200f), "Prototype B initial set complete.\nThis is a greybox P0 comparison build.", style);
+            if (GUI.Button(new Rect(PrototypeGuiLayout.Width * 0.5f - 90f, PrototypeGuiLayout.Height - 88f, 180f, 52f), "Restart set"))
             {
                 setComplete = false;
                 LoadLevel(FirstLevel);
@@ -607,8 +628,8 @@ namespace Project77.Game
 
         private float GetCellSize()
         {
-            var widthFit = (Screen.width - 40f) / payload.Width;
-            var heightFit = (Screen.height - 230f) / payload.Height;
+            var widthFit = (PrototypeGuiLayout.Width - 40f) / payload.Width;
+            var heightFit = (PrototypeGuiLayout.Height - 260f) / payload.Height;
             return Mathf.Clamp(Mathf.Min(widthFit, heightFit), 34f, 82f);
         }
 
@@ -616,7 +637,7 @@ namespace Project77.Game
         {
             var width = payload.Width * cellSize;
             var height = payload.Height * cellSize;
-            return new Rect((Screen.width - width) * 0.5f, 78f + (Screen.height - 230f - height) * 0.5f, width, height);
+            return new Rect((PrototypeGuiLayout.Width - width) * 0.5f, 104f + (PrototypeGuiLayout.Height - 260f - height) * 0.5f, width, height);
         }
 
         private Rect GetCellRect(GridCell cell, Rect boardRect, float cellSize)
@@ -629,7 +650,7 @@ namespace Project77.Game
         {
             var cellSize = GetCellSize();
             var boardRect = GetBoardRect(cellSize);
-            var guiPosition = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
+            var guiPosition = PrototypeGuiLayout.ScreenToGui(screenPosition);
             if (!boardRect.Contains(guiPosition))
             {
                 cell = default;
