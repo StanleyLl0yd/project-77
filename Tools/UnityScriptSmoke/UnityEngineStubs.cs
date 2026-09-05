@@ -139,6 +139,8 @@ namespace UnityEngine
     {
         public static int width => 1920;
         public static int height => 1080;
+        public static float dpi => 320f;
+        public static Rect safeArea => new Rect(0f, 0f, width, height);
     }
 
     public static class Time
@@ -155,6 +157,7 @@ namespace UnityEngine
     {
         public static Color backgroundColor { get; set; }
         public static bool enabled { get; set; } = true;
+        public static Matrix4x4 matrix { get; set; }
         public static GUISkin skin { get; } = new GUISkin();
 
         public static void Label(Rect position, string text)
@@ -174,15 +177,37 @@ namespace UnityEngine
             return false;
         }
 
+        public static bool Button(Rect position, string text, GUIStyle style)
+        {
+            return false;
+        }
+
         public static string TextField(Rect position, string text, int maxLength)
         {
             return text;
+        }
+
+        public static string TextField(Rect position, string text, int maxLength, GUIStyle style)
+        {
+            return text;
+        }
+
+        public static Vector2 BeginScrollView(Rect position, Vector2 scrollPosition, Rect viewRect)
+        {
+            return scrollPosition;
+        }
+
+        public static void EndScrollView()
+        {
         }
     }
 
     public sealed class GUISkin
     {
         public GUIStyle label { get; } = new GUIStyle();
+        public GUIStyle button { get; } = new GUIStyle();
+        public GUIStyle box { get; } = new GUIStyle();
+        public GUIStyle textField { get; } = new GUIStyle();
     }
 
     public sealed class GUIStyle
@@ -242,6 +267,19 @@ namespace UnityEngine
         public float x;
         public float y;
         public float z;
+    }
+
+    public struct Quaternion
+    {
+        public static Quaternion identity => default;
+    }
+
+    public struct Matrix4x4
+    {
+        public static Matrix4x4 TRS(Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+            return default;
+        }
     }
 
     public struct Rect
