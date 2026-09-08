@@ -517,7 +517,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         freeze.verify_manifest(
             manifest,
-            str(manifest.get("commit_sha")),
+            freeze.current_commit(),
             artifact_path=args.artifact,
         )
         sessions = discover_sessions(args.data_dir)
