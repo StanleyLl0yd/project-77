@@ -13,6 +13,7 @@
     <Compile Include="UnityEngineStubs.cs" />
     <Compile Include="../../Assets/Project77/Puzzle/**/*.cs" />
     <Compile Include="../../Assets/Project77/Analytics/**/*.cs" />
+    <Compile Include="../../Assets/Project77/Meta/**/*.cs" />
     <Compile Include="../../Assets/Project77/Game/**/*.cs" />
     <Compile Include="../../Assets/Project77/Core/**/*.cs" />
   </ItemGroup>
