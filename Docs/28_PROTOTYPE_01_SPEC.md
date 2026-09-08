@@ -14,9 +14,11 @@ Related operational documents:
 
 ## 1. Phase status
 
-**Pre-production is complete. Project 77 is in Prototype Phase.**
+**Pre-production is complete. Project 77 is in Prototype Phase — Gate P1.**
 
-Until both P0 and P1 return **CONTINUE**, the project does not expand into production scope.
+Gate P0 has an owner-authorized **CONTINUE** decision dated 2026-09-08. Energy Routing is the selected P1 core. The incomplete retained quantitative P0 evidence is documented in `33_P0_GATE_DECISION.md`.
+
+Until P1 returns **CONTINUE**, the project does not expand into production scope.
 
 ## 2. Main product hypothesis
 
@@ -76,9 +78,9 @@ A technically functional build is not a product success if these hypotheses fail
 
 Development iteration may use the fastest Unity-supported scripting/build configuration. Before P1 gate evidence is accepted, at least one representative Android device/emulator build must install and run successfully; any untested final-release-specific property must be reported as a limitation, not assumed.
 
-## 5. Exact P0 prototype variants
+## 5. P0 prototype variants — historical comparison
 
-All three are **PROVISIONAL test hypotheses**, not LOCKED game design.
+P0 compared these three hypotheses. Gate P0 is now closed for implementation purposes by D-039; Energy Routing is selected for P1.
 
 ### A — Energy Routing
 
@@ -202,7 +204,7 @@ Initial comparison intent:
 - do not count moderator-prompted continuation as voluntary;
 - compare variants using the same P0 gate definitions.
 
-The core is selected by observed evidence, not by concept-art appeal or author's preference.
+The P0 implementation decision is recorded in `33_P0_GATE_DECISION.md` and D-039. Energy Routing is the selected P1 core. The retained P0 dataset is not sufficient to claim formal quantitative superiority, so no stronger claim should be made.
 
 ## 13. P1 integrated Prototype 0.1 content
 
@@ -308,7 +310,6 @@ Minimal mocks/stubs are allowed only when they directly unblock P0/P1 testing.
 
 These are not documentation defects:
 
-- winning core mechanic;
 - exact early difficulty curve;
 - portrait vs landscape;
 - exact mystery-reveal pacing;
