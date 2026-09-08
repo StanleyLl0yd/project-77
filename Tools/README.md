@@ -69,3 +69,35 @@ python Tools/p0_gate_report.py PlaytestData/P0-001 \
   --output PlaytestData/P0-001/report.md \
   --summary-json PlaytestData/P0-001/summary.json
 ```
+
+
+## P1 playtest tooling
+
+`P1_MODERATION_TEMPLATE.csv` and `P1_SESSION_NOTES_TEMPLATE.md` capture the Gate P1 observations that telemetry cannot establish by itself: resource comprehension, puzzle-to-reward causality, repair/world-change comprehension, 77 recall, whether puzzle and island feel connected, and formal post-island voluntary continuation.
+
+`p1_event_audit.py` extends the shared event-order checks with P1 meta-state invariants. It rejects duplicate/misordered reward claims, resource spends that do not reconcile with tracked balances, generator repair without matching generator spends, area unlock before repair, 77 discovery before area unlock, and a completed prototype session missing required meta milestones.
+
+`p1_freeze_manifest.py` freezes the selected Energy Routing level revisions, P1 meta implementation files, governing contracts, exact commit/build identity, Gate P1 observation window/target and the exact Android APK. External P1 testing must use an artifact-bound freeze; `--allow-unbound-artifact` is CI/tooling smoke only.
+
+Example:
+
+```bash
+python Tools/p1_freeze_manifest.py generate \
+  --batch-id P1-001 \
+  --artifact Project77-P1.apk \
+  --output PlaytestData/P1-001/freeze.json
+
+python Tools/p1_freeze_manifest.py verify PlaytestData/P1-001/freeze.json \
+  --artifact Project77-P1.apk
+```
+
+`p1_gate_report.py` validates selected-meta session metadata/events against the freeze, re-validates the shared analytics schema, runs the P1 event-state audit, joins moderation records, and reports both telemetry reach and formal Gate P1 observations. Telemetry clicks remain distinct from moderator-qualified voluntary continuation.
+
+```bash
+python Tools/p1_gate_report.py PlaytestData/P1-001 \
+  --freeze PlaytestData/P1-001/freeze.json \
+  --artifact Project77-P1.apk \
+  --moderation PlaytestData/P1-001/moderation.csv \
+  --output PlaytestData/P1-001/report.md \
+  --summary-json PlaytestData/P1-001/summary.json
+```
