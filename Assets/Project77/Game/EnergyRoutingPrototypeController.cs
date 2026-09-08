@@ -15,6 +15,7 @@ namespace Project77.Game
 
         private enum PrototypeView
         {
+            Intro,
             Puzzle,
             Reward,
             Island
@@ -74,6 +75,12 @@ namespace Project77.Game
                     ["core_variant"] = PrototypeVariant.EnergyRouting
                 });
 
+            if (metaLoopEnabled)
+            {
+                view = PrototypeView.Intro;
+                return;
+            }
+
             LoadLevel(FirstLevel);
         }
 
@@ -112,6 +119,12 @@ namespace Project77.Game
                 if (setComplete)
                 {
                     DrawSetComplete();
+                    return;
+                }
+
+                if (metaLoopEnabled && view == PrototypeView.Intro)
+                {
+                    DrawIntro();
                     return;
                 }
 
@@ -553,6 +566,30 @@ namespace Project77.Game
                 new Rect(20f, 50f, PrototypeGuiLayout.Width - 40f, 46f),
                 $"Level A-{levelNumber:000} · {feedback}",
                 bodyStyle);
+        }
+
+        private void DrawIntro()
+        {
+            var width = PrototypeGuiLayout.ContentWidth(620f, 20f);
+            var x = (PrototypeGuiLayout.Width - width) * 0.5f;
+            var title = CenteredStyle(30, FontStyle.Bold);
+            var body = CenteredStyle(20, FontStyle.Normal);
+
+            GUI.Label(new Rect(x, 72f, width, 48f), "Project 77", title);
+            GUI.Box(new Rect(x, 138f, width, 244f), string.Empty);
+            GUI.Label(
+                new Rect(x + 24f, 164f, width - 48f, 132f),
+                "The island is silent. Its old generator is dead.\n\nA weak energy network still responds beneath the surface.",
+                body);
+            GUI.Label(
+                new Rect(x + 24f, 304f, width - 48f, 42f),
+                "Restore a route and see what wakes up.",
+                body);
+
+            if (GUI.Button(new Rect(x + 24f, 400f, width - 48f, 60f), "Begin restoration"))
+            {
+                LoadLevel(FirstLevel);
+            }
         }
 
         private void DrawReward()
