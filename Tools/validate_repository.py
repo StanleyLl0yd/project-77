@@ -57,6 +57,7 @@ REQUIRED_FILES = [
     "Assets/Project77/Tests/EditMode/PrototypeAnalyticsJsonTests.cs",
     "Assets/Project77/Tests/EditMode/PrototypeAttemptPolicyTests.cs",
     "Assets/Project77/Tests/EditMode/PrototypeMetaProgressionTests.cs",
+    "Assets/Project77/Tests/EditMode/PrototypeMetaAnalyticsTests.cs",
     "Assets/Project77/Tests/EditMode/EnergyRoutingRunnerTests.cs",
     "Assets/Project77/Tests/EditMode/PathExpeditionRunnerTests.cs",
     "Assets/Project77/Tests/EditMode/FlowNetworkRunnerTests.cs",
