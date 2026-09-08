@@ -1,6 +1,6 @@
 # Project 77 — Prototype 0.1 Implementation Backlog
 
-Status: **ACTIVE ordered backlog — Milestone G / P1**.
+Status: **ACTIVE ordered backlog — Milestone H / P1 external playtest preparation**.
 
 Gate P0 has an owner-authorized **CONTINUE** decision and Energy Routing is the selected P1 core. Quantitative P0 evidence is incomplete and explicitly documented in `33_P0_GATE_DECISION.md`.
 
@@ -218,9 +218,11 @@ DoD:
 - if CONTINUE, record winning mechanic decision in `13_DECISION_LOG.md`;
 - rejected variant presentation code may then be removed if no longer useful.
 
-## Milestone G — Selected core + meta loop — ACTIVE
+## Milestone G — Selected core + meta loop — ENGINEERING IMPLEMENTED
 
 Only starts after P0 CONTINUE.
+
+Implementation status: the integrated greybox path now includes the short intro, the existing 10 validated Energy Routing levels, reward/resources, placeholder island state, generator repair, visible change, area unlock, 77 discovery, explicit continuation choice and selected-meta telemetry. Real-device validation of the new P1 APK remains part of Milestone H.
 
 ### P77-060 — Expand selected core to Prototype 0.1 set
 
@@ -277,7 +279,7 @@ DoD:
 - no auto-advance makes voluntary continuation unmeasurable;
 - offer/click timing is logged.
 
-## Milestone H — P1 external playtest
+## Milestone H — P1 external playtest — ACTIVE
 
 ### P77-070 — P1 test build freeze
 
