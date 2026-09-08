@@ -26,6 +26,14 @@ jobs:
       - name: Test P0 operational tools
         run: python -m unittest discover -s Tools/tests -p "test_*.py"
 
+      - name: Smoke-test P1 batch freeze tools
+        run: |
+          python Tools/p1_freeze_manifest.py generate \
+            --batch-id CI-P1-SMOKE \
+            --allow-unbound-artifact \
+            --output /tmp/project77-p1-freeze.json
+          python Tools/p1_freeze_manifest.py verify /tmp/project77-p1-freeze.json
+
       - name: Smoke-test P0 batch setup tools
         run: |
           python Tools/p0_order_plan.py --participants 10 --prefix CI-P0 --output PlaytestData/ci/orders.csv --summary-json PlaytestData/ci/orders.json
