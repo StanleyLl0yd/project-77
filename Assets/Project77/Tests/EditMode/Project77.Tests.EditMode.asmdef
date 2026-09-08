@@ -3,7 +3,8 @@
   "rootNamespace": "Project77.Tests",
   "references": [
     "Project77.Puzzle",
-    "Project77.Analytics"
+    "Project77.Analytics",
+    "Project77.Meta"
   ],
   "includePlatforms": [
     "Editor"

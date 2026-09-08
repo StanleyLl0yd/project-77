@@ -1,11 +1,7 @@
 {
-  "name": "Project77.Game",
-  "rootNamespace": "Project77.Game",
-  "references": [
-    "Project77.Puzzle",
-    "Project77.Analytics",
-    "Project77.Meta"
-  ],
+  "name": "Project77.Meta",
+  "rootNamespace": "Project77.Meta",
+  "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
@@ -14,5 +10,5 @@
   "autoReferenced": true,
   "defineConstraints": [],
   "versionDefines": [],
-  "noEngineReferences": false
+  "noEngineReferences": true
 }

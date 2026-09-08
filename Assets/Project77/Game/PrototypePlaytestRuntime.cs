@@ -18,6 +18,7 @@ namespace Project77.Game
         private JsonLinesPrototypeAnalyticsSink fileSink;
         private PrototypeBuildInfo buildInfo;
         private string selectedVariant;
+        private string selectedCoreVariant;
         private string playtestId;
         private string sessionId;
         private string eventsPath;
@@ -111,6 +112,39 @@ namespace Project77.Game
 
             playtestId = normalizedId;
             selectedVariant = variant;
+            selectedCoreVariant = variant;
+            StartSession(writeMetadata: true);
+            return true;
+        }
+
+        public bool TryBeginSelectedMeta(
+            string requestedPlaytestId,
+            string coreVariant,
+            out string error)
+        {
+            error = null;
+            if (sessionActive)
+            {
+                error = "A playtest session is already active.";
+                return false;
+            }
+
+            if (!PrototypeAnalyticsValidator.IsKnownCoreVariant(coreVariant))
+            {
+                error = "Unknown selected core variant.";
+                return false;
+            }
+
+            var normalizedId = NormalizePlaytestId(requestedPlaytestId);
+            if (normalizedId == null)
+            {
+                error = "Playtest ID must be 1-64 characters and contain no line breaks.";
+                return false;
+            }
+
+            playtestId = normalizedId;
+            selectedVariant = PrototypeVariant.SelectedMeta;
+            selectedCoreVariant = coreVariant;
             StartSession(writeMetadata: true);
             return true;
         }
@@ -289,6 +323,7 @@ namespace Project77.Game
                 android_api = AndroidApiLevel(),
                 screen_orientation = CurrentOrientation(),
                 session_started_utc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                core_variant = selectedCoreVariant,
                 levels = LoadLevelManifest(selectedVariant)
             };
 
@@ -305,7 +340,8 @@ namespace Project77.Game
             for (var number = FirstLevel; number <= LastLevel; number++)
             {
                 PrototypeLevelDefinition level;
-                if (variant == PrototypeVariant.EnergyRouting)
+                if (variant == PrototypeVariant.EnergyRouting ||
+                    (variant == PrototypeVariant.SelectedMeta && selectedCoreVariant == PrototypeVariant.EnergyRouting))
                 {
                     level = EnergyRoutingJsonLoader.LoadResource($"A-{number:000}");
                 }
@@ -319,7 +355,7 @@ namespace Project77.Game
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Unsupported P0 variant '{variant}'.");
+                    throw new InvalidOperationException($"Unsupported prototype variant '{variant}' with core '{selectedCoreVariant}'.");
                 }
 
                 records[number - FirstLevel] = new LevelRevisionRecord
@@ -348,7 +384,7 @@ namespace Project77.Game
                 null,
                 new Dictionary<string, object>
                 {
-                    ["tutorial_step_id"] = TutorialStepId(selectedVariant),
+                    ["tutorial_step_id"] = TutorialStepId(selectedCoreVariant),
                     ["exposure_index"] = 1,
                     ["presentation_type"] = "text",
                     ["auto_advance_ms"] = null
@@ -366,7 +402,7 @@ namespace Project77.Game
                 new Dictionary<string, object>
                 {
                     ["entry_point"] = entryPoint,
-                    ["core_variant"] = selectedVariant
+                    ["core_variant"] = selectedCoreVariant
                 }));
         }
 
@@ -514,7 +550,7 @@ namespace Project77.Game
             GUI.Box(new Rect(x, y, width, 142f), string.Empty);
             GUI.Label(
                 new Rect(x + 10f, y + 8f, width - 20f, 30f),
-                $"P0 data · schema v{PrototypeAnalyticsEvent.CurrentSchemaVersion}",
+                $"Prototype data · schema v{PrototypeAnalyticsEvent.CurrentSchemaVersion}",
                 titleStyle);
 
             var gap = 10f;
@@ -603,6 +639,7 @@ namespace Project77.Game
             if (variant == PrototypeVariant.EnergyRouting) return "A";
             if (variant == PrototypeVariant.PathExpeditionRouting) return "B";
             if (variant == PrototypeVariant.FlowNetworkRestoration) return "C";
+            if (variant == PrototypeVariant.SelectedMeta) return "P1";
             return "X";
         }
 
@@ -660,6 +697,7 @@ namespace Project77.Game
             public string app_version;
             public string unity_version;
             public string prototype_variant;
+            public string core_variant;
             public string device_model;
             public string operating_system;
             public int android_api;

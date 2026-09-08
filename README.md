@@ -8,21 +8,15 @@ The game begins as a small mystery about restoring an abandoned island. Over tim
 
 ## Current status
 
-**Prototype Phase — Prototype 0.1**
+**Prototype Phase — Prototype 0.1 / Gate P1**
 
-Pre-production is complete. The current goal is to validate the core + meta loop before committing to production art, monetization systems, a large backend, or large-scale content production.
+Pre-production is complete. Gate P0 has an owner-authorized **CONTINUE** decision. **Energy Routing** is now the selected core for the integrated P1 prototype; the retained P0 evidence limitation is documented in `Docs/33_P0_GATE_DECISION.md`.
 
 Active test flow:
 
-`Puzzle -> Reward -> Island Change / Discovery -> Next Puzzle`
+`Energy Routing -> Reward -> Generator Repair -> Island Change -> Area Unlock -> Discover 77 -> Voluntary Next Puzzle`
 
-P0 first compares three greybox hypotheses:
-
-- A — Energy Routing (current favorite)
-- B — Path / Expedition Routing
-- C — Flow / Network Restoration
-
-Each starts with a minimum of 10 validated test levels. After P0 selects a winner, P1 integrates that mechanic into a 10–20-level path ending with generator repair, an island-area unlock, and discovery of robot **77**.
+P1 uses the validated 10-level Energy Routing set as the initial integrated path. Path / Expedition Routing and Flow / Network Restoration remain P0/debug implementations while P1 validates whether the meta loop increases desire to continue.
 
 ## Start here
 

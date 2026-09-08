@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Project77.Analytics;
+using Project77.Meta;
 using Project77.Puzzle;
 using Project77.Puzzle.EnergyRouting;
 using UnityEngine;
@@ -12,30 +13,54 @@ namespace Project77.Game
         private const int FirstLevel = 1;
         private const int LastLevel = 10;
 
+        private enum PrototypeView
+        {
+            Puzzle,
+            Reward,
+            Island
+        }
+
         private readonly EnergyRoutingRunner runner = new EnergyRoutingRunner();
         private readonly List<GridCell> dragPath = new List<GridCell>();
         private readonly InMemoryPrototypeAnalyticsSink analytics = new InMemoryPrototypeAnalyticsSink();
+        private readonly PrototypeMetaProgression meta = new PrototypeMetaProgression();
 
         private PrototypeAnalyticsContext analyticsContext;
         private EnergyRoutingPayload payload;
+        private PrototypeLevelReward pendingReward;
+        private PrototypeView view = PrototypeView.Puzzle;
         private int levelNumber = FirstLevel;
         private int attemptIndex = 1;
         private int validInteractionCount;
         private int invalidInteractionCount;
         private string activePairId;
         private string feedback = "Connect matching nodes without crossing paths.";
+        private string playtestId = "local_debug";
+        private string continuationContext = "post_level";
         private long levelStartMs;
+        private long sessionStartMs;
         private long offerTimestampMs;
         private bool continuationOffered;
         private bool setComplete;
+        private bool metaLoopEnabled;
+
+        public void ConfigureSelectedMeta(string anonymousPlaytestId)
+        {
+            metaLoopEnabled = true;
+            if (!string.IsNullOrWhiteSpace(anonymousPlaytestId))
+            {
+                playtestId = anonymousPlaytestId;
+            }
+        }
 
         private void Start()
         {
+            sessionStartMs = NowMs();
             analyticsContext = new PrototypeAnalyticsContext(
                 Guid.NewGuid().ToString("N"),
-                "local_debug",
+                playtestId,
                 Application.version,
-                PrototypeVariant.EnergyRouting,
+                metaLoopEnabled ? PrototypeVariant.SelectedMeta : PrototypeVariant.EnergyRouting,
                 "unknown",
                 PrototypeGuiLayout.Width >= PrototypeGuiLayout.Height ? "landscape" : "portrait");
 
@@ -54,7 +79,10 @@ namespace Project77.Game
 
         private void Update()
         {
-            if (setComplete || continuationOffered || runner.Status != PuzzleRunStatus.Active)
+            if (view != PrototypeView.Puzzle ||
+                setComplete ||
+                continuationOffered ||
+                runner.Status != PuzzleRunStatus.Active)
             {
                 return;
             }
@@ -81,13 +109,25 @@ namespace Project77.Game
             PrototypeGuiLayout.Begin();
             try
             {
-                DrawHeader();
                 if (setComplete)
                 {
                     DrawSetComplete();
                     return;
                 }
 
+                if (metaLoopEnabled && view == PrototypeView.Reward)
+                {
+                    DrawReward();
+                    return;
+                }
+
+                if (metaLoopEnabled && view == PrototypeView.Island)
+                {
+                    DrawIsland();
+                    return;
+                }
+
+                DrawHeader();
                 DrawBoard();
                 DrawControls();
             }
@@ -105,12 +145,15 @@ namespace Project77.Game
             payload = (EnergyRoutingPayload)level.Payload;
             runner.Load(level);
             runner.Start();
+            view = PrototypeView.Puzzle;
+            pendingReward = null;
             attemptIndex = 1;
             validInteractionCount = 0;
             invalidInteractionCount = 0;
             activePairId = null;
             dragPath.Clear();
             continuationOffered = false;
+            continuationContext = "post_level";
             levelStartMs = NowMs();
             feedback = "Connect matching nodes without crossing paths.";
 
@@ -193,7 +236,14 @@ namespace Project77.Game
             if (runner.Status == PuzzleRunStatus.Succeeded)
             {
                 TrackLevelComplete();
-                OfferContinuation();
+                if (metaLoopEnabled)
+                {
+                    ShowReward();
+                }
+                else
+                {
+                    OfferContinuation("post_level");
+                }
             }
         }
 
@@ -237,6 +287,157 @@ namespace Project77.Game
                 });
         }
 
+        private void ShowReward()
+        {
+            pendingReward = meta.RewardForLevel(levelNumber);
+            view = PrototypeView.Reward;
+            continuationOffered = false;
+
+            Track(
+                PrototypeAnalyticsEventName.RewardShown,
+                runner.Level.Id,
+                runner.Level.Revision,
+                new Dictionary<string, object>
+                {
+                    ["reward_id"] = pendingReward.RewardId,
+                    ["reward_source"] = "level_complete",
+                    ["scrap_amount"] = pendingReward.ScrapAmount,
+                    ["energy_amount"] = pendingReward.EnergyAmount
+                });
+        }
+
+        private void ClaimReward()
+        {
+            if (pendingReward == null || !meta.ClaimReward(pendingReward))
+            {
+                return;
+            }
+
+            Track(
+                PrototypeAnalyticsEventName.RewardClaimed,
+                runner.Level.Id,
+                runner.Level.Revision,
+                new Dictionary<string, object>
+                {
+                    ["reward_id"] = pendingReward.RewardId,
+                    ["claim_mode"] = "explicit",
+                    ["scrap_amount"] = pendingReward.ScrapAmount,
+                    ["energy_amount"] = pendingReward.EnergyAmount
+                });
+
+            pendingReward = null;
+            view = PrototypeView.Island;
+            continuationOffered = false;
+
+            if ((!meta.GeneratorRepaired && !meta.CanRepairGenerator) ||
+                meta.Robot77Discovered)
+            {
+                OfferContinuation("post_reward");
+            }
+        }
+
+        private void RepairGenerator()
+        {
+            var result = meta.RepairGenerator();
+            if (!result.Accepted)
+            {
+                return;
+            }
+
+            Track(
+                PrototypeAnalyticsEventName.ResourceSpend,
+                null,
+                null,
+                new Dictionary<string, object>
+                {
+                    ["resource_type"] = "scrap",
+                    ["amount"] = result.ScrapSpent,
+                    ["sink_id"] = PrototypeMetaProgression.GeneratorSinkId,
+                    ["balance_after"] = meta.Scrap
+                });
+            Track(
+                PrototypeAnalyticsEventName.ResourceSpend,
+                null,
+                null,
+                new Dictionary<string, object>
+                {
+                    ["resource_type"] = "energy",
+                    ["amount"] = result.EnergySpent,
+                    ["sink_id"] = PrototypeMetaProgression.GeneratorSinkId,
+                    ["balance_after"] = meta.Energy
+                });
+            Track(
+                PrototypeAnalyticsEventName.GeneratorRepair,
+                null,
+                null,
+                new Dictionary<string, object>
+                {
+                    ["repair_stage"] = 1,
+                    ["scrap_spent"] = result.ScrapSpent,
+                    ["energy_spent"] = result.EnergySpent,
+                    ["time_since_session_start_ms"] = (int)Math.Max(0, NowMs() - sessionStartMs)
+                });
+            Track(
+                PrototypeAnalyticsEventName.IslandChange,
+                null,
+                null,
+                new Dictionary<string, object>
+                {
+                    ["change_id"] = "generator_power_on",
+                    ["change_type"] = "power_on",
+                    ["caused_by"] = "generator_repair"
+                });
+        }
+
+        private void UnlockArea()
+        {
+            if (!meta.UnlockFirstArea())
+            {
+                return;
+            }
+
+            Track(
+                PrototypeAnalyticsEventName.AreaUnlock,
+                null,
+                null,
+                new Dictionary<string, object>
+                {
+                    ["area_id"] = PrototypeMetaProgression.FirstAreaId,
+                    ["unlock_source"] = "generator_repair"
+                });
+            Track(
+                PrototypeAnalyticsEventName.IslandChange,
+                null,
+                null,
+                new Dictionary<string, object>
+                {
+                    ["change_id"] = "generator_annex_open",
+                    ["change_type"] = "unlock_visual",
+                    ["caused_by"] = "area_unlock"
+                });
+        }
+
+        private void DiscoverRobot77()
+        {
+            if (!meta.DiscoverRobot77())
+            {
+                return;
+            }
+
+            Track(
+                PrototypeAnalyticsEventName.Robot77Discovered,
+                null,
+                null,
+                new Dictionary<string, object>
+                {
+                    ["discovery_id"] = PrototypeMetaProgression.Robot77DiscoveryId,
+                    ["time_since_session_start_ms"] = (int)Math.Max(0, NowMs() - sessionStartMs),
+                    ["levels_completed_before_discovery"] = levelNumber
+                });
+
+            OfferContinuation("post_77_discovery");
+        }
+
         private void NextLevel()
         {
             if (!continuationOffered)
@@ -250,7 +451,7 @@ namespace Project77.Game
                 runner.Level.Revision,
                 new Dictionary<string, object>
                 {
-                    ["offer_context"] = "post_level",
+                    ["offer_context"] = continuationContext,
                     ["next_level_id"] = levelNumber < LastLevel ? $"A-{levelNumber + 1:000}" : "A-END",
                     ["ms_since_offer"] = (int)Math.Max(0, NowMs() - offerTimestampMs),
                     ["offer_sequence_index"] = levelNumber
@@ -265,9 +466,10 @@ namespace Project77.Game
             LoadLevel(levelNumber + 1);
         }
 
-        private void OfferContinuation()
+        private void OfferContinuation(string offerContext)
         {
             continuationOffered = true;
+            continuationContext = offerContext;
             offerTimestampMs = NowMs();
             Track(
                 PrototypeAnalyticsEventName.NextPuzzleOffered,
@@ -275,7 +477,7 @@ namespace Project77.Game
                 runner.Level.Revision,
                 new Dictionary<string, object>
                 {
-                    ["offer_context"] = "post_level",
+                    ["offer_context"] = offerContext,
                     ["next_level_id"] = levelNumber < LastLevel ? $"A-{levelNumber + 1:000}" : "A-END",
                     ["offer_sequence_index"] = levelNumber
                 });
@@ -332,7 +534,8 @@ namespace Project77.Game
             var titleStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 26,
-                fontStyle = FontStyle.Bold
+                fontStyle = FontStyle.Bold,
+                wordWrap = true
             };
             var bodyStyle = new GUIStyle(GUI.skin.label)
             {
@@ -340,11 +543,131 @@ namespace Project77.Game
                 wordWrap = true
             };
 
-            GUI.Label(new Rect(20f, 14f, PrototypeGuiLayout.Width - 40f, 34f), "Project 77 — Prototype A: Energy Routing", titleStyle);
             GUI.Label(
-                new Rect(20f, 48f, PrototypeGuiLayout.Width - 40f, 46f),
-                setComplete ? "Initial 10-level set complete." : $"Level A-{levelNumber:000} · {feedback}",
+                new Rect(20f, 14f, PrototypeGuiLayout.Width - 40f, 36f),
+                metaLoopEnabled
+                    ? "Project 77 — P1: Energy Routing + Island"
+                    : "Project 77 — Prototype A: Energy Routing",
+                titleStyle);
+            GUI.Label(
+                new Rect(20f, 50f, PrototypeGuiLayout.Width - 40f, 46f),
+                $"Level A-{levelNumber:000} · {feedback}",
                 bodyStyle);
+        }
+
+        private void DrawReward()
+        {
+            var width = PrototypeGuiLayout.ContentWidth(620f, 20f);
+            var x = (PrototypeGuiLayout.Width - width) * 0.5f;
+            var title = CenteredStyle(28, FontStyle.Bold);
+            var body = CenteredStyle(20, FontStyle.Normal);
+
+            GUI.Label(new Rect(x, 70f, width, 44f), "Puzzle complete", title);
+            GUI.Box(new Rect(x, 132f, width, 220f), string.Empty);
+            GUI.Label(new Rect(x + 20f, 154f, width - 40f, 40f), "Recovered resources", body);
+            GUI.Label(
+                new Rect(x + 20f, 206f, width - 40f, 70f),
+                $"+{pendingReward.ScrapAmount} Scrap\n+{pendingReward.EnergyAmount} Energy",
+                title);
+
+            if (GUI.Button(new Rect(x + 20f, 292f, width - 40f, 52f), "Claim reward"))
+            {
+                ClaimReward();
+            }
+        }
+
+        private void DrawIsland()
+        {
+            var width = PrototypeGuiLayout.ContentWidth(660f, 18f);
+            var x = (PrototypeGuiLayout.Width - width) * 0.5f;
+            var title = CenteredStyle(28, FontStyle.Bold);
+            var body = CenteredStyle(18, FontStyle.Normal);
+            var status = CenteredStyle(20, FontStyle.Bold);
+
+            GUI.Label(new Rect(x, 28f, width, 44f), "Abandoned Island", title);
+            GUI.Label(
+                new Rect(x, 72f, width, 38f),
+                $"Scrap {meta.Scrap}   ·   Energy {meta.Energy}",
+                status);
+
+            GUI.Box(new Rect(x, 124f, width, 252f), string.Empty);
+            GUI.Label(
+                new Rect(x + 20f, 144f, width - 40f, 34f),
+                meta.GeneratorRepaired ? "GENERATOR: ONLINE" : "GENERATOR: DAMAGED",
+                status);
+            GUI.Label(
+                new Rect(x + 20f, 184f, width - 40f, 34f),
+                meta.AreaUnlocked ? "GENERATOR ANNEX: OPEN" : "GENERATOR ANNEX: SEALED",
+                body);
+            GUI.Label(
+                new Rect(x + 20f, 222f, width - 40f, 72f),
+                meta.Robot77Discovered
+                    ? "77: damaged robot found. Its systems are dormant, but it reacted to restored power."
+                    : "77: no contact",
+                body);
+
+            if (!meta.GeneratorRepaired && meta.CanRepairGenerator)
+            {
+                GUI.Label(
+                    new Rect(x + 20f, 294f, width - 40f, 36f),
+                    "The generator can be repaired with the resources you recovered.",
+                    body);
+                if (GUI.Button(
+                        new Rect(x + 20f, 388f, width - 40f, 56f),
+                        $"Repair generator — {PrototypeMetaProgression.GeneratorScrapCost} Scrap + {PrototypeMetaProgression.GeneratorEnergyCost} Energy"))
+                {
+                    RepairGenerator();
+                }
+                return;
+            }
+
+            if (!meta.GeneratorRepaired)
+            {
+                GUI.Label(
+                    new Rect(x + 20f, 294f, width - 40f, 48f),
+                    $"Repair requires {PrototypeMetaProgression.GeneratorScrapCost} Scrap and {PrototypeMetaProgression.GeneratorEnergyCost} Energy.",
+                    body);
+            }
+            else if (!meta.AreaUnlocked)
+            {
+                GUI.Label(
+                    new Rect(x + 20f, 294f, width - 40f, 48f),
+                    "Power is back. A gate beside the generator has unlocked.",
+                    body);
+                if (GUI.Button(new Rect(x + 20f, 388f, width - 40f, 56f), "Open powered area"))
+                {
+                    UnlockArea();
+                }
+                return;
+            }
+            else if (!meta.Robot77Discovered)
+            {
+                GUI.Label(
+                    new Rect(x + 20f, 294f, width - 40f, 48f),
+                    "A weak signal is coming from inside the opened annex.",
+                    body);
+                if (GUI.Button(new Rect(x + 20f, 388f, width - 40f, 56f), "Investigate signal"))
+                {
+                    DiscoverRobot77();
+                }
+                return;
+            }
+
+            if (continuationOffered)
+            {
+                GUI.Label(
+                    new Rect(x + 20f, 388f, width - 40f, 38f),
+                    meta.Robot77Discovered
+                        ? "The island changed. Another energy route is available."
+                        : "You need more resources. Another route is available.",
+                    body);
+                if (GUI.Button(
+                        new Rect(x + 20f, 438f, width - 40f, 58f),
+                        levelNumber < LastLevel ? "Start next puzzle" : "Finish prototype"))
+                {
+                    NextLevel();
+                }
+            }
         }
 
         private void DrawBoard()
@@ -390,7 +713,9 @@ namespace Project77.Game
                 RestartLevel();
             }
 
-            if (continuationOffered && GUI.Button(new Rect(PrototypeGuiLayout.Width - 172f, y, 152f, 50f), "Next level"))
+            if (!metaLoopEnabled &&
+                continuationOffered &&
+                GUI.Button(new Rect(PrototypeGuiLayout.Width - 172f, y, 152f, 50f), "Next level"))
             {
                 NextLevel();
             }
@@ -406,14 +731,30 @@ namespace Project77.Game
             };
             GUI.Label(
                 new Rect(30f, 100f, PrototypeGuiLayout.Width - 60f, PrototypeGuiLayout.Height - 200f),
-                "Prototype A initial set complete.\nThis is a greybox build for P0 comparison, not production gameplay.",
+                metaLoopEnabled
+                    ? "Prototype 0.1 P1 path complete.\nPuzzle → reward → repair → island change → 77 → continuation is now implemented."
+                    : "Prototype A initial set complete.\nThis is a greybox build for P0 comparison, not production gameplay.",
                 style);
 
-            if (GUI.Button(new Rect(PrototypeGuiLayout.Width * 0.5f - 90f, PrototypeGuiLayout.Height - 88f, 180f, 52f), "Restart set"))
+            if (!metaLoopEnabled &&
+                GUI.Button(
+                    new Rect(PrototypeGuiLayout.Width * 0.5f - 90f, PrototypeGuiLayout.Height - 88f, 180f, 52f),
+                    "Restart set"))
             {
                 setComplete = false;
                 LoadLevel(FirstLevel);
             }
+        }
+
+        private static GUIStyle CenteredStyle(int fontSize, FontStyle fontStyle)
+        {
+            return new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = fontSize,
+                fontStyle = fontStyle,
+                wordWrap = true
+            };
         }
 
         private void DrawPath(string pairId, IReadOnlyList<GridCell> path, Rect boardRect, float cellSize, float insetFactor)
@@ -459,7 +800,11 @@ namespace Project77.Game
         {
             var width = payload.Width * cellSize;
             var height = payload.Height * cellSize;
-            return new Rect((PrototypeGuiLayout.Width - width) * 0.5f, 104f + (PrototypeGuiLayout.Height - 230f - height) * 0.5f, width, height);
+            return new Rect(
+                (PrototypeGuiLayout.Width - width) * 0.5f,
+                104f + (PrototypeGuiLayout.Height - 230f - height) * 0.5f,
+                width,
+                height);
         }
 
         private Rect GetCellRect(GridCell cell, Rect boardRect, float cellSize)

@@ -1,6 +1,8 @@
 # Project 77 — Prototype 0.1 Implementation Backlog
 
-Status: **ACTIVE ordered backlog**.
+Status: **ACTIVE ordered backlog — Milestone G / P1**.
+
+Gate P0 has an owner-authorized **CONTINUE** decision and Energy Routing is the selected P1 core. Quantitative P0 evidence is incomplete and explicitly documented in `33_P0_GATE_DECISION.md`.
 
 This backlog is executable scope for the current phase. `28_PROTOTYPE_01_SPEC.md` remains the implementation contract; `18_PRODUCT_GATES.md` remains the gate authority.
 
@@ -188,7 +190,7 @@ DoD:
 
 - minimum **10** validated levels with stable IDs/revisions.
 
-## Milestone F — P0 instrumentation and playtest
+## Milestone F — P0 instrumentation and playtest — DECISION RECORDED
 
 ### P77-050 — P0 build/revision freeze
 
@@ -216,7 +218,7 @@ DoD:
 - if CONTINUE, record winning mechanic decision in `13_DECISION_LOG.md`;
 - rejected variant presentation code may then be removed if no longer useful.
 
-## Milestone G — Selected core + meta loop
+## Milestone G — Selected core + meta loop — ACTIVE
 
 Only starts after P0 CONTINUE.
 

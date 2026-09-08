@@ -19,6 +19,7 @@ REQUIRED_FILES = [
     "Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md",
     "Docs/31_ENGINEERING_CONVENTIONS.md",
     "Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md",
+    "Docs/33_P0_GATE_DECISION.md",
     "ProjectSettings/ProjectVersion.txt",
     "Packages/manifest.json",
     "Assets/Project77/Core/PrototypeEntryPoint.cs",
@@ -37,6 +38,8 @@ REQUIRED_FILES = [
     "Assets/Project77/Puzzle/FlowNetworkRestoration/FlowNetworkRunner.cs",
     "Assets/Project77/Analytics/PrototypeAnalytics.cs",
     "Assets/Project77/Analytics/PrototypeAnalyticsJson.cs",
+    "Assets/Project77/Meta/Project77.Meta.asmdef",
+    "Assets/Project77/Meta/PrototypeMetaProgression.cs",
     "Assets/Project77/Game/Project77.Game.asmdef",
     "Assets/Project77/Game/PrototypeGuiLayout.cs",
     "Assets/Project77/Game/PrototypePlaytestRuntime.cs",
@@ -53,6 +56,8 @@ REQUIRED_FILES = [
     "Assets/Project77/Tests/EditMode/PrototypeAnalyticsTests.cs",
     "Assets/Project77/Tests/EditMode/PrototypeAnalyticsJsonTests.cs",
     "Assets/Project77/Tests/EditMode/PrototypeAttemptPolicyTests.cs",
+    "Assets/Project77/Tests/EditMode/PrototypeMetaProgressionTests.cs",
+    "Assets/Project77/Tests/EditMode/PrototypeMetaAnalyticsTests.cs",
     "Assets/Project77/Tests/EditMode/EnergyRoutingRunnerTests.cs",
     "Assets/Project77/Tests/EditMode/PathExpeditionRunnerTests.cs",
     "Assets/Project77/Tests/EditMode/FlowNetworkRunnerTests.cs",
@@ -158,6 +163,34 @@ def main() -> None:
         },
     )
 
+    _require_fragments(
+        "Assets/Project77/Meta/PrototypeMetaProgression.cs",
+        {
+            "P1 reward fixture": "RewardForLevel",
+            "generator repair": "RepairGenerator",
+            "area unlock": "UnlockFirstArea",
+            "77 discovery": "DiscoverRobot77",
+        },
+    )
+    _require_fragments(
+        "Assets/Project77/Game/EnergyRoutingPrototypeController.cs",
+        {
+            "selected-meta mode": "PrototypeVariant.SelectedMeta",
+            "reward event": "PrototypeAnalyticsEventName.RewardShown",
+            "generator repair event": "PrototypeAnalyticsEventName.GeneratorRepair",
+            "area unlock event": "PrototypeAnalyticsEventName.AreaUnlock",
+            "77 discovery event": "PrototypeAnalyticsEventName.Robot77Discovered",
+            "voluntary continuation": "post_77_discovery",
+        },
+    )
+    _require_fragments(
+        "Assets/Project77/Game/PrototypePlaytestRuntime.cs",
+        {
+            "selected-meta session": "TryBeginSelectedMeta",
+            "selected core metadata": "core_variant = selectedCoreVariant",
+        },
+    )
+
     restart_guard = "PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered)"
     _require_fragments(
         "Assets/Project77/Game/EnergyRoutingPrototypeController.cs",
@@ -205,7 +238,7 @@ def main() -> None:
     summary = ", ".join(f"{name}={count}" for name, count in sorted(content_counts.items()))
     print(
         f"Repository validation passed: Unity {editor_version}, URP {urp}, Android JNI {android_jni}, "
-        f"cloud pre-export/Android source baseline and P0 control guards locked, "
+        f"cloud pre-export/Android source baseline, P0 control guards and P1 meta invariants locked, "
         f"Prototype 0.1 governance present, validated content: {summary}."
     )
 

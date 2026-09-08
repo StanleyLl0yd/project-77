@@ -48,5 +48,8 @@
     "planets",
     "ship_gameplay",
     "mass_content_production"
-  ]
+  ],
+  "active_stage": "Prototype 0.1 / Gate P1",
+  "p0_decision": "CONTINUE",
+  "selected_core": "energy_routing"
 }

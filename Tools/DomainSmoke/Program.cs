@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Project77.Analytics;
+using Project77.Meta;
 using Project77.Puzzle;
 using Project77.Puzzle.EnergyRouting;
 using Project77.Puzzle.FlowNetworkRestoration;
@@ -14,6 +15,7 @@ internal static class Program
         PathExpeditionSmoke();
         FlowNetworkSmoke();
         AnalyticsSmoke();
+        MetaSmoke();
         Console.WriteLine("Project 77 pure-domain smoke checks passed.");
     }
 
@@ -119,6 +121,17 @@ internal static class Program
         var sink = new InMemoryPrototypeAnalyticsSink();
         sink.Track(analyticsEvent);
         Assert(sink.Events.Count == 1, "Analytics smoke failed.");
+    }
+
+    private static void MetaSmoke()
+    {
+        var meta = new PrototypeMetaProgression();
+        Assert(meta.ClaimReward(meta.RewardForLevel(1)), "First P1 reward claim failed.");
+        Assert(meta.ClaimReward(meta.RewardForLevel(2)), "Second P1 reward claim failed.");
+        Assert(meta.CanRepairGenerator, "P1 generator should be repairable after two rewards.");
+        Assert(meta.RepairGenerator().Accepted, "P1 generator repair failed.");
+        Assert(meta.UnlockFirstArea(), "P1 area unlock failed.");
+        Assert(meta.DiscoverRobot77(), "P1 robot 77 discovery failed.");
     }
 
     private static void Assert(bool condition, string message)
