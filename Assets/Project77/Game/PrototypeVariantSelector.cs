@@ -19,7 +19,7 @@ namespace Project77.Game
                 playtestRuntime = gameObject.AddComponent<PrototypePlaytestRuntime>();
             }
 
-            playtestId = "p0-" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            playtestId = "p1-" + Guid.NewGuid().ToString("N").Substring(0, 8);
         }
 
         private void OnGUI()
@@ -46,7 +46,7 @@ namespace Project77.Game
                 viewportHeight);
 
             var contentWidth = Mathf.Max(220f, width - 20f);
-            var contentHeight = string.IsNullOrEmpty(setupError) ? 500f : 566f;
+            var contentHeight = string.IsNullOrEmpty(setupError) ? 690f : 756f;
             setupScroll = GUI.BeginScrollView(
                 viewport,
                 setupScroll,
@@ -69,11 +69,22 @@ namespace Project77.Game
             {
                 fontSize = 16
             };
+            var sectionStyle = new GUIStyle(bodyStyle)
+            {
+                fontSize = 18,
+                fontStyle = FontStyle.Bold
+            };
             var buttonStyle = new GUIStyle(GUI.skin.button)
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 20,
                 fontStyle = FontStyle.Bold,
+                wordWrap = true
+            };
+            var debugButtonStyle = new GUIStyle(GUI.skin.button)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 17,
                 wordWrap = true
             };
             var textFieldStyle = new GUIStyle(GUI.skin.textField)
@@ -85,14 +96,14 @@ namespace Project77.Game
             var y = 8f;
             GUI.Label(new Rect(0f, y, contentWidth, 48f), "Project 77", titleStyle);
             y += 48f;
-            GUI.Label(new Rect(0f, y, contentWidth, 34f), "P0 Playtest Setup", titleStyle);
-            y += 42f;
+            GUI.Label(new Rect(0f, y, contentWidth, 34f), "Prototype 0.1 — P1", titleStyle);
+            y += 44f;
 
             GUI.Label(
-                new Rect(8f, y, contentWidth - 16f, 60f),
-                "Moderator setup: record the assigned order, choose the mechanic, then hand the device to the tester.",
+                new Rect(8f, y, contentWidth - 16f, 70f),
+                "Selected core + meta loop: puzzle → reward → generator repair → island change → discover 77 → choose whether to continue.",
                 bodyStyle);
-            y += 68f;
+            y += 78f;
 
             GUI.Label(
                 new Rect(8f, y, contentWidth - 16f, 42f),
@@ -109,23 +120,38 @@ namespace Project77.Game
                 textFieldStyle);
             y += 66f;
 
-            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 62f), "A — Energy Routing", buttonStyle))
+            if (GUI.Button(
+                    new Rect(8f, y, contentWidth - 16f, 68f),
+                    "Start P1 — Energy Routing + Island",
+                    buttonStyle))
+            {
+                StartSelectedMeta();
+            }
+            y += 88f;
+
+            GUI.Label(
+                new Rect(8f, y, contentWidth - 16f, 34f),
+                "P0 debug variants",
+                sectionStyle);
+            y += 42f;
+
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 50f), "A — Energy Routing only", debugButtonStyle))
             {
                 Select<EnergyRoutingPrototypeController>(PrototypeVariant.EnergyRouting);
             }
-            y += 72f;
+            y += 58f;
 
-            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 62f), "B — Path / Expedition Routing", buttonStyle))
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 50f), "B — Path / Expedition Routing", debugButtonStyle))
             {
                 Select<PathExpeditionPrototypeController>(PrototypeVariant.PathExpeditionRouting);
             }
-            y += 72f;
+            y += 58f;
 
-            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 62f), "C — Flow / Network Restoration", buttonStyle))
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 50f), "C — Flow / Network Restoration", debugButtonStyle))
             {
                 Select<FlowNetworkPrototypeController>(PrototypeVariant.FlowNetworkRestoration);
             }
-            y += 72f;
+            y += 62f;
 
             if (!string.IsNullOrEmpty(setupError))
             {
@@ -137,6 +163,21 @@ namespace Project77.Game
             }
 
             GUI.EndScrollView();
+        }
+
+        private void StartSelectedMeta()
+        {
+            if (!playtestRuntime.TryBeginSelectedMeta(
+                    playtestId,
+                    PrototypeVariant.EnergyRouting,
+                    out setupError))
+            {
+                return;
+            }
+
+            enabled = false;
+            var controller = gameObject.AddComponent<EnergyRoutingPrototypeController>();
+            controller.ConfigureSelectedMeta(playtestId);
         }
 
         private void Select<T>(string variant) where T : MonoBehaviour
