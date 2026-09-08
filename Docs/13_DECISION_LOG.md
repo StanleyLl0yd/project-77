@@ -156,13 +156,15 @@ Accessibility (readability, color independence, touch targets, text/subtitles, r
 
 Технически работающая сборка сама по себе не завершает Prototype 0.1. Ключевой продуктовый критерий: после понятного puzzle → reward → island change/discovery игрок **добровольно хочет продолжить**. Без этого результат = ITERATE/PIVOT, а не автоматический CONTINUE.
 
+### D-039 — Gate P0 CONTINUE and selected core
+
+08.09.2026 владелец проекта принял решение **CONTINUE** к P1 после успешного physical-device smoke и нескольких дополнительных внешних прогонов без выявленных блокирующих проблем.
+
+Выбранный P1 core: **Energy Routing**.
+
+Полный protocol-grade количественный P0 dataset не был сохранён, поэтому решение не трактуется как доказательство прохождения каждого initial numeric threshold или статистического превосходства A над B/C. Ограничение и basis решения зафиксированы в `33_P0_GATE_DECISION.md`. P1 обязан собирать полноценную telemetry/moderation evidence для следующего gate.
+
 ## PROVISIONAL — рабочая гипотеза
-
-### P-001 — Core mechanic
-
-Основной кандидат: Energy Routing puzzle.
-
-Статус изменится на LOCKED только после сравнения P0 variants и решения Gate P0. Текущий comparison set определён в P-009.
 
 ### P-002 — Art direction
 
