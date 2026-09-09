@@ -17,8 +17,8 @@ Read in this order for current work:
 5. [`29_PROTOTYPE_PLAYTEST_PROTOCOL.md`](29_PROTOTYPE_PLAYTEST_PROTOCOL.md) — external-test procedure.
 6. [`34_P1_EXTERNAL_PLAYTEST_PLAN.md`](34_P1_EXTERNAL_PLAYTEST_PLAN.md) — preregistered Gate P1 batch hypothesis/environment rules.
 7. [`18_PRODUCT_GATES.md`](18_PRODUCT_GATES.md) — P0/P1 decision gates.
-7. [`02_CORE_GAMEPLAY.md`](02_CORE_GAMEPLAY.md) — mechanic hypotheses.
-8. [`07_ROADMAP.md`](07_ROADMAP.md) — phase sequence.
+8. [`02_CORE_GAMEPLAY.md`](02_CORE_GAMEPLAY.md) — mechanic hypotheses.
+9. [`07_ROADMAP.md`](07_ROADMAP.md) — phase sequence.
 
 ## Governance
 
