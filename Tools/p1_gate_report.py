@@ -297,6 +297,12 @@ def validate_sessions_against_freeze(
             raise P1ReportError(f"{session.metadata_path}: prototype variant does not match freeze")
         if metadata["core_variant"] != manifest["selected_core"]:
             raise P1ReportError(f"{session.metadata_path}: selected core does not match freeze")
+        expected_orientation = manifest["test_plan"]["orientation"]
+        if metadata["screen_orientation"] != expected_orientation:
+            raise P1ReportError(
+                f"{session.metadata_path}: screen_orientation {metadata['screen_orientation']!r} "
+                f"does not match frozen orientation {expected_orientation!r}"
+            )
         if _level_key(metadata["levels"]) != expected_levels:
             raise P1ReportError(f"{session.metadata_path}: level revisions do not match freeze")
 

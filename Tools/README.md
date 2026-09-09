@@ -94,7 +94,7 @@ python Tools/p1_freeze_manifest.py verify PlaytestData/P1-001/freeze.json \
   --artifact Project77-P1.apk
 ```
 
-`p1_gate_report.py` validates selected-meta session metadata/events against the freeze, re-validates the shared analytics schema, runs the P1 event-state audit, joins moderation records, and reports both telemetry reach and formal Gate P1 observations. Telemetry clicks remain distinct from moderator-qualified voluntary continuation.
+`p1_gate_report.py` validates selected-meta session metadata/events against the freeze, rejects sessions whose actual screen orientation differs from the frozen batch orientation, re-validates the shared analytics schema, runs the P1 event-state audit, joins moderation records, and reports both telemetry reach and formal Gate P1 observations. Telemetry clicks remain distinct from moderator-qualified voluntary continuation.
 
 ```bash
 python Tools/p1_gate_report.py PlaytestData/P1-001 \
