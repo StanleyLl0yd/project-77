@@ -1,4 +1,4 @@
-# PROJECT 77 — MASTER DOCUMENTATION v0.5
+# PROJECT 77 — MASTER DOCUMENTATION v0.6
 
 **Status:** pre-production COMPLETE; active phase = **Prototype 0.1**.
 
@@ -15,7 +15,8 @@ Read in this order for current work:
 3. [`31_ENGINEERING_CONVENTIONS.md`](31_ENGINEERING_CONVENTIONS.md) — minimal Unity/C# implementation rules.
 4. [`30_PROTOTYPE_ANALYTICS_CONTRACT.md`](30_PROTOTYPE_ANALYTICS_CONTRACT.md) — canonical P0/P1 event schema.
 5. [`29_PROTOTYPE_PLAYTEST_PROTOCOL.md`](29_PROTOTYPE_PLAYTEST_PROTOCOL.md) — external-test procedure.
-6. [`18_PRODUCT_GATES.md`](18_PRODUCT_GATES.md) — P0/P1 decision gates.
+6. [`34_P1_EXTERNAL_PLAYTEST_PLAN.md`](34_P1_EXTERNAL_PLAYTEST_PLAN.md) — preregistered Gate P1 batch hypothesis/environment rules.
+7. [`18_PRODUCT_GATES.md`](18_PRODUCT_GATES.md) — P0/P1 decision gates.
 7. [`02_CORE_GAMEPLAY.md`](02_CORE_GAMEPLAY.md) — mechanic hypotheses.
 8. [`07_ROADMAP.md`](07_ROADMAP.md) — phase sequence.
 
@@ -66,8 +67,8 @@ Current prototype implementation must still obey the scope freeze in `28_PROTOTY
 
 ## Current P0/P1 authoritative summary
 
-- P0 variants: **A Energy Routing / B Path-Expedition Routing / C Flow-Network Restoration**.
-- All three remain PROVISIONAL until Gate P0.
+- Gate P0: **CONTINUE** (owner-authorized; evidence limitation recorded).
+- Selected P1 core: **Energy Routing**.
 - Minimum P0 comparison content: **10 validated levels per variant**; add more only to answer a defined test question.
 - P1 winner path: **10–20 selected-core levels -> reward -> repair generator -> visible island change -> unlock -> discover 77 -> genuine next-puzzle choice**.
 - Placeholder visuals are expected.
