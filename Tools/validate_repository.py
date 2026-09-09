@@ -214,6 +214,13 @@ def main() -> None:
         },
     )
 
+    _require_fragments(
+        "Tools/p1_gate_report.py",
+        {
+            "frozen orientation enforcement": "does not match frozen orientation",
+        },
+    )
+
     restart_guard = "PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered)"
     _require_fragments(
         "Assets/Project77/Game/EnergyRoutingPrototypeController.cs",
