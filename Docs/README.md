@@ -20,10 +20,10 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 - Монетизация строится вокруг косметики, Season Pass, подписки, удобства, ускорений и добровольной рекламы, а не вокруг обязательной оплаты сюжета.
 - Остров остаётся домом игрока навсегда, даже после открытия космоса.
 - Основной игровой цикл должен быть простым, управляться одним пальцем и занимать примерно 30–90 секунд.
-- Конкретная core-puzzle механика пока считается проверяемой гипотезой и должна пройти прототипирование.
+- Gate P0 принят как CONTINUE для реализации; **Energy Routing** выбран текущим P1 core. Ограничения количественной P0 evidence зафиксированы отдельно.
 - Production stack: **Unity 6.3 LTS + C# + URP**.
 - Первая целевая платформа: **Android**, архитектура сразу cross-platform.
-- Первый milestone: **Project 77 Prototype 0.1** — P0 сравнивает три greybox-варианта (minimum 10 validated levels each), затем P1 интегрирует победителя в 10–20-level путь → ресурсы → восстановление генератора → area unlock → обнаружение 77.
+- Текущий milestone: **Project 77 Prototype 0.1 / Gate P1** — интегрированный Energy Routing путь → ресурсы → восстановление генератора → visible island change → area unlock → обнаружение 77 → voluntary continuation.
 - Красивый production-art, магазин и большой backend не делаются до доказательства core/meta loop.
 - Целевая product-аудитория: подростки и взрослые (13+ direction), не child-directed.
 - Launch social: visits/likes/predefined reactions; без free-form chat/UGC.
@@ -33,6 +33,7 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 - Standardized P0/P1 playtests: `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`.
 - Prototype telemetry schema: `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
 - Minimal Unity engineering rules/backlog: `31_ENGINEERING_CONVENTIONS.md` + `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`.
+- Gate P1 preregistered execution plan: `34_P1_EXTERNAL_PLAYTEST_PLAN.md`.
 
 ## Структура пакета
 
