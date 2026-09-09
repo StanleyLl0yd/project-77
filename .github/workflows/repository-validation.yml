@@ -30,6 +30,9 @@ jobs:
         run: |
           python Tools/p1_freeze_manifest.py generate \
             --batch-id CI-P1-SMOKE \
+            --orientation portrait \
+            --device-target "CI Android device | API 29 | 1080x2340 | portrait" \
+            --help-threshold-seconds 30 \
             --allow-unbound-artifact \
             --output /tmp/project77-p1-freeze.json
           python Tools/p1_freeze_manifest.py verify /tmp/project77-p1-freeze.json
