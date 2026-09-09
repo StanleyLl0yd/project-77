@@ -86,6 +86,38 @@ class P1GateReportTests(unittest.TestCase):
         self.assertEqual(metric["total"], 0)
         self.assertIsNone(metric["rate"])
 
+    def test_freeze_rejects_mismatched_session_orientation(self):
+        levels = [{"id": f"A-{index:03d}", "revision": 1} for index in range(1, 11)]
+        session = report.SessionData(
+            Path("s1_metadata.json"),
+            Path("s1_events.jsonl"),
+            {
+                "session_id": "s1",
+                "build_version": "0.0.1-prototype+abc",
+                "commit_sha": "abc",
+                "unity_version": "6000.3.22f1",
+                "event_schema_version": 1,
+                "prototype_variant": "selected_meta",
+                "core_variant": "energy_routing",
+                "screen_orientation": "landscape",
+                "levels": levels,
+            },
+            [],
+        )
+        manifest = {
+            "build_version": "0.0.1-prototype+abc",
+            "commit_sha": "abc",
+            "unity_version": "6000.3.22f1",
+            "event_schema_version": 1,
+            "prototype_variant": "selected_meta",
+            "selected_core": "energy_routing",
+            "test_plan": {"orientation": "portrait"},
+            "levels": levels,
+        }
+
+        with self.assertRaisesRegex(report.P1ReportError, "frozen orientation"):
+            report.validate_sessions_against_freeze([session], manifest)
+
 
 if __name__ == "__main__":
     unittest.main()
