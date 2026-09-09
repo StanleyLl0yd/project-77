@@ -283,6 +283,8 @@ DoD:
 
 ### P77-070 — P1 test build freeze
 
+Preparation status: **READY FOR APK**. The preregistered test question/decision rule is in `34_P1_EXTERNAL_PLAYTEST_PLAN.md`. The freeze tool now requires orientation, at least one device target and the help threshold, and binds those values into the batch fingerprint.
+
 DoD:
 
 - build, levels, telemetry schema, orientation, device matrix and help rules recorded before test.
