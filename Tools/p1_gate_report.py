@@ -449,6 +449,8 @@ def render_report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
             f"- 16 KB APK ZIP alignment: {'PASS' if artifact['apk_uncompressed_libs_16kb_zip_aligned'] else 'FAIL'}",
         ]
 
+    test_plan = manifest.get("test_plan") or {}
+    device_targets = test_plan.get("device_targets") or []
     lines = [
         "# Project 77 — P1 Batch Report",
         "",
@@ -456,6 +458,9 @@ def render_report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
         f"- Build: `{summary['build_version']}`",
         f"- Commit: `{summary['commit_sha']}`",
         *artifact_lines,
+        f"- Frozen orientation: {test_plan.get('orientation', 'unknown')}",
+        f"- Frozen help threshold: {test_plan.get('help_threshold_seconds', 'unknown')} s",
+        f"- Frozen device targets: {'; '.join(str(value) for value in device_targets) if device_targets else 'none'}",
         f"- Sessions: {summary['sessions_total']}",
         f"- Fresh sessions with moderation: {summary['fresh_sessions_with_moderation']}/{summary['fresh_sessions_target']}",
         "",
