@@ -77,13 +77,16 @@ python Tools/p0_gate_report.py PlaytestData/P0-001 \
 
 `p1_event_audit.py` extends the shared event-order checks with P1 meta-state invariants. It rejects duplicate/misordered reward claims, resource spends that do not reconcile with tracked balances, generator repair without matching generator spends, area unlock before repair, 77 discovery before area unlock, and a completed prototype session missing required meta milestones.
 
-`p1_freeze_manifest.py` freezes the selected Energy Routing level revisions, P1 meta implementation files, governing contracts, exact commit/build identity, Gate P1 observation window/target and the exact Android APK. External P1 testing must use an artifact-bound freeze; `--allow-unbound-artifact` is CI/tooling smoke only.
+`p1_freeze_manifest.py` freezes the selected Energy Routing level revisions, P1 meta implementation files, governing contracts, exact commit/build identity, Gate P1 observation window/target, preregistered orientation/device targets/help threshold and the exact Android APK. External P1 testing must use an artifact-bound freeze; `--allow-unbound-artifact` is CI/tooling smoke only.
 
 Example:
 
 ```bash
 python Tools/p1_freeze_manifest.py generate \
   --batch-id P1-001 \
+  --orientation portrait \
+  --device-target "Joy 4 | Android 10 / VOS 3.0 | 1080x2340 | portrait" \
+  --help-threshold-seconds 30 \
   --artifact Project77-P1.apk \
   --output PlaytestData/P1-001/freeze.json
 
