@@ -221,7 +221,11 @@ namespace Project77.Game
             lastVisibleStep = analyticsEvent.EventName;
             ObserveState(analyticsEvent);
 
-            if (analyticsEvent.EventName == PrototypeAnalyticsEventName.PrototypeStart && !tutorialRecorded)
+            if (!tutorialRecorded &&
+                ((analyticsEvent.EventName == PrototypeAnalyticsEventName.PrototypeStart &&
+                  selectedVariant != PrototypeVariant.SelectedMeta) ||
+                 (analyticsEvent.EventName == PrototypeAnalyticsEventName.LevelStart &&
+                  selectedVariant == PrototypeVariant.SelectedMeta)))
             {
                 WriteTutorialExposure();
             }

@@ -184,6 +184,8 @@ def main() -> None:
         "Assets/Project77/Game/EnergyRoutingPrototypeController.cs",
         {
             "selected-meta mode": "PrototypeVariant.SelectedMeta",
+            "short P1 intro": "PrototypeView.Intro",
+            "explicit intro continuation": "Begin restoration",
             "reward event": "PrototypeAnalyticsEventName.RewardShown",
             "generator repair event": "PrototypeAnalyticsEventName.GeneratorRepair",
             "area unlock event": "PrototypeAnalyticsEventName.AreaUnlock",
@@ -196,6 +198,7 @@ def main() -> None:
         {
             "selected-meta session": "TryBeginSelectedMeta",
             "selected core metadata": "core_variant = selectedCoreVariant",
+            "P1 tutorial starts with puzzle": "analyticsEvent.EventName == PrototypeAnalyticsEventName.LevelStart",
         },
     )
 
