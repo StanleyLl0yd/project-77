@@ -1,6 +1,6 @@
 # Project 77 — Project Documentation
 
-Версия документации: **0.5 Prototype Readiness Audit**.
+Версия документации: **0.6 Gate P1 Execution Baseline**.
 
 Статус: **pre-production завершён; активная фаза — Prototype 0.1**. Implementation baseline и operational guardrails утверждены.
 
@@ -70,7 +70,9 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 32. `30_PROTOTYPE_ANALYTICS_CONTRACT.md` — canonical P0/P1 event names, properties, types and schema version.
 33. `31_ENGINEERING_CONVENTIONS.md` — minimal Unity/C# structure, deterministic-domain/config/test rules.
 34. `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered implementation tasks and Definition of Done.
-35. `CHANGELOG.md` — история версий проектной документации.
+35. `33_P0_GATE_DECISION.md` — basis/limitations owner-authorized Gate P0 CONTINUE.
+36. `34_P1_EXTERNAL_PLAYTEST_PLAN.md` — preregistered Gate P1 hypothesis, environment and decision rule.
+37. `CHANGELOG.md` — история версий проектной документации.
 
 ## Текущая рабочая фаза
 
@@ -80,7 +82,7 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 
 `bootstrap -> A/B/C (10 validated levels each) -> P0 playtest -> select winner -> 10–20 integrated levels -> reward -> repair generator -> unlock area -> discover 77 -> P1 playtest -> gate decision`.
 
-Current A/B/C set: Energy Routing / Path-Expedition Routing / Flow-Network Restoration. All remain PROVISIONAL until P0.
+Gate P0 has CONTINUE for implementation purposes; Energy Routing is the selected P1 core. The current active work is the frozen external P1 batch and Gate P1 decision.
 
 До успешного gate production-art, большой backend, store, Season Pass, subscription, планеты и массовое производство контента не являются допустимым приоритетом.
 
