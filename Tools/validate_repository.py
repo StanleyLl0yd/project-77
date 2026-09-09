@@ -20,6 +20,7 @@ REQUIRED_FILES = [
     "Docs/31_ENGINEERING_CONVENTIONS.md",
     "Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md",
     "Docs/33_P0_GATE_DECISION.md",
+    "Docs/34_P1_EXTERNAL_PLAYTEST_PLAN.md",
     "ProjectSettings/ProjectVersion.txt",
     "Packages/manifest.json",
     "Assets/Project77/Core/PrototypeEntryPoint.cs",
@@ -199,6 +200,17 @@ def main() -> None:
             "selected-meta session": "TryBeginSelectedMeta",
             "selected core metadata": "core_variant = selectedCoreVariant",
             "P1 tutorial starts with puzzle": "analyticsEvent.EventName == PrototypeAnalyticsEventName.LevelStart",
+        },
+    )
+
+    _require_fragments(
+        "Tools/p1_freeze_manifest.py",
+        {
+            "P1 freeze schema v2": "MANIFEST_SCHEMA_VERSION = 2",
+            "frozen orientation": "\"orientation\"",
+            "frozen device matrix": "\"device_targets\"",
+            "frozen help threshold": "\"help_threshold_seconds\"",
+            "P1 plan contract": "Docs/34_P1_EXTERNAL_PLAYTEST_PLAN.md",
         },
     )
 
