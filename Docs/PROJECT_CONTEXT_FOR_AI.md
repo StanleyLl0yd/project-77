@@ -40,27 +40,19 @@ Questions that can be cheaply tested remain OPEN/PROVISIONAL until evidence exis
 - Intended product positioning: teens/adults (13+ direction), not child-directed.
 - Product stages use CONTINUE / ITERATE / PIVOT / STOP gates; sunk cost is not a reason to continue.
 
-## Current P0 mechanic hypotheses
+## Current core decision
 
-All are PROVISIONAL until Gate P0:
+Gate P0 has an owner-authorized **CONTINUE** decision. **Energy Routing** is the selected P1 core. The retained quantitative P0 evidence limitation is documented in `33_P0_GATE_DECISION.md`.
 
-- A — **Energy Routing** (current favorite).
-- B — **Path / Expedition Routing**.
-- C — **Flow / Network Restoration**.
-
-`Signal Sequence` is retired as the current Prototype C definition in v0.5.
-
-Initial P0 content rule: minimum 10 validated levels per variant; add more only when needed to answer a defined test question.
+Path / Expedition Routing and Flow / Network Restoration remain available as P0/debug implementations; they are not the active P1 path.
 
 ## Active Prototype 0.1 flow
 
-P0:
+Current Gate P1 path:
 
-`A/B/C greybox -> standardized fresh-tester playtests -> Gate P0 -> select/iterate/pivot/stop`
+`Energy Routing -> reward -> Scrap/Energy -> repair generator -> visible island change -> unlock area -> discover 77 -> genuine next-puzzle choice -> Gate P1`
 
-P1 after P0 CONTINUE:
-
-`selected puzzle (10–20 integrated levels) -> reward -> Scrap/Energy test resources -> repair generator -> visible island change -> unlock area -> discover 77 -> genuine next-puzzle choice -> Gate P1`
+The integrated P1 engineering loop is implemented. Active work is the frozen external P1 test and evidence collection; production scope remains blocked until Gate P1 CONTINUE.
 
 Operational docs:
 
@@ -68,7 +60,8 @@ Operational docs:
 - `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` — playtest procedure and voluntary-continue definition;
 - `30_PROTOTYPE_ANALYTICS_CONTRACT.md` — canonical prototype event schema;
 - `31_ENGINEERING_CONVENTIONS.md` — Unity/C# conventions;
-- `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered tasks/DoD.
+- `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered tasks/DoD;
+- `34_P1_EXTERNAL_PLAYTEST_PLAN.md` — preregistered Gate P1 hypothesis/environment/decision rule.
 
 ## Tech baseline
 

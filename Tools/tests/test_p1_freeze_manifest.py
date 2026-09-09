@@ -19,6 +19,10 @@ class P1FreezeManifestTests(unittest.TestCase):
             commit,
             "0.0.1-prototype+" + commit[:12],
             "2026-09-08T00:00:00Z",
+            test_plan=freeze.build_test_plan(
+                "portrait",
+                ["CI device | Android 10 | 1080x2340 | portrait"],
+            ),
         )
         freeze.verify_manifest(manifest, commit)
 
@@ -29,6 +33,10 @@ class P1FreezeManifestTests(unittest.TestCase):
             commit,
             "0.0.1-prototype+" + commit[:12],
             "2026-09-08T00:00:00Z",
+            test_plan=freeze.build_test_plan(
+                "portrait",
+                ["CI device | Android 10 | 1080x2340 | portrait"],
+            ),
         )
         changed = copy.deepcopy(manifest)
         changed["freeze_fingerprint"] = "0" * 64
@@ -42,7 +50,32 @@ class P1FreezeManifestTests(unittest.TestCase):
                 "c" * 40,
                 "0.0.1-prototype+wrong",
                 "2026-09-08T00:00:00Z",
+                test_plan=freeze.build_test_plan(
+                    "portrait",
+                    ["CI device | Android 10 | 1080x2340 | portrait"],
+                ),
             )
+
+    def test_test_plan_requires_device_target(self):
+        with self.assertRaises(freeze.FreezeError):
+            freeze.build_test_plan("portrait", [])
+
+    def test_test_plan_is_part_of_batch_fingerprint(self):
+        commit = "d" * 40
+        manifest = freeze.build_manifest(
+            "P1-CI",
+            commit,
+            "0.0.1-prototype+" + commit[:12],
+            "2026-09-08T00:00:00Z",
+            test_plan=freeze.build_test_plan(
+                "portrait",
+                ["Primary device"],
+            ),
+        )
+        changed = copy.deepcopy(manifest)
+        changed["test_plan"]["orientation"] = "landscape"
+        with self.assertRaises(freeze.FreezeError):
+            freeze.verify_manifest(changed, commit)
 
 
 if __name__ == "__main__":

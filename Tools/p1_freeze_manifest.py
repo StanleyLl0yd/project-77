@@ -14,7 +14,7 @@ from typing import Any
 import verify_android_artifact as android_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_SCHEMA_VERSION = 1
+MANIFEST_SCHEMA_VERSION = 2
 EVENT_SCHEMA_VERSION = 1
 METADATA_SCHEMA_VERSION = 1
 SELECTED_CORE = "energy_routing"
@@ -32,6 +32,7 @@ CONTRACTS = {
     "product_gates": "Docs/18_PRODUCT_GATES.md",
     "prototype_spec": "Docs/28_PROTOTYPE_01_SPEC.md",
     "p0_decision": "Docs/33_P0_GATE_DECISION.md",
+    "p1_external_playtest_plan": "Docs/34_P1_EXTERNAL_PLAYTEST_PLAN.md",
 }
 
 IMPLEMENTATION = {
@@ -43,6 +44,41 @@ IMPLEMENTATION = {
 
 class FreezeError(ValueError):
     pass
+
+
+def build_test_plan(
+    orientation: str,
+    device_targets: list[str],
+    help_threshold_seconds: int = 30,
+) -> dict[str, Any]:
+    normalized_orientation = (orientation or "").strip().lower()
+    if normalized_orientation not in {"portrait", "landscape"}:
+        raise FreezeError("orientation must be portrait or landscape")
+
+    normalized_devices = [value.strip() for value in (device_targets or []) if value and value.strip()]
+    if not normalized_devices:
+        raise FreezeError("at least one device target must be preregistered")
+    if len(set(normalized_devices)) != len(normalized_devices):
+        raise FreezeError("device targets must be unique")
+    if help_threshold_seconds < 1:
+        raise FreezeError("help threshold must be at least 1 second")
+
+    return {
+        "orientation": normalized_orientation,
+        "device_targets": normalized_devices,
+        "help_threshold_seconds": int(help_threshold_seconds),
+    }
+
+
+def _validate_test_plan(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise FreezeError("test_plan is required")
+    orientation = value.get("orientation")
+    devices = value.get("device_targets")
+    threshold = value.get("help_threshold_seconds")
+    if not isinstance(devices, list) or not isinstance(threshold, int) or isinstance(threshold, bool):
+        raise FreezeError("test_plan is malformed")
+    return build_test_plan(str(orientation or ""), [str(item) for item in devices], threshold)
 
 
 def _sha256(path: Path) -> str:
@@ -203,6 +239,7 @@ def _batch_identity(manifest: dict[str, Any]) -> dict[str, Any]:
         "commit_sha": manifest.get("commit_sha"),
         "freeze_fingerprint": manifest.get("freeze_fingerprint"),
         "gate_plan": manifest.get("gate_plan"),
+        "test_plan": manifest.get("test_plan"),
         "artifact": manifest.get("artifact"),
     }
 
@@ -213,6 +250,7 @@ def build_manifest(
     build_version: str,
     created_utc: str,
     *,
+    test_plan: dict[str, Any],
     root: Path = ROOT,
     artifact_path: Path | None = None,
 ) -> dict[str, Any]:
@@ -226,6 +264,8 @@ def build_manifest(
     if not build_version.endswith("+" + commit_sha[:12]):
         raise FreezeError("build_version must end with +<first 12 commit characters>")
 
+    normalized_test_plan = _validate_test_plan(test_plan)
+
     manifest = {
         "freeze_manifest_schema_version": MANIFEST_SCHEMA_VERSION,
         "batch_id": batch_id,
@@ -233,6 +273,7 @@ def build_manifest(
         "build_version": build_version,
         "commit_sha": commit_sha,
         "gate_plan": GATE_PLAN,
+        "test_plan": normalized_test_plan,
         "artifact": _artifact_record(artifact_path),
         **build_repository_snapshot(root),
     }
@@ -268,6 +309,9 @@ def verify_manifest(
         raise FreezeError("freeze build_version is not bound to checkout commit")
     if manifest.get("gate_plan") != GATE_PLAN:
         raise FreezeError("freeze gate plan changed")
+    normalized_test_plan = _validate_test_plan(manifest.get("test_plan"))
+    if manifest.get("test_plan") != normalized_test_plan:
+        raise FreezeError("freeze test_plan is not normalized")
 
     snapshot = build_repository_snapshot(root)
     for key in (
@@ -327,6 +371,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     generate = sub.add_parser("generate")
     generate.add_argument("--batch-id", required=True)
     generate.add_argument("--artifact", type=Path)
+    generate.add_argument("--orientation", choices=("portrait", "landscape"), required=True)
+    generate.add_argument(
+        "--device-target",
+        action="append",
+        dest="device_targets",
+        required=True,
+        help="Repeat for every preregistered device/profile in this batch.",
+    )
+    generate.add_argument("--help-threshold-seconds", type=int, default=30)
     generate.add_argument("--allow-unbound-artifact", action="store_true")
     generate.add_argument("--output", type=Path, required=True)
 
@@ -349,11 +402,17 @@ def main(argv: list[str] | None = None) -> int:
                     "use --allow-unbound-artifact only for tooling smoke"
                 )
             build_version = _bundle_version(ROOT) + "+" + commit[:12]
+            test_plan = build_test_plan(
+                args.orientation,
+                args.device_targets,
+                args.help_threshold_seconds,
+            )
             manifest = build_manifest(
                 args.batch_id,
                 commit,
                 build_version,
                 _created_now(),
+                test_plan=test_plan,
                 artifact_path=args.artifact,
             )
             args.output.parent.mkdir(parents=True, exist_ok=True)

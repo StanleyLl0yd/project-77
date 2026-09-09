@@ -1,5 +1,14 @@
 # Project 77 — Documentation Changelog
 
+## v0.6 — Gate P1 Execution Baseline — 2026-09-09
+
+- Gate P0 owner-authorized CONTINUE and Energy Routing selection are reflected in the active documentation baseline.
+- Milestone G integrated P1 engineering path is implemented: short intro, selected core, reward/resources, generator repair, island change, area unlock, 77 discovery and genuine continuation choice.
+- Added `33_P0_GATE_DECISION.md` and `34_P1_EXTERNAL_PLAYTEST_PLAN.md`.
+- Gate P1 test question, >=50% formal post-island voluntary-continuation target, 15-second window and 30-second default help threshold are preregistered from the existing Product Gates/Playtest Protocol.
+- P1 freeze manifest schema v2 binds the exact APK/build/content plus orientation, device targets and help threshold into the batch fingerprint.
+- P1 moderation, event-audit and gate-report tooling are active; production scope remains blocked until Gate P1 CONTINUE.
+
 ## v0.5 — Prototype Readiness Audit — 2026-09-03
 
 Repository/documentation consistency audit and implementation-readiness pass.

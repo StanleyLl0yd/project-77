@@ -1,7 +1,7 @@
 {
   "project": "Project 77",
   "status": "prototype_phase",
-  "documentation_version": "0.5",
+  "documentation_version": "0.6",
   "active_milestone": "Prototype 0.1",
   "source_hierarchy": [
     "owner_current_instruction",
@@ -49,7 +49,8 @@
     "ship_gameplay",
     "mass_content_production"
   ],
-  "active_stage": "Prototype 0.1 / Gate P1",
+  "active_stage": "Prototype 0.1 / Gate P1 external playtest",
   "p0_decision": "CONTINUE",
-  "selected_core": "energy_routing"
+  "selected_core": "energy_routing",
+  "p1_external_playtest_plan": "34_P1_EXTERNAL_PLAYTEST_PLAN.md"
 }
