@@ -37,20 +37,20 @@ namespace Project77.Game
         {
             if (levelNumber <= 1 && connectedPairCount == 0)
             {
-                return "HOW TO PLAY: touch R1, keep your finger down, and drag through side-touching squares to R2.";
+                return "HOW TO PLAY: touch R1, keep your finger down, and drag to R2. Move through neighboring squares — up, down, left or right.";
             }
 
             if (levelNumber <= 2)
             {
-                return "GOAL: connect every matching label. Keep your finger down while dragging. Paths cannot share squares.";
+                return "GOAL: connect every matching label, such as R1 to R2. Keep your finger down while dragging. Paths cannot share squares.";
             }
 
             if (blockedCount > 0)
             {
-                return "GOAL: connect every matching label. X squares are blocked. Paths cannot cross or share squares.";
+                return "GOAL: connect every matching label. X means blocked — route around it. Paths cannot cross or share squares.";
             }
 
-            return "GOAL: connect every matching label. Drag through side-touching squares; paths cannot cross or share squares.";
+            return "GOAL: connect every matching label. Drag up, down, left or right; paths cannot cross or share squares.";
         }
 
         public static string Legend(IEnumerable<string> pairIds, bool hasBlockedCells)
