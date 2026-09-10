@@ -37,6 +37,31 @@ jobs:
             --output /tmp/project77-p1-freeze.json
           python Tools/p1_freeze_manifest.py verify /tmp/project77-p1-freeze.json
 
+      - name: Emit exact P1-001 repository freeze snapshot
+        run: |
+          python - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "Tools")
+          import p1_freeze_manifest as freeze
+          commit = "357356a9fdf34052cc666bf6ac16abec9e419848"
+          manifest = freeze.build_manifest(
+              "P1-001",
+              commit,
+              "0.0.1-prototype+357356a9fdf3",
+              "2026-09-10T08:16:10Z",
+              test_plan=freeze.build_test_plan(
+                  "portrait",
+                  ["Joy 4 | Android 10 / VOS 3.0 | 1080x2340 | portrait"],
+                  30,
+              ),
+              root=Path("."),
+              artifact_path=None,
+          )
+          print("P1_001_FREEZE_JSON=" + json.dumps(manifest, sort_keys=True, separators=(",", ":")))
+          PY
+
       - name: Smoke-test P0 batch setup tools
         run: |
           python Tools/p0_order_plan.py --participants 10 --prefix CI-P0 --output PlaytestData/ci/orders.csv --summary-json PlaytestData/ci/orders.json
