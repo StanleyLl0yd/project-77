@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 PAGE_SIZE = 16 * 1024
+MARKER_SCAN_CHUNK_SIZE = 64 * 1024
 APK_SIGNING_BLOCK_MAGIC = b"APK Sig Block 42"
 
 
@@ -99,11 +100,64 @@ def _apk_signature_marker(path: Path) -> bool:
     return APK_SIGNING_BLOCK_MAGIC in data
 
 
+def _normalize_text_markers(expected: dict[str, str] | None) -> dict[str, bytes]:
+    if expected is None:
+        return {}
+
+    normalized: dict[str, bytes] = {}
+    for name, value in expected.items():
+        if not isinstance(name, str) or not name.strip():
+            raise ArtifactError("embedded text marker names must be non-empty strings")
+        if not isinstance(value, str) or not value:
+            raise ArtifactError(f"embedded text marker {name!r} must have a non-empty string value")
+        normalized[name] = value.encode("utf-8")
+    return normalized
+
+
+def _find_text_markers(
+    archive: zipfile.ZipFile,
+    infos: list[zipfile.ZipInfo],
+    expected: dict[str, bytes],
+) -> dict[str, bool]:
+    if not expected:
+        return {}
+
+    found = {name: False for name in expected}
+    remaining = set(expected)
+    max_marker_length = max(len(value) for value in expected.values())
+
+    for info in infos:
+        if not remaining or info.is_dir():
+            continue
+
+        tail = b""
+        try:
+            with archive.open(info, "r") as member:
+                while remaining:
+                    chunk = member.read(MARKER_SCAN_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    window = tail + chunk
+                    for name in tuple(remaining):
+                        if expected[name] in window:
+                            found[name] = True
+                            remaining.remove(name)
+                    if not remaining:
+                        break
+                    keep = max_marker_length - 1
+                    tail = window[-keep:] if keep > 0 else b""
+        except (OSError, RuntimeError, zipfile.BadZipFile) as exc:
+            raise ArtifactError(f"cannot scan ZIP member {info.filename!r}: {exc}") from exc
+
+    return found
+
+
 def inspect_artifact(
     path: Path,
     *,
     require_arm64_only: bool = True,
     require_signature_marker: bool = True,
+    expected_text_markers: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     suffix = path.suffix.lower()
     if suffix not in {".apk", ".aab"}:
@@ -111,6 +165,7 @@ def inspect_artifact(
     if not path.is_file():
         raise ArtifactError(f"artifact does not exist: {path}")
     kind = suffix[1:]
+    marker_bytes = _normalize_text_markers(expected_text_markers)
 
     try:
         with zipfile.ZipFile(path, "r") as archive:
@@ -163,6 +218,13 @@ def inspect_artifact(
                         }
                     )
 
+            embedded_text_markers = _find_text_markers(archive, infos, marker_bytes)
+            missing_markers = [name for name, present in embedded_text_markers.items() if not present]
+            if missing_markers:
+                raise ArtifactError(
+                    "required embedded text marker(s) not found: " + ", ".join(sorted(missing_markers))
+                )
+
             signature_marker = _apk_signature_marker(path) if kind == "apk" else _aab_signature_marker(infos)
             if require_signature_marker and not signature_marker:
                 label = "APK Signing Block" if kind == "apk" else "JAR signature entries"
@@ -193,6 +255,8 @@ def inspect_artifact(
         ),
         "signature_marker_present": signature_marker,
         "signature_marker_is_cryptographic_verification": False,
+        "embedded_text_markers": embedded_text_markers,
+        "embedded_text_marker_verification_is_cryptographic": False,
         "libraries": libraries,
     }
 
