@@ -1,3 +1,5 @@
+import csv
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -35,6 +37,27 @@ def gate_manifest(target: int = 10):
             "voluntary_window_ms": 15000,
         },
     }
+
+
+def write_moderation_csv(path: Path, *, exclusion_reason: str):
+    row = {column: "" for column in report.MODERATION_COLUMNS}
+    row.update(
+        {
+            "session_id": "s1",
+            "cohort": "fresh",
+            "post_island_voluntary_continuation": "yes",
+            "help_required": "yes",
+            "exclude_resource": "no",
+            "exclude_repair": "no",
+            "exclude_voluntary": "yes",
+            "exclusion_reason": exclusion_reason,
+            "moderator_id": "M",
+        }
+    )
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=report.MODERATION_COLUMNS)
+        writer.writeheader()
+        writer.writerow(row)
 
 
 class P1GateReportTests(unittest.TestCase):
@@ -120,6 +143,20 @@ class P1GateReportTests(unittest.TestCase):
         self.assertEqual(metric["total"], 0)
         self.assertIsNone(metric["rate"])
         self.assertEqual(summary["post_island_voluntary_gate_state"], "INSUFFICIENT DATA")
+
+    def test_exclusion_requires_explicit_reason(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "moderation.csv"
+            write_moderation_csv(path, exclusion_reason="")
+
+            with self.assertRaisesRegex(report.P1ReportError, "exclusion_reason is required"):
+                report.load_moderation(path)
+
+            write_moderation_csv(path, exclusion_reason="moderator prompted continuation")
+            records = report.load_moderation(path)
+
+        self.assertTrue(records["s1"].exclude_voluntary)
+        self.assertEqual(records["s1"].exclusion_reason, "moderator prompted continuation")
 
     def test_render_report_marks_incomplete_sample(self):
         session = report.SessionData(
