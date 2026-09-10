@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Project77.Puzzle;
 using UnityEngine;
 
@@ -6,9 +7,15 @@ namespace Project77.Game
 {
     public sealed class PrototypeVariantSelector : MonoBehaviour
     {
+        private const string DataFolderName = "Project77Playtests";
+
         private PrototypePlaytestRuntime playtestRuntime;
         private string playtestId;
         private string setupError = string.Empty;
+        private string previousEventsPath;
+        private string previousMetadataPath;
+        private string recoveryStatus = string.Empty;
+        private float recoveryStatusUntil;
         private Vector2 setupScroll;
 
         private void Awake()
@@ -20,6 +27,7 @@ namespace Project77.Game
             }
 
             playtestId = "p1-" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            RefreshPreviousSessionFiles();
         }
 
         private void OnGUI()
@@ -46,10 +54,11 @@ namespace Project77.Game
                 viewportHeight);
 
             var contentWidth = Mathf.Max(220f, width - 20f);
+            var recoveryHeight = HasPreviousSessionData ? 138f : 0f;
 #if UNITY_EDITOR
-            var contentHeight = string.IsNullOrEmpty(setupError) ? 700f : 766f;
+            var contentHeight = (string.IsNullOrEmpty(setupError) ? 700f : 766f) + recoveryHeight;
 #else
-            var contentHeight = string.IsNullOrEmpty(setupError) ? 458f : 524f;
+            var contentHeight = (string.IsNullOrEmpty(setupError) ? 458f : 524f) + recoveryHeight;
 #endif
             setupScroll = GUI.BeginScrollView(
                 viewport,
@@ -113,6 +122,11 @@ namespace Project77.Game
                 textFieldStyle);
             y += 68f;
 
+            if (HasPreviousSessionData)
+            {
+                DrawPreviousSessionData(contentWidth, ref y, bodyStyle);
+            }
+
             if (GUI.Button(
                     new Rect(8f, y, contentWidth - 16f, 68f),
                     "Start playtest",
@@ -136,6 +150,123 @@ namespace Project77.Game
             }
 
             GUI.EndScrollView();
+        }
+
+        private bool HasPreviousSessionData =>
+            IsReadableFile(previousEventsPath) || IsReadableFile(previousMetadataPath);
+
+        private void DrawPreviousSessionData(float contentWidth, ref float y, GUIStyle bodyStyle)
+        {
+            var panelWidth = contentWidth - 16f;
+            var titleStyle = new GUIStyle(bodyStyle)
+            {
+                fontSize = 16,
+                fontStyle = FontStyle.Bold
+            };
+            var statusStyle = new GUIStyle(bodyStyle)
+            {
+                fontSize = 14
+            };
+            var buttonStyle = new GUIStyle(GUI.skin.button)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 16,
+                wordWrap = true
+            };
+
+            GUI.Box(new Rect(8f, y, panelWidth, 124f), string.Empty);
+            GUI.Label(
+                new Rect(18f, y + 8f, panelWidth - 20f, 26f),
+                "Moderator: previous session data",
+                titleStyle);
+
+            var gap = 8f;
+            var buttonWidth = (panelWidth - 28f - gap) * 0.5f;
+            GUI.enabled = IsReadableFile(previousEventsPath);
+            if (GUI.Button(new Rect(18f, y + 40f, buttonWidth, 44f), "Copy events", buttonStyle))
+            {
+                CopyPreviousFile(previousEventsPath, "Previous events copied");
+            }
+
+            GUI.enabled = IsReadableFile(previousMetadataPath);
+            if (GUI.Button(
+                    new Rect(18f + buttonWidth + gap, y + 40f, buttonWidth, 44f),
+                    "Copy metadata",
+                    buttonStyle))
+            {
+                CopyPreviousFile(previousMetadataPath, "Previous metadata copied");
+            }
+            GUI.enabled = true;
+
+            if (Time.realtimeSinceStartup < recoveryStatusUntil)
+            {
+                GUI.Label(
+                    new Rect(18f, y + 88f, panelWidth - 20f, 26f),
+                    recoveryStatus,
+                    statusStyle);
+            }
+
+            y += 138f;
+        }
+
+        private void RefreshPreviousSessionFiles()
+        {
+            previousEventsPath = null;
+            previousMetadataPath = null;
+
+            var directory = Path.Combine(Application.persistentDataPath, DataFolderName);
+            if (!Directory.Exists(directory))
+            {
+                return;
+            }
+
+            previousEventsPath = FindLatest(directory, "*_events.jsonl");
+            previousMetadataPath = FindLatest(directory, "*_metadata.json");
+        }
+
+        private static string FindLatest(string directory, string pattern)
+        {
+            var files = Directory.GetFiles(directory, pattern, SearchOption.TopDirectoryOnly);
+            string latest = null;
+            var latestWrite = DateTime.MinValue;
+            foreach (var file in files)
+            {
+                var write = File.GetLastWriteTimeUtc(file);
+                if (write > latestWrite)
+                {
+                    latestWrite = write;
+                    latest = file;
+                }
+            }
+
+            return latest;
+        }
+
+        private void CopyPreviousFile(string path, string successStatus)
+        {
+            try
+            {
+                if (!IsReadableFile(path))
+                {
+                    recoveryStatus = "Previous session file is unavailable";
+                }
+                else
+                {
+                    GUIUtility.systemCopyBuffer = File.ReadAllText(path);
+                    recoveryStatus = successStatus;
+                }
+            }
+            catch (Exception)
+            {
+                recoveryStatus = "Could not copy previous session data";
+            }
+
+            recoveryStatusUntil = Time.realtimeSinceStartup + 3f;
+        }
+
+        private static bool IsReadableFile(string path)
+        {
+            return !string.IsNullOrEmpty(path) && File.Exists(path);
         }
 
 #if UNITY_EDITOR
