@@ -111,6 +111,15 @@ def load_moderation(path: Path | None) -> dict[str, ModerationRecord]:
             if cohort not in {"fresh", "returning"}:
                 raise P1ReportError(f"moderation row {line_no}: cohort must be fresh or returning")
 
+            exclude_resource = _required_bool(row["exclude_resource"], "exclude_resource")
+            exclude_repair = _required_bool(row["exclude_repair"], "exclude_repair")
+            exclude_voluntary = _required_bool(row["exclude_voluntary"], "exclude_voluntary")
+            exclusion_reason = (row["exclusion_reason"] or "").strip()
+            if (exclude_resource or exclude_repair or exclude_voluntary) and not exclusion_reason:
+                raise P1ReportError(
+                    f"moderation row {line_no}: exclusion_reason is required when any exclusion flag is yes"
+                )
+
             result[session_id] = ModerationRecord(
                 session_id=session_id,
                 cohort=cohort,
@@ -126,10 +135,10 @@ def load_moderation(path: Path | None) -> dict[str, ModerationRecord]:
                     row["post_island_voluntary_continuation"], "post_island_voluntary_continuation"
                 ),
                 help_required=_bool_or_none(row["help_required"], "help_required"),
-                exclude_resource=_required_bool(row["exclude_resource"], "exclude_resource"),
-                exclude_repair=_required_bool(row["exclude_repair"], "exclude_repair"),
-                exclude_voluntary=_required_bool(row["exclude_voluntary"], "exclude_voluntary"),
-                exclusion_reason=(row["exclusion_reason"] or "").strip(),
+                exclude_resource=exclude_resource,
+                exclude_repair=exclude_repair,
+                exclude_voluntary=exclude_voluntary,
+                exclusion_reason=exclusion_reason,
                 moderator_id=(row["moderator_id"] or "").strip(),
             )
         return result
