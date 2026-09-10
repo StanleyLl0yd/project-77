@@ -971,11 +971,9 @@ namespace Project77.Game
         {
             var width = payload.Width * cellSize;
             var height = payload.Height * cellSize;
-            var boardTop = GetBoardTop();
-            var availableHeight = Mathf.Max(height, PrototypeGuiLayout.Height - boardTop - BoardBottomReserve);
             return new Rect(
                 (PrototypeGuiLayout.Width - width) * 0.5f,
-                boardTop + (availableHeight - height) * 0.5f,
+                GetBoardTop() + 12f,
                 width,
                 height);
         }
