@@ -89,7 +89,7 @@ namespace Project77.Game
             var y = 8f;
             GUI.Label(new Rect(0f, y, contentWidth, 48f), "Project 77", titleStyle);
             y += 48f;
-            GUI.Label(new Rect(0f, y, contentWidth, 34f), "Prototype 0.1 — P1 playtest", titleStyle);
+            GUI.Label(new Rect(0f, y, contentWidth, 34f), "Playtest build", titleStyle);
             y += 48f;
 
             GUI.Label(
@@ -115,7 +115,7 @@ namespace Project77.Game
 
             if (GUI.Button(
                     new Rect(8f, y, contentWidth - 16f, 68f),
-                    "Start P1 playtest",
+                    "Start playtest",
                     buttonStyle))
             {
                 StartSelectedMeta();
