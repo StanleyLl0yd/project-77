@@ -1,5 +1,14 @@
 # Project 77 — Documentation Changelog
 
+## v0.6.1 — Build 11 first-use UX iteration — 2026-09-10
+
+- Physical-device review of Unity Build #11 found a blocking first-use comprehension problem before the protocol-grade P1 fresh-tester batch.
+- Build #11 remains valid technical evidence for commit `357356a9fdf34052cc666bf6ac16abec9e419848`, but its P1-001 freeze is superseded for external Gate P1 testing.
+- Added `35_P1_BUILD_11_DEVICE_FINDING.md` as the recorded device finding.
+- External Android/playtest launch is being constrained to the selected P1 path; legacy P0 A/B/C selection remains editor/debug-only.
+- Energy Routing onboarding is being revised for explicit one-finger drag guidance, redundant endpoint labels, obvious blocked-cell markers and clearer reward/island causality.
+- P77-071 remains blocked until a corrected Android APK passes physical-device first-use smoke and receives a new artifact-bound freeze.
+
 ## v0.6 — Gate P1 Execution Baseline — 2026-09-09
 
 - Gate P0 owner-authorized CONTINUE and Energy Routing selection are reflected in the active documentation baseline.

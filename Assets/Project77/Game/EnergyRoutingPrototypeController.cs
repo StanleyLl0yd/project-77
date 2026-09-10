@@ -12,6 +12,9 @@ namespace Project77.Game
     {
         private const int FirstLevel = 1;
         private const int LastLevel = 10;
+        private const float PortraitBoardTop = 224f;
+        private const float CompactBoardTop = 174f;
+        private const float BoardBottomReserve = 94f;
 
         private enum PrototypeView
         {
@@ -35,7 +38,9 @@ namespace Project77.Game
         private int validInteractionCount;
         private int invalidInteractionCount;
         private string activePairId;
-        private string feedback = "Connect matching nodes without crossing paths.";
+        private string activeTargetLabel;
+        private string feedback = "Ready.";
+        private string islandNotice = "The generator is dark. The annex has no power.";
         private string playtestId = "local_debug";
         private string continuationContext = "post_level";
         private long levelStartMs;
@@ -164,11 +169,12 @@ namespace Project77.Game
             validInteractionCount = 0;
             invalidInteractionCount = 0;
             activePairId = null;
+            activeTargetLabel = null;
             dragPath.Clear();
             continuationOffered = false;
             continuationContext = "post_level";
             levelStartMs = NowMs();
-            feedback = "Connect matching nodes without crossing paths.";
+            feedback = levelNumber == FirstLevel ? "Start with the labeled nodes." : "Ready.";
 
             Track(
                 PrototypeAnalyticsEventName.LevelStart,
@@ -189,63 +195,131 @@ namespace Project77.Game
                 return;
             }
 
-            var pairId = FindPairAtEndpoint(cell);
-            if (pairId == null)
+            if (IsBlocked(cell))
             {
                 invalidInteractionCount++;
-                feedback = "Start on a colored endpoint.";
+                feedback = "X is blocked. Start on a labeled endpoint.";
+                TrackInvalid("path_start", "blocked");
+                return;
+            }
+
+            var pair = FindPairAtEndpoint(cell);
+            if (pair == null)
+            {
+                invalidInteractionCount++;
+                feedback = "Start on a labeled endpoint such as R1 or R2.";
                 TrackInvalid("path_start", "wrong_target");
                 return;
             }
 
-            activePairId = pairId;
+            activePairId = pair.Id;
+            activeTargetLabel = cell.Equals(pair.Start)
+                ? EnergyRoutingPresentation.EndpointLabel(pair.Id, 2)
+                : EnergyRoutingPresentation.EndpointLabel(pair.Id, 1);
             dragPath.Clear();
             dragPath.Add(cell);
-            feedback = $"Routing {pairId}…";
+            feedback = $"Keep your finger down and drag to {activeTargetLabel}.";
         }
 
         private void ContinueDrag(Vector2 screenPosition)
         {
-            if (!TryScreenToCell(screenPosition, out var cell) || dragPath.Count == 0)
+            if (!TryScreenToCell(screenPosition, out var target) || dragPath.Count == 0)
             {
                 return;
             }
 
             var last = dragPath[dragPath.Count - 1];
-            if (cell.Equals(last))
+            if (target.Equals(last))
             {
                 return;
+            }
+
+            if (last.X != target.X && last.Y != target.Y)
+            {
+                return;
+            }
+
+            var stepX = Math.Sign(target.X - last.X);
+            var stepY = Math.Sign(target.Y - last.Y);
+            while (!last.Equals(target))
+            {
+                var next = new GridCell(last.X + stepX, last.Y + stepY);
+                if (!TryAppendDragCell(next))
+                {
+                    return;
+                }
+
+                last = dragPath[dragPath.Count - 1];
+            }
+        }
+
+        private bool TryAppendDragCell(GridCell cell)
+        {
+            var last = dragPath[dragPath.Count - 1];
+            if (!last.IsOrthogonallyAdjacentTo(cell))
+            {
+                return false;
             }
 
             if (dragPath.Count >= 2 && cell.Equals(dragPath[dragPath.Count - 2]))
             {
                 dragPath.RemoveAt(dragPath.Count - 1);
-                return;
+                return true;
             }
 
-            if (last.IsOrthogonallyAdjacentTo(cell) && !dragPath.Contains(cell))
+            if (dragPath.Contains(cell))
             {
-                dragPath.Add(cell);
+                feedback = "A route cannot loop through the same square.";
+                return false;
             }
+
+            if (IsBlocked(cell))
+            {
+                feedback = "X is blocked. Keep holding and route around it.";
+                return false;
+            }
+
+            var endpointPair = FindPairAtEndpoint(cell);
+            if (endpointPair != null && endpointPair.Id != activePairId)
+            {
+                feedback = "That endpoint belongs to another pair.";
+                return false;
+            }
+
+            if (IsOccupiedByAnotherPath(activePairId, cell))
+            {
+                feedback = "That square is already used. Paths cannot cross.";
+                return false;
+            }
+
+            dragPath.Add(cell);
+            return true;
         }
 
         private void EndDrag()
         {
             var pairId = activePairId;
+            var targetLabel = activeTargetLabel;
             activePairId = null;
+            activeTargetLabel = null;
+
             var result = runner.Apply(new EnergyRoutingPathAction(pairId, dragPath.ToArray()));
             dragPath.Clear();
 
             if (!result.Accepted)
             {
                 invalidInteractionCount++;
-                feedback = $"Invalid route: {result.Reason}";
+                feedback = FriendlyInvalidReason(result.Reason, targetLabel);
                 TrackInvalid("path_end", MapInvalidReason(result.Reason));
                 return;
             }
 
             validInteractionCount++;
-            feedback = runner.Status == PuzzleRunStatus.Succeeded ? "Network restored." : "Route accepted.";
+            var code = EnergyRoutingPresentation.PairCode(pairId);
+            feedback = runner.Status == PuzzleRunStatus.Succeeded
+                ? "All matching labels connected. Network restored."
+                : $"{code}1 and {code}2 connected. Connect the remaining pair.";
+
             if (runner.Status == PuzzleRunStatus.Succeeded)
             {
                 TrackLevelComplete();
@@ -271,12 +345,13 @@ namespace Project77.Game
             attemptIndex++;
             runner.Restart();
             activePairId = null;
+            activeTargetLabel = null;
             dragPath.Clear();
             continuationOffered = false;
             validInteractionCount = 0;
             invalidInteractionCount = 0;
             levelStartMs = NowMs();
-            feedback = "Level restarted.";
+            feedback = "Route cleared. Start again on a labeled endpoint.";
 
             Track(
                 PrototypeAnalyticsEventName.LevelRetry,
@@ -341,6 +416,9 @@ namespace Project77.Game
             pendingReward = null;
             view = PrototypeView.Island;
             continuationOffered = false;
+            islandNotice = meta.CanRepairGenerator
+                ? "You now have enough material and stored power to repair the generator."
+                : "The recovered resources can be used to repair the island generator.";
 
             if ((!meta.GeneratorRepaired && !meta.CanRepairGenerator) ||
                 meta.Robot77Discovered)
@@ -400,6 +478,8 @@ namespace Project77.Game
                     ["change_type"] = "power_on",
                     ["caused_by"] = "generator_repair"
                 });
+
+            islandNotice = "POWER RESTORED. Lights come on and the sealed annex receives power.";
         }
 
         private void UnlockArea()
@@ -428,6 +508,8 @@ namespace Project77.Game
                     ["change_type"] = "unlock_visual",
                     ["caused_by"] = "area_unlock"
                 });
+
+            islandNotice = "ANNEX OPEN. A weak signal is now detectable inside.";
         }
 
         private void DiscoverRobot77()
@@ -448,6 +530,7 @@ namespace Project77.Game
                     ["levels_completed_before_discovery"] = levelNumber
                 });
 
+            islandNotice = "SIGNAL FOUND: 77. The damaged robot reacts to the restored power.";
             OfferContinuation("post_77_discovery");
         }
 
@@ -544,28 +627,55 @@ namespace Project77.Game
 
         private void DrawHeader()
         {
+            var compactVertical = PrototypeGuiLayout.Height < 650f;
             var titleStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 26,
+                fontSize = compactVertical ? 22 : 26,
                 fontStyle = FontStyle.Bold,
                 wordWrap = true
             };
-            var bodyStyle = new GUIStyle(GUI.skin.label)
+            var feedbackStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 18,
+                fontSize = compactVertical ? 16 : 18,
+                fontStyle = FontStyle.Bold,
+                wordWrap = true
+            };
+            var instructionStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = compactVertical ? 15 : 17,
+                wordWrap = true
+            };
+            var legendStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = compactVertical ? 14 : 16,
+                fontStyle = FontStyle.Bold,
                 wordWrap = true
             };
 
             GUI.Label(
-                new Rect(20f, 14f, PrototypeGuiLayout.Width - 40f, 36f),
-                metaLoopEnabled
-                    ? "Project 77 — P1: Energy Routing + Island"
-                    : "Project 77 — Prototype A: Energy Routing",
+                new Rect(20f, 10f, PrototypeGuiLayout.Width - 40f, 34f),
+                metaLoopEnabled ? "Project 77 — Energy Routing" : "Project 77 — Prototype A: Energy Routing",
                 titleStyle);
             GUI.Label(
-                new Rect(20f, 50f, PrototypeGuiLayout.Width - 40f, 46f),
-                $"Level A-{levelNumber:000} · {feedback}",
-                bodyStyle);
+                new Rect(20f, 46f, PrototypeGuiLayout.Width - 40f, compactVertical ? 38f : 46f),
+                $"Route {levelNumber} of {LastLevel} · {feedback}",
+                feedbackStyle);
+
+            var instructionY = compactVertical ? 86f : 96f;
+            var instructionHeight = compactVertical ? 78f : 116f;
+            var panel = new Rect(20f, instructionY, PrototypeGuiLayout.Width - 40f, instructionHeight);
+            GUI.Box(panel, string.Empty);
+
+            var connectedCount = ConnectedPairCount();
+            GUI.Label(
+                new Rect(panel.x + 10f, panel.y + 6f, panel.width - 20f, compactVertical ? 42f : 66f),
+                EnergyRoutingPresentation.Instruction(levelNumber, payload.BlockedCells.Count, connectedCount),
+                instructionStyle);
+            GUI.Label(
+                new Rect(panel.x + 10f, panel.y + instructionHeight - (compactVertical ? 30f : 40f), panel.width - 20f, compactVertical ? 28f : 36f),
+                BuildLegend(),
+                legendStyle);
         }
 
         private void DrawIntro()
@@ -597,17 +707,22 @@ namespace Project77.Game
             var width = PrototypeGuiLayout.ContentWidth(620f, 20f);
             var x = (PrototypeGuiLayout.Width - width) * 0.5f;
             var title = CenteredStyle(28, FontStyle.Bold);
-            var body = CenteredStyle(20, FontStyle.Normal);
+            var body = CenteredStyle(18, FontStyle.Normal);
+            var resource = CenteredStyle(22, FontStyle.Bold);
 
-            GUI.Label(new Rect(x, 70f, width, 44f), "Puzzle complete", title);
-            GUI.Box(new Rect(x, 132f, width, 220f), string.Empty);
-            GUI.Label(new Rect(x + 20f, 154f, width - 40f, 40f), "Recovered resources", body);
+            GUI.Label(new Rect(x, 62f, width, 44f), "Route restored", title);
+            GUI.Box(new Rect(x, 124f, width, 276f), string.Empty);
+            GUI.Label(new Rect(x + 20f, 144f, width - 40f, 36f), "Recovered resources", body);
             GUI.Label(
-                new Rect(x + 20f, 206f, width - 40f, 70f),
-                $"+{pendingReward.ScrapAmount} Scrap\n+{pendingReward.EnergyAmount} Energy",
-                title);
+                new Rect(x + 20f, 190f, width - 40f, 74f),
+                $"SCRAP +{pendingReward.ScrapAmount}\nENERGY +{pendingReward.EnergyAmount}",
+                resource);
+            GUI.Label(
+                new Rect(x + 20f, 270f, width - 40f, 70f),
+                "Scrap is repair material. Energy is stored power. Both can restore island machinery.",
+                body);
 
-            if (GUI.Button(new Rect(x + 20f, 292f, width - 40f, 52f), "Claim reward"))
+            if (GUI.Button(new Rect(x + 20f, 420f, width - 40f, 58f), "Take resources"))
             {
                 ClaimReward();
             }
@@ -620,38 +735,37 @@ namespace Project77.Game
             var title = CenteredStyle(28, FontStyle.Bold);
             var body = CenteredStyle(18, FontStyle.Normal);
             var status = CenteredStyle(20, FontStyle.Bold);
+            var notice = CenteredStyle(19, FontStyle.Bold);
 
-            GUI.Label(new Rect(x, 28f, width, 44f), "Abandoned Island", title);
+            GUI.Label(new Rect(x, 24f, width, 44f), "Abandoned Island", title);
             GUI.Label(
-                new Rect(x, 72f, width, 38f),
-                $"Scrap {meta.Scrap}   ·   Energy {meta.Energy}",
+                new Rect(x, 68f, width, 52f),
+                $"SCRAP {meta.Scrap}/{PrototypeMetaProgression.GeneratorScrapCost}   ·   ENERGY {meta.Energy}/{PrototypeMetaProgression.GeneratorEnergyCost}",
                 status);
 
-            GUI.Box(new Rect(x, 124f, width, 252f), string.Empty);
+            GUI.Box(new Rect(x, 126f, width, 246f), string.Empty);
             GUI.Label(
-                new Rect(x + 20f, 144f, width - 40f, 34f),
-                meta.GeneratorRepaired ? "GENERATOR: ONLINE" : "GENERATOR: DAMAGED",
+                new Rect(x + 20f, 144f, width - 40f, 36f),
+                meta.GeneratorRepaired ? "[GENERATOR] ONLINE" : "[GENERATOR] OFFLINE — NEEDS REPAIR",
                 status);
             GUI.Label(
                 new Rect(x + 20f, 184f, width - 40f, 34f),
-                meta.AreaUnlocked ? "GENERATOR ANNEX: OPEN" : "GENERATOR ANNEX: SEALED",
+                meta.AreaUnlocked ? "[ANNEX] OPEN" : "[ANNEX] LOCKED — NO POWER",
                 body);
             GUI.Label(
-                new Rect(x + 20f, 222f, width - 40f, 72f),
-                meta.Robot77Discovered
-                    ? "77: damaged robot found. Its systems are dormant, but it reacted to restored power."
-                    : "77: no contact",
+                new Rect(x + 20f, 222f, width - 40f, 56f),
+                meta.Robot77Discovered ? "[SIGNAL] 77 FOUND" : "[SIGNAL] NONE",
                 body);
+            GUI.Label(
+                new Rect(x + 20f, 286f, width - 40f, 68f),
+                islandNotice,
+                notice);
 
             if (!meta.GeneratorRepaired && meta.CanRepairGenerator)
             {
-                GUI.Label(
-                    new Rect(x + 20f, 294f, width - 40f, 36f),
-                    "The generator can be repaired with the resources you recovered.",
-                    body);
                 if (GUI.Button(
-                        new Rect(x + 20f, 388f, width - 40f, 56f),
-                        $"Repair generator — {PrototypeMetaProgression.GeneratorScrapCost} Scrap + {PrototypeMetaProgression.GeneratorEnergyCost} Energy"))
+                        new Rect(x + 20f, 394f, width - 40f, 62f),
+                        $"Repair generator — spend {PrototypeMetaProgression.GeneratorScrapCost} Scrap + {PrototypeMetaProgression.GeneratorEnergyCost} Energy"))
                 {
                     RepairGenerator();
                 }
@@ -661,17 +775,13 @@ namespace Project77.Game
             if (!meta.GeneratorRepaired)
             {
                 GUI.Label(
-                    new Rect(x + 20f, 294f, width - 40f, 48f),
-                    $"Repair requires {PrototypeMetaProgression.GeneratorScrapCost} Scrap and {PrototypeMetaProgression.GeneratorEnergyCost} Energy.",
+                    new Rect(x + 20f, 382f, width - 40f, 50f),
+                    $"Generator repair needs {PrototypeMetaProgression.GeneratorScrapCost} Scrap and {PrototypeMetaProgression.GeneratorEnergyCost} Energy.",
                     body);
             }
             else if (!meta.AreaUnlocked)
             {
-                GUI.Label(
-                    new Rect(x + 20f, 294f, width - 40f, 48f),
-                    "Power is back. A gate beside the generator has unlocked.",
-                    body);
-                if (GUI.Button(new Rect(x + 20f, 388f, width - 40f, 56f), "Open powered area"))
+                if (GUI.Button(new Rect(x + 20f, 394f, width - 40f, 62f), "Open the powered annex"))
                 {
                     UnlockArea();
                 }
@@ -679,11 +789,7 @@ namespace Project77.Game
             }
             else if (!meta.Robot77Discovered)
             {
-                GUI.Label(
-                    new Rect(x + 20f, 294f, width - 40f, 48f),
-                    "A weak signal is coming from inside the opened annex.",
-                    body);
-                if (GUI.Button(new Rect(x + 20f, 388f, width - 40f, 56f), "Investigate signal"))
+                if (GUI.Button(new Rect(x + 20f, 394f, width - 40f, 62f), "Investigate the signal"))
                 {
                     DiscoverRobot77();
                 }
@@ -693,14 +799,14 @@ namespace Project77.Game
             if (continuationOffered)
             {
                 GUI.Label(
-                    new Rect(x + 20f, 388f, width - 40f, 38f),
+                    new Rect(x + 20f, 444f, width - 40f, 50f),
                     meta.Robot77Discovered
-                        ? "The island changed. Another energy route is available."
-                        : "You need more resources. Another route is available.",
+                        ? "Another energy route is available."
+                        : "You need more resources. Another energy route is available.",
                     body);
                 if (GUI.Button(
-                        new Rect(x + 20f, 438f, width - 40f, 58f),
-                        levelNumber < LastLevel ? "Start next puzzle" : "Finish prototype"))
+                        new Rect(x + 20f, 504f, width - 40f, 62f),
+                        levelNumber < LastLevel ? "Restore another route" : "Finish prototype"))
                 {
                     NextLevel();
                 }
@@ -711,6 +817,8 @@ namespace Project77.Game
         {
             var cellSize = GetCellSize();
             var boardRect = GetBoardRect(cellSize);
+            var blockedStyle = CenteredStyle(Mathf.Clamp((int)(cellSize * 0.38f), 20, 34), FontStyle.Bold);
+
             for (var y = 0; y < payload.Height; y++)
             {
                 for (var x = 0; x < payload.Width; x++)
@@ -718,26 +826,34 @@ namespace Project77.Game
                     var cell = new GridCell(x, y);
                     var rect = GetCellRect(cell, boardRect, cellSize);
                     var previous = GUI.backgroundColor;
-                    GUI.backgroundColor = IsBlocked(cell) ? new Color(0.22f, 0.22f, 0.24f) : new Color(0.48f, 0.5f, 0.54f);
+                    var blocked = IsBlocked(cell);
+                    GUI.backgroundColor = blocked
+                        ? new Color(0.92f, 0.30f, 0.24f)
+                        : new Color(0.78f, 0.82f, 0.88f);
                     GUI.Box(rect, string.Empty);
                     GUI.backgroundColor = previous;
+
+                    if (blocked)
+                    {
+                        GUI.Label(rect, "X", blockedStyle);
+                    }
                 }
             }
 
             foreach (var pair in payload.Pairs)
             {
-                DrawPath(pair.Id, runner.GetPath(pair.Id), boardRect, cellSize, 0.72f);
+                DrawPath(pair.Id, runner.GetPath(pair.Id), boardRect, cellSize, 0.68f);
             }
 
             if (activePairId != null)
             {
-                DrawPath(activePairId, dragPath, boardRect, cellSize, 0.48f);
+                DrawPath(activePairId, dragPath, boardRect, cellSize, 0.50f);
             }
 
             foreach (var pair in payload.Pairs)
             {
-                DrawEndpoint(pair.Id, pair.Start, boardRect, cellSize);
-                DrawEndpoint(pair.Id, pair.End, boardRect, cellSize);
+                DrawEndpoint(pair.Id, pair.Start, 1, boardRect, cellSize);
+                DrawEndpoint(pair.Id, pair.End, 2, boardRect, cellSize);
             }
         }
 
@@ -745,7 +861,7 @@ namespace Project77.Game
         {
             var y = PrototypeGuiLayout.Height - 72f;
             if (PrototypeAttemptPolicy.CanRestartAttempt(runner.Status, continuationOffered) &&
-                GUI.Button(new Rect(20f, y, 142f, 50f), "Restart"))
+                GUI.Button(new Rect(20f, y, 142f, 50f), "Clear routes"))
             {
                 RestartLevel();
             }
@@ -769,8 +885,8 @@ namespace Project77.Game
             GUI.Label(
                 new Rect(30f, 100f, PrototypeGuiLayout.Width - 60f, PrototypeGuiLayout.Height - 200f),
                 metaLoopEnabled
-                    ? "Prototype 0.1 P1 path complete.\nPuzzle → reward → repair → island change → 77 → continuation is now implemented."
-                    : "Prototype A initial set complete.\nThis is a greybox build for P0 comparison, not production gameplay.",
+                    ? "Prototype route complete. Thank you for playing."
+                    : "Prototype A initial set complete.\nThis is an editor-only P0 comparison path.",
                 style);
 
             if (!metaLoopEnabled &&
@@ -811,26 +927,44 @@ namespace Project77.Game
             GUI.backgroundColor = previous;
         }
 
-        private void DrawEndpoint(string pairId, GridCell cell, Rect boardRect, float cellSize)
+        private void DrawEndpoint(
+            string pairId,
+            GridCell cell,
+            int endpointNumber,
+            Rect boardRect,
+            float cellSize)
         {
             var rect = GetCellRect(cell, boardRect, cellSize);
-            var inset = cellSize * 0.2f;
-            rect.x += inset;
-            rect.y += inset;
-            rect.width -= inset * 2f;
-            rect.height -= inset * 2f;
+            var outerInset = cellSize * 0.11f;
+            rect.x += outerInset;
+            rect.y += outerInset;
+            rect.width -= outerInset * 2f;
+            rect.height -= outerInset * 2f;
 
             var previous = GUI.backgroundColor;
             GUI.backgroundColor = PairColor(pairId);
-            GUI.Box(rect, pairId.Substring(0, 1).ToUpperInvariant());
+            GUI.Box(rect, string.Empty);
+
+            var inner = rect;
+            var innerInset = Mathf.Max(4f, cellSize * 0.08f);
+            inner.x += innerInset;
+            inner.y += innerInset;
+            inner.width -= innerInset * 2f;
+            inner.height -= innerInset * 2f;
+            GUI.backgroundColor = new Color(0.12f, 0.13f, 0.16f);
+            GUI.Box(inner, string.Empty);
             GUI.backgroundColor = previous;
+
+            var markerStyle = CenteredStyle(Mathf.Clamp((int)(cellSize * 0.27f), 16, 24), FontStyle.Bold);
+            GUI.Label(inner, EnergyRoutingPresentation.EndpointLabel(pairId, endpointNumber), markerStyle);
         }
 
         private float GetCellSize()
         {
             var widthFit = (PrototypeGuiLayout.Width - 40f) / payload.Width;
-            var heightFit = (PrototypeGuiLayout.Height - 230f) / payload.Height;
-            return Mathf.Clamp(Mathf.Min(widthFit, heightFit), 36f, 86f);
+            var availableHeight = Mathf.Max(150f, PrototypeGuiLayout.Height - GetBoardTop() - BoardBottomReserve);
+            var heightFit = availableHeight / payload.Height;
+            return Mathf.Clamp(Mathf.Min(widthFit, heightFit), 32f, 86f);
         }
 
         private Rect GetBoardRect(float cellSize)
@@ -839,9 +973,14 @@ namespace Project77.Game
             var height = payload.Height * cellSize;
             return new Rect(
                 (PrototypeGuiLayout.Width - width) * 0.5f,
-                104f + (PrototypeGuiLayout.Height - 230f - height) * 0.5f,
+                GetBoardTop() + 12f,
                 width,
                 height);
+        }
+
+        private static float GetBoardTop()
+        {
+            return PrototypeGuiLayout.Height < 650f ? CompactBoardTop : PortraitBoardTop;
         }
 
         private Rect GetCellRect(GridCell cell, Rect boardRect, float cellSize)
@@ -872,13 +1011,13 @@ namespace Project77.Game
             return payload.Contains(cell);
         }
 
-        private string FindPairAtEndpoint(GridCell cell)
+        private EnergyRoutingPair FindPairAtEndpoint(GridCell cell)
         {
             foreach (var pair in payload.Pairs)
             {
                 if (pair.Start.Equals(cell) || pair.End.Equals(cell))
                 {
-                    return pair.Id;
+                    return pair;
                 }
             }
 
@@ -896,6 +1035,84 @@ namespace Project77.Game
             }
 
             return false;
+        }
+
+        private bool IsOccupiedByAnotherPath(string pairId, GridCell cell)
+        {
+            foreach (var pair in payload.Pairs)
+            {
+                if (pair.Id == pairId)
+                {
+                    continue;
+                }
+
+                var path = runner.GetPath(pair.Id);
+                for (var index = 0; index < path.Count; index++)
+                {
+                    if (path[index].Equals(cell))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private int ConnectedPairCount()
+        {
+            var count = 0;
+            foreach (var pair in payload.Pairs)
+            {
+                if (runner.GetPath(pair.Id).Count > 0)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private string BuildLegend()
+        {
+            var pairIds = new List<string>();
+            foreach (var pair in payload.Pairs)
+            {
+                pairIds.Add(pair.Id);
+            }
+
+            return EnergyRoutingPresentation.Legend(pairIds, payload.BlockedCells.Count > 0);
+        }
+
+        private static string FriendlyInvalidReason(string reason, string targetLabel)
+        {
+            if (reason == EnergyRoutingInvalidReason.Blocked)
+            {
+                return "X is blocked. Route around it.";
+            }
+            if (reason == EnergyRoutingInvalidReason.Crossing)
+            {
+                return "Paths cannot cross or share squares.";
+            }
+            if (reason == EnergyRoutingInvalidReason.SelfIntersection)
+            {
+                return "A route cannot loop through the same square.";
+            }
+            if (reason == EnergyRoutingInvalidReason.NonContiguous)
+            {
+                return "Drag through side-touching squares, not diagonally.";
+            }
+            if (reason == EnergyRoutingInvalidReason.WrongTarget)
+            {
+                return "Finish on the matching label, not another pair.";
+            }
+            if (reason == EnergyRoutingInvalidReason.BadEndpoint)
+            {
+                return targetLabel == null
+                    ? "Start and finish on matching labels."
+                    : $"Keep your finger down until {targetLabel}.";
+            }
+            return "That route is not valid. Try another path.";
         }
 
         private static string MapInvalidReason(string reason)
@@ -921,11 +1138,11 @@ namespace Project77.Game
         {
             switch (pairId)
             {
-                case "red": return new Color(0.78f, 0.26f, 0.24f);
-                case "blue": return new Color(0.24f, 0.46f, 0.82f);
-                case "green": return new Color(0.25f, 0.68f, 0.38f);
-                case "yellow": return new Color(0.86f, 0.72f, 0.24f);
-                default: return new Color(0.66f, 0.42f, 0.8f);
+                case "red": return new Color(1f, 0.34f, 0.30f);
+                case "blue": return new Color(0.30f, 0.62f, 1f);
+                case "green": return new Color(0.30f, 0.88f, 0.48f);
+                case "yellow": return new Color(1f, 0.82f, 0.24f);
+                default: return new Color(0.78f, 0.48f, 1f);
             }
         }
 

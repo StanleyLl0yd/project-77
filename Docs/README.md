@@ -1,8 +1,8 @@
 # Project 77 — Project Documentation
 
-Версия документации: **0.6 Gate P1 Execution Baseline**.
+Версия документации: **0.6.1 Build 11 First-Use UX Iteration**.
 
-Статус: **pre-production завершён; активная фаза — Prototype 0.1**. Implementation baseline и operational guardrails утверждены.
+Статус: **pre-production завершён; активная фаза — Prototype 0.1 / Gate P1 UX iteration**. Build #11 технически валиден, но не допущен к fresh-tester batch после physical-device finding.
 
 Project 77 — мобильная free-to-play adventure/puzzle-игра с долгой метапрогрессией. Игрок начинает с восстановления заброшенного острова, постепенно раскрывает тайну подземного исследовательского комплекса, находит древний корабль, выходит в космос, исследует другие планеты и в перспективе открывает сеть миров.
 
@@ -24,6 +24,7 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 - Production stack: **Unity 6.3 LTS + C# + URP**.
 - Первая целевая платформа: **Android**, архитектура сразу cross-platform.
 - Текущий milestone: **Project 77 Prototype 0.1 / Gate P1** — интегрированный Energy Routing путь → ресурсы → восстановление генератора → visible island change → area unlock → обнаружение 77 → voluntary continuation.
+- Unity Build #11 выявил first-use UX blocker до P77-071; finding зафиксирован в `35_P1_BUILD_11_DEVICE_FINDING.md`, исправленный Android build обязателен до fresh-tester batch.
 - Красивый production-art, магазин и большой backend не делаются до доказательства core/meta loop.
 - Целевая product-аудитория: подростки и взрослые (13+ direction), не child-directed.
 - Launch social: visits/likes/predefined reactions; без free-form chat/UGC.
@@ -73,19 +74,20 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 34. `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered implementation tasks and Definition of Done.
 35. `33_P0_GATE_DECISION.md` — basis/limitations owner-authorized Gate P0 CONTINUE.
 36. `34_P1_EXTERNAL_PLAYTEST_PLAN.md` — preregistered Gate P1 hypothesis, environment and decision rule.
-37. `CHANGELOG.md` — история версий проектной документации.
+37. `35_P1_BUILD_11_DEVICE_FINDING.md` — physical-device finding that superseded Build #11 for the fresh P1 batch.
+38. `CHANGELOG.md` — история версий проектной документации.
 
 ## Текущая рабочая фаза
 
-**Prototype 0.1.** На этом этапе проект больше не расширяет дизайн «на бумаге» без необходимости. Основная задача — проверить core + meta loop на внешних playtests.
+**Prototype 0.1 / Gate P1 UX iteration.** Интегрированный core/meta loop существует, но P77-071 ещё не начат. Physical-device smoke Build #11 показал, что первый puzzle и внешний entry point недостаточно понятны без знания прототипа.
 
 Последовательность ближайшей работы:
 
-`bootstrap -> A/B/C (10 validated levels each) -> P0 playtest -> select winner -> 10–20 integrated levels -> reward -> repair generator -> unlock area -> discover 77 -> P1 playtest -> gate decision`.
+`first-use UX fix -> repository CI -> corrected Android build -> physical-device smoke -> new artifact-bound P1 freeze -> P1 fresh-tester batch -> Gate P1 report`.
 
-Gate P0 has CONTINUE for implementation purposes; Energy Routing is the selected P1 core. The current active work is the frozen external P1 batch and Gate P1 decision.
+Gate P0 has CONTINUE for implementation purposes; Energy Routing remains the selected P1 core. Build #11 и его freeze сохраняются только как historical technical evidence и не используются для fresh P1 metrics.
 
-До успешного gate production-art, большой backend, store, Season Pass, subscription, планеты и массовое производство контента не являются допустимым приоритетом.
+До успешного Gate P1 production-art, большой backend, store, Season Pass, subscription, планеты и массовое производство контента не являются допустимым приоритетом.
 
 ## Как пользоваться документацией
 

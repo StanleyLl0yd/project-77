@@ -1,8 +1,10 @@
 # Project 77 — Prototype 0.1 Implementation Backlog
 
-Status: **ACTIVE ordered backlog — Milestone H / P1 external playtest preparation**.
+Status: **ACTIVE ordered backlog — Milestone H / P1 UX iteration before external playtest**.
 
 Gate P0 has an owner-authorized **CONTINUE** decision and Energy Routing is the selected P1 core. Quantitative P0 evidence is incomplete and explicitly documented in `33_P0_GATE_DECISION.md`.
+
+Unity Build #11 passed technical artifact checks but failed physical-device first-use acceptance before P77-071. The finding is recorded in `35_P1_BUILD_11_DEVICE_FINDING.md`; Build #11 and its freeze are historical only for Gate P1 evidence.
 
 This backlog is executable scope for the current phase. `28_PROTOTYPE_01_SPEC.md` remains the implementation contract; `18_PRODUCT_GATES.md` remains the gate authority.
 
@@ -222,7 +224,7 @@ DoD:
 
 Only starts after P0 CONTINUE.
 
-Implementation status: the integrated greybox path now includes the short intro, the existing 10 validated Energy Routing levels, reward/resources, placeholder island state, generator repair, visible change, area unlock, 77 discovery, explicit continuation choice and selected-meta telemetry. Real-device validation of the new P1 APK remains part of Milestone H.
+Implementation status: the integrated greybox path includes the short intro, 10 validated Energy Routing levels, reward/resources, placeholder island state, generator repair, visible change, area unlock, 77 discovery, explicit continuation choice and selected-meta telemetry. First-use presentation is being iterated from physical-device evidence before the external P1 batch.
 
 ### P77-060 — Expand selected core to Prototype 0.1 set
 
@@ -279,17 +281,23 @@ DoD:
 - no auto-advance makes voluntary continuation unmeasurable;
 - offer/click timing is logged.
 
-## Milestone H — P1 external playtest — ACTIVE
+## Milestone H — P1 external playtest — UX ITERATION BEFORE BATCH
 
 ### P77-070 — P1 test build freeze
 
-Preparation status: **READY FOR APK**. The preregistered test question/decision rule is in `34_P1_EXTERNAL_PLAYTEST_PLAN.md`. The freeze tool now requires orientation, at least one device target and the help threshold, and binds those values into the batch fingerprint.
+Status: **ITERATING AFTER PHYSICAL-DEVICE FINDING**.
+
+Build #11 was successfully built, inspected and artifact-bound, but physical-device review exposed a blocking first-use clarity/debug-entry problem before fresh testing. Its freeze is retained as historical technical evidence only. The corrected build must receive a new artifact-bound freeze before P77-071.
+
+The preregistered test question/decision rule remains unchanged in `34_P1_EXTERNAL_PLAYTEST_PLAN.md`. Orientation, device target, help threshold and gate threshold are not being changed in response to the UX finding.
 
 DoD:
 
-- build, levels, telemetry schema, orientation, device matrix and help rules recorded before test.
+- corrected build, levels, telemetry schema, orientation, device matrix and help rules recorded before test;
+- external Android launch exposes only the selected P1 path;
+- corrected APK passes physical-device first-use smoke before being admitted to P77-071.
 
-### P77-071 — Run P1 fresh-tester batch
+### P77-071 — Run P1 fresh-tester batch — BLOCKED BY P77-070
 
 DoD:
 

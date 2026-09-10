@@ -46,7 +46,11 @@ namespace Project77.Game
                 viewportHeight);
 
             var contentWidth = Mathf.Max(220f, width - 20f);
-            var contentHeight = string.IsNullOrEmpty(setupError) ? 690f : 756f;
+#if UNITY_EDITOR
+            var contentHeight = string.IsNullOrEmpty(setupError) ? 700f : 766f;
+#else
+            var contentHeight = string.IsNullOrEmpty(setupError) ? 458f : 524f;
+#endif
             setupScroll = GUI.BeginScrollView(
                 viewport,
                 setupScroll,
@@ -69,22 +73,11 @@ namespace Project77.Game
             {
                 fontSize = 16
             };
-            var sectionStyle = new GUIStyle(bodyStyle)
-            {
-                fontSize = 18,
-                fontStyle = FontStyle.Bold
-            };
             var buttonStyle = new GUIStyle(GUI.skin.button)
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 20,
                 fontStyle = FontStyle.Bold,
-                wordWrap = true
-            };
-            var debugButtonStyle = new GUIStyle(GUI.skin.button)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 17,
                 wordWrap = true
             };
             var textFieldStyle = new GUIStyle(GUI.skin.textField)
@@ -96,20 +89,20 @@ namespace Project77.Game
             var y = 8f;
             GUI.Label(new Rect(0f, y, contentWidth, 48f), "Project 77", titleStyle);
             y += 48f;
-            GUI.Label(new Rect(0f, y, contentWidth, 34f), "Prototype 0.1 — P1", titleStyle);
-            y += 44f;
+            GUI.Label(new Rect(0f, y, contentWidth, 34f), "Playtest build", titleStyle);
+            y += 48f;
 
             GUI.Label(
-                new Rect(8f, y, contentWidth - 16f, 70f),
-                "Selected core + meta loop: puzzle → reward → generator repair → island change → discover 77 → choose whether to continue.",
+                new Rect(8f, y, contentWidth - 16f, 82f),
+                "Restore the island's energy network, recover resources, repair the generator and investigate what wakes up.",
                 bodyStyle);
-            y += 78f;
+            y += 92f;
 
             GUI.Label(
                 new Rect(8f, y, contentWidth - 16f, 42f),
                 $"Build {playtestRuntime.BuildVersion}\nSchema v{Project77.Analytics.PrototypeAnalyticsEvent.CurrentSchemaVersion}",
                 captionStyle);
-            y += 50f;
+            y += 54f;
 
             GUI.Label(new Rect(0f, y, contentWidth, 28f), "Anonymous playtest ID", bodyStyle);
             y += 32f;
@@ -118,40 +111,20 @@ namespace Project77.Game
                 playtestId ?? string.Empty,
                 64,
                 textFieldStyle);
-            y += 66f;
+            y += 68f;
 
             if (GUI.Button(
                     new Rect(8f, y, contentWidth - 16f, 68f),
-                    "Start P1 — Energy Routing + Island",
+                    "Start playtest",
                     buttonStyle))
             {
                 StartSelectedMeta();
             }
-            y += 88f;
+            y += 82f;
 
-            GUI.Label(
-                new Rect(8f, y, contentWidth - 16f, 34f),
-                "P0 debug variants",
-                sectionStyle);
-            y += 42f;
-
-            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 50f), "A — Energy Routing only", debugButtonStyle))
-            {
-                Select<EnergyRoutingPrototypeController>(PrototypeVariant.EnergyRouting);
-            }
-            y += 58f;
-
-            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 50f), "B — Path / Expedition Routing", debugButtonStyle))
-            {
-                Select<PathExpeditionPrototypeController>(PrototypeVariant.PathExpeditionRouting);
-            }
-            y += 58f;
-
-            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 50f), "C — Flow / Network Restoration", debugButtonStyle))
-            {
-                Select<FlowNetworkPrototypeController>(PrototypeVariant.FlowNetworkRestoration);
-            }
-            y += 62f;
+#if UNITY_EDITOR
+            DrawEditorDebugVariants(contentWidth, ref y, bodyStyle);
+#endif
 
             if (!string.IsNullOrEmpty(setupError))
             {
@@ -164,6 +137,47 @@ namespace Project77.Game
 
             GUI.EndScrollView();
         }
+
+#if UNITY_EDITOR
+        private void DrawEditorDebugVariants(float contentWidth, ref float y, GUIStyle bodyStyle)
+        {
+            var sectionStyle = new GUIStyle(bodyStyle)
+            {
+                fontSize = 17,
+                fontStyle = FontStyle.Bold
+            };
+            var debugButtonStyle = new GUIStyle(GUI.skin.button)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 17,
+                wordWrap = true
+            };
+
+            GUI.Label(
+                new Rect(8f, y, contentWidth - 16f, 32f),
+                "Editor-only P0 debug variants",
+                sectionStyle);
+            y += 40f;
+
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 48f), "A — Energy Routing only", debugButtonStyle))
+            {
+                Select<EnergyRoutingPrototypeController>(PrototypeVariant.EnergyRouting);
+            }
+            y += 56f;
+
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 48f), "B — Path / Expedition Routing", debugButtonStyle))
+            {
+                Select<PathExpeditionPrototypeController>(PrototypeVariant.PathExpeditionRouting);
+            }
+            y += 56f;
+
+            if (GUI.Button(new Rect(8f, y, contentWidth - 16f, 48f), "C — Flow / Network Restoration", debugButtonStyle))
+            {
+                Select<FlowNetworkPrototypeController>(PrototypeVariant.FlowNetworkRestoration);
+            }
+            y += 58f;
+        }
+#endif
 
         private void StartSelectedMeta()
         {
@@ -180,6 +194,7 @@ namespace Project77.Game
             controller.ConfigureSelectedMeta(playtestId);
         }
 
+#if UNITY_EDITOR
         private void Select<T>(string variant) where T : MonoBehaviour
         {
             if (!playtestRuntime.TryBeginVariant(playtestId, variant, out setupError))
@@ -190,5 +205,6 @@ namespace Project77.Game
             enabled = false;
             gameObject.AddComponent<T>();
         }
+#endif
     }
 }

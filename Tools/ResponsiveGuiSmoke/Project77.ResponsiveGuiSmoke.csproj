@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="../UnityScriptSmoke/UnityEngineStubs.cs" Link="UnityEngineStubs.cs" />
     <Compile Include="../../Assets/Project77/Game/PrototypeGuiLayout.cs" Link="PrototypeGuiLayout.cs" />
+    <Compile Include="../../Assets/Project77/Game/EnergyRoutingPresentation.cs" Link="EnergyRoutingPresentation.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
 </Project>

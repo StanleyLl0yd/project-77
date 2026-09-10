@@ -1,7 +1,7 @@
 {
   "project": "Project 77",
   "status": "prototype_phase",
-  "documentation_version": "0.6",
+  "documentation_version": "0.6.1",
   "active_milestone": "Prototype 0.1",
   "source_hierarchy": [
     "owner_current_instruction",
@@ -49,8 +49,15 @@
     "ship_gameplay",
     "mass_content_production"
   ],
-  "active_stage": "Prototype 0.1 / Gate P1 external playtest",
+  "active_stage": "Prototype 0.1 / Gate P1 UX iteration before external playtest",
   "p0_decision": "CONTINUE",
   "selected_core": "energy_routing",
-  "p1_external_playtest_plan": "34_P1_EXTERNAL_PLAYTEST_PLAN.md"
+  "p1_external_playtest_plan": "34_P1_EXTERNAL_PLAYTEST_PLAN.md",
+  "p1_latest_device_finding": "35_P1_BUILD_11_DEVICE_FINDING.md",
+  "p1_external_batch_state": "blocked_pending_corrected_android_build",
+  "superseded_p1_build": {
+    "unity_build_number": 11,
+    "commit_sha": "357356a9fdf34052cc666bf6ac16abec9e419848",
+    "reason": "first-use clarity and external debug-entry blocker"
+  }
 }

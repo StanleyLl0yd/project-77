@@ -8,15 +8,17 @@ The game begins as a small mystery about restoring an abandoned island. Over tim
 
 ## Current status
 
-**Prototype Phase — Prototype 0.1 / Gate P1**
+**Prototype Phase — Prototype 0.1 / Gate P1 UX iteration**
 
-Pre-production is complete. Gate P0 has an owner-authorized **CONTINUE** decision. **Energy Routing** is now the selected core for the integrated P1 prototype; the retained P0 evidence limitation is documented in `Docs/33_P0_GATE_DECISION.md`.
+Pre-production is complete. Gate P0 has an owner-authorized **CONTINUE** decision. **Energy Routing** is the selected core for the integrated P1 prototype; the retained P0 evidence limitation is documented in `Docs/33_P0_GATE_DECISION.md`.
 
 Active test flow:
 
 `Energy Routing -> Reward -> Generator Repair -> Island Change -> Area Unlock -> Discover 77 -> Voluntary Next Puzzle`
 
-P1 uses the validated 10-level Energy Routing set as the initial integrated path. Path / Expedition Routing and Flow / Network Restoration remain P0/debug implementations while P1 validates whether the meta loop increases desire to continue.
+Unity Build #11 passed technical artifact checks but exposed a blocking first-use clarity/debug-entry problem on the physical Android device before the protocol-grade P1 fresh-tester batch. The finding is recorded in `Docs/35_P1_BUILD_11_DEVICE_FINDING.md`. Build #11 remains historical evidence only; a corrected APK and new freeze are required before P77-071.
+
+Path / Expedition Routing and Flow / Network Restoration remain editor/debug P0 implementations and are not part of the external Android P1 path.
 
 ## Start here
 
@@ -30,6 +32,7 @@ Current implementation documents:
 - [`Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md`](Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md) — prototype event schema
 - [`Docs/29_PROTOTYPE_PLAYTEST_PROTOCOL.md`](Docs/29_PROTOTYPE_PLAYTEST_PROTOCOL.md) — external playtest protocol
 - [`Docs/34_P1_EXTERNAL_PLAYTEST_PLAN.md`](Docs/34_P1_EXTERNAL_PLAYTEST_PLAN.md) — preregistered Gate P1 test plan
+- [`Docs/35_P1_BUILD_11_DEVICE_FINDING.md`](Docs/35_P1_BUILD_11_DEVICE_FINDING.md) — latest physical-device iteration evidence
 - [`Docs/18_PRODUCT_GATES.md`](Docs/18_PRODUCT_GATES.md) — P0/P1 gates
 - [`Docs/13_DECISION_LOG.md`](Docs/13_DECISION_LOG.md) — product/high-level decision status
 
