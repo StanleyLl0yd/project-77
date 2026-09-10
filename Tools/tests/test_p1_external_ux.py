@@ -32,6 +32,7 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("X = BLOCKED", presentation)
         self.assertIn('builder.Append(code).Append("1 <-> ").Append(code).Append(\'2\')', presentation)
         self.assertIn("keep your finger down", presentation)
+        self.assertIn("up, down, left or right", presentation)
         self.assertIn("No blocked squares", presentation)
 
     def test_first_level_is_single_pair_onboarding(self):
@@ -65,7 +66,7 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("GUIUtility.systemCopyBuffer = File.ReadAllText(path);", selector)
         self.assertIn("+ recoveryHeight", selector)
 
-    def test_external_copy_uses_player_language_not_p0_internal_labels(self):
+    def test_external_copy_uses_player_language_not_internal_phase_labels(self):
         selector = (ROOT / "Assets/Project77/Game/PrototypeVariantSelector.cs").read_text(encoding="utf-8")
         runtime_text = re.sub(
             r"#if UNITY_EDITOR.*?#endif",
@@ -77,8 +78,8 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertNotIn("Prototype A", runtime_text)
         self.assertNotIn("Prototype B", runtime_text)
         self.assertNotIn("Prototype C", runtime_text)
-        self.assertNotIn("P1 playtest", runtime_text)
-        self.assertNotIn("P0 debug variants", runtime_text)
+        self.assertNotIn("P1", runtime_text)
+        self.assertIn("Playtest build", runtime_text)
 
 
 if __name__ == "__main__":
