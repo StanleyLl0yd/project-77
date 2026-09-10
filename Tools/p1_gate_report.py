@@ -111,6 +111,15 @@ def load_moderation(path: Path | None) -> dict[str, ModerationRecord]:
             if cohort not in {"fresh", "returning"}:
                 raise P1ReportError(f"moderation row {line_no}: cohort must be fresh or returning")
 
+            exclude_resource = _required_bool(row["exclude_resource"], "exclude_resource")
+            exclude_repair = _required_bool(row["exclude_repair"], "exclude_repair")
+            exclude_voluntary = _required_bool(row["exclude_voluntary"], "exclude_voluntary")
+            exclusion_reason = (row["exclusion_reason"] or "").strip()
+            if (exclude_resource or exclude_repair or exclude_voluntary) and not exclusion_reason:
+                raise P1ReportError(
+                    f"moderation row {line_no}: exclusion_reason is required when any exclusion flag is yes"
+                )
+
             result[session_id] = ModerationRecord(
                 session_id=session_id,
                 cohort=cohort,
@@ -126,10 +135,10 @@ def load_moderation(path: Path | None) -> dict[str, ModerationRecord]:
                     row["post_island_voluntary_continuation"], "post_island_voluntary_continuation"
                 ),
                 help_required=_bool_or_none(row["help_required"], "help_required"),
-                exclude_resource=_required_bool(row["exclude_resource"], "exclude_resource"),
-                exclude_repair=_required_bool(row["exclude_repair"], "exclude_repair"),
-                exclude_voluntary=_required_bool(row["exclude_voluntary"], "exclude_voluntary"),
-                exclusion_reason=(row["exclusion_reason"] or "").strip(),
+                exclude_resource=exclude_resource,
+                exclude_repair=exclude_repair,
+                exclude_voluntary=exclude_voluntary,
+                exclusion_reason=exclusion_reason,
                 moderator_id=(row["moderator_id"] or "").strip(),
             )
         return result
@@ -368,6 +377,7 @@ def summarize(
         if moderation.get(session.session_id) is not None
         and moderation[session.session_id].cohort == "fresh"
     )
+    fresh_target = int(manifest["gate_plan"]["fresh_sessions_target"])
     window = int(manifest["gate_plan"]["voluntary_window_ms"])
 
     telemetry = {
@@ -418,8 +428,9 @@ def summarize(
 
     voluntary = formal["post_island_voluntary_continuation"]
     threshold = float(manifest["gate_plan"]["post_island_voluntary_continuation_min"])
+    fresh_sample_complete = fresh_count >= fresh_target
     gate_state = "INSUFFICIENT DATA"
-    if voluntary["rate"] is not None:
+    if fresh_sample_complete and voluntary["rate"] is not None:
         gate_state = "MEETS INITIAL TARGET" if voluntary["rate"] >= threshold else "BELOW INITIAL TARGET"
 
     return {
@@ -428,7 +439,8 @@ def summarize(
         "commit_sha": manifest["commit_sha"],
         "sessions_total": len(sessions),
         "fresh_sessions_with_moderation": fresh_count,
-        "fresh_sessions_target": int(manifest["gate_plan"]["fresh_sessions_target"]),
+        "fresh_sessions_target": fresh_target,
+        "fresh_sample_complete": fresh_sample_complete,
         "telemetry": telemetry,
         "formal": formal,
         "post_island_voluntary_gate_state": gate_state,
@@ -469,6 +481,7 @@ def render_report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
         f"- Frozen device targets: {'; '.join(str(value) for value in device_targets) if device_targets else 'none'}",
         f"- Sessions: {summary['sessions_total']}",
         f"- Fresh sessions with moderation: {summary['fresh_sessions_with_moderation']}/{summary['fresh_sessions_target']}",
+        f"- Fresh sample: {'COMPLETE' if summary['fresh_sample_complete'] else 'INCOMPLETE'}",
         "",
         "## Telemetry reach",
         "",
