@@ -4,8 +4,41 @@ from pathlib import Path
 import p1_gate_report as report
 
 
+def moderation_record(session_id: str, voluntary: bool, exclude_voluntary: bool = False):
+    return report.ModerationRecord(
+        session_id=session_id,
+        cohort="fresh",
+        resource_comprehension=True,
+        puzzle_reward_comprehension=True,
+        repair_world_change_comprehension=True,
+        robot_77_remembered=True,
+        puzzle_island_connected=True,
+        island_increased_desire=True,
+        post_island_voluntary_continuation=voluntary,
+        help_required=False,
+        exclude_resource=False,
+        exclude_repair=False,
+        exclude_voluntary=exclude_voluntary,
+        exclusion_reason="" if not exclude_voluntary else "excluded",
+        moderator_id="M",
+    )
+
+
+def gate_manifest(target: int = 10):
+    return {
+        "batch_id": "P1-002",
+        "build_version": "0.0.1-prototype+abc",
+        "commit_sha": "abc",
+        "gate_plan": {
+            "fresh_sessions_target": target,
+            "post_island_voluntary_continuation_min": 0.50,
+            "voluntary_window_ms": 15000,
+        },
+    }
+
+
 class P1GateReportTests(unittest.TestCase):
-    def test_summary_uses_moderated_post_island_continuation(self):
+    def test_incomplete_sample_keeps_observed_rate_but_does_not_claim_target(self):
         metadata = {
             "session_id": "s1",
         }
@@ -20,42 +53,58 @@ class P1GateReportTests(unittest.TestCase):
             {"event_name": "session_end", "end_reason": "prototype_complete"},
         ]
         session = report.SessionData(Path("s1_metadata.json"), Path("s1_events.jsonl"), metadata, events)
-        moderation = {
-            "s1": report.ModerationRecord(
-                session_id="s1",
-                cohort="fresh",
-                resource_comprehension=True,
-                puzzle_reward_comprehension=True,
-                repair_world_change_comprehension=True,
-                robot_77_remembered=True,
-                puzzle_island_connected=True,
-                island_increased_desire=True,
-                post_island_voluntary_continuation=True,
-                help_required=False,
-                exclude_resource=False,
-                exclude_repair=False,
-                exclude_voluntary=False,
-                exclusion_reason="",
-                moderator_id="M",
-            )
-        }
-        manifest = {
-            "batch_id": "P1-001",
-            "build_version": "0.0.1-prototype+abc",
-            "commit_sha": "abc",
-            "gate_plan": {
-                "fresh_sessions_target": 10,
-                "post_island_voluntary_continuation_min": 0.50,
-                "voluntary_window_ms": 15000,
-            },
-        }
+        moderation = {"s1": moderation_record("s1", True)}
 
-        summary = report.summarize([session], moderation, manifest)
+        summary = report.summarize([session], moderation, gate_manifest())
 
-        self.assertEqual(summary["post_island_voluntary_gate_state"], "MEETS INITIAL TARGET")
+        self.assertEqual(summary["post_island_voluntary_gate_state"], "INSUFFICIENT DATA")
+        self.assertFalse(summary["fresh_sample_complete"])
+        self.assertEqual(summary["formal"]["post_island_voluntary_continuation"]["rate"], 1.0)
         self.assertEqual(summary["telemetry"]["robot_77_reach"]["rate"], 1.0)
         self.assertEqual(summary["telemetry"]["post_77_click_within_window"]["rate"], 1.0)
         self.assertEqual(summary["formal"]["repair_world_change_comprehension"]["rate"], 1.0)
+
+    def test_complete_fresh_sample_can_meet_target(self):
+        sessions = []
+        moderation = {}
+        for index in range(10):
+            session_id = f"s{index}"
+            sessions.append(
+                report.SessionData(
+                    Path(f"{session_id}_metadata.json"),
+                    Path(f"{session_id}_events.jsonl"),
+                    {"session_id": session_id},
+                    [],
+                )
+            )
+            moderation[session_id] = moderation_record(session_id, index < 5)
+
+        summary = report.summarize(sessions, moderation, gate_manifest())
+
+        self.assertTrue(summary["fresh_sample_complete"])
+        self.assertEqual(summary["formal"]["post_island_voluntary_continuation"]["rate"], 0.5)
+        self.assertEqual(summary["post_island_voluntary_gate_state"], "MEETS INITIAL TARGET")
+
+    def test_complete_fresh_sample_can_be_below_target(self):
+        sessions = []
+        moderation = {}
+        for index in range(10):
+            session_id = f"s{index}"
+            sessions.append(
+                report.SessionData(
+                    Path(f"{session_id}_metadata.json"),
+                    Path(f"{session_id}_events.jsonl"),
+                    {"session_id": session_id},
+                    [],
+                )
+            )
+            moderation[session_id] = moderation_record(session_id, index < 4)
+
+        summary = report.summarize(sessions, moderation, gate_manifest())
+
+        self.assertTrue(summary["fresh_sample_complete"])
+        self.assertEqual(summary["formal"]["post_island_voluntary_continuation"]["rate"], 0.4)
+        self.assertEqual(summary["post_island_voluntary_gate_state"], "BELOW INITIAL TARGET")
 
     def test_excluded_voluntary_session_is_not_counted(self):
         session = report.SessionData(
@@ -64,27 +113,34 @@ class P1GateReportTests(unittest.TestCase):
             {"session_id": "s1"},
             [],
         )
-        moderation = {
-            "s1": report.ModerationRecord(
-                "s1", "fresh", True, True, True, True, True, True, True, False,
-                False, False, True, "moderator prompted", "M"
-            )
-        }
-        manifest = {
-            "batch_id": "P1-001",
-            "build_version": "x",
-            "commit_sha": "y",
-            "gate_plan": {
-                "fresh_sessions_target": 10,
-                "post_island_voluntary_continuation_min": 0.50,
-                "voluntary_window_ms": 15000,
-            },
-        }
+        moderation = {"s1": moderation_record("s1", True, exclude_voluntary=True)}
 
-        summary = report.summarize([session], moderation, manifest)
+        summary = report.summarize([session], moderation, gate_manifest())
         metric = summary["formal"]["post_island_voluntary_continuation"]
         self.assertEqual(metric["total"], 0)
         self.assertIsNone(metric["rate"])
+        self.assertEqual(summary["post_island_voluntary_gate_state"], "INSUFFICIENT DATA")
+
+    def test_render_report_marks_incomplete_sample(self):
+        session = report.SessionData(
+            Path("s1_metadata.json"),
+            Path("s1_events.jsonl"),
+            {"session_id": "s1"},
+            [],
+        )
+        manifest = gate_manifest()
+        manifest["test_plan"] = {
+            "orientation": "portrait",
+            "help_threshold_seconds": 30,
+            "device_targets": ["Joy 4"],
+        }
+        summary = report.summarize([session], {"s1": moderation_record("s1", True)}, manifest)
+
+        rendered = report.render_report(summary, manifest)
+
+        self.assertIn("Fresh sample: INCOMPLETE", rendered)
+        self.assertIn("Post-island voluntary continuation: **INSUFFICIENT DATA**", rendered)
+        self.assertIn("100.0% (1/1)", rendered)
 
     def test_freeze_rejects_mismatched_session_orientation(self):
         levels = [{"id": f"A-{index:03d}", "revision": 1} for index in range(1, 11)]
