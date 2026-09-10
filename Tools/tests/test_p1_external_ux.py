@@ -30,7 +30,7 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("EnergyRoutingPresentation.EndpointLabel", controller)
         self.assertIn('GUI.Label(rect, "X"', controller)
         self.assertIn("X = BLOCKED", presentation)
-        self.assertIn("R1 <-> ", presentation)
+        self.assertIn('builder.Append(code).Append("1 <-> ").Append(code).Append(\'2\')', presentation)
         self.assertIn("keep your finger down", presentation)
         self.assertIn("No blocked squares", presentation)
 
