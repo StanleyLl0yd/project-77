@@ -52,6 +52,20 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("GetBoardTop() + 12f", controller)
         self.assertNotIn("boardTop + (availableHeight - height) * 0.5f", controller)
 
+    def test_interrupted_session_data_can_be_recovered_on_next_setup(self):
+        selector = (ROOT / "Assets/Project77/Game/PrototypeVariantSelector.cs").read_text(encoding="utf-8")
+
+        self.assertIn('DataFolderName = "Project77Playtests"', selector)
+        self.assertIn("RefreshPreviousSessionFiles();", selector)
+        self.assertIn("HasPreviousSessionData", selector)
+        self.assertIn("Moderator: previous session data", selector)
+        self.assertIn('FindLatest(directory, "*_events.jsonl")', selector)
+        self.assertIn('FindLatest(directory, "*_metadata.json")', selector)
+        self.assertIn('CopyPreviousFile(previousEventsPath, "Previous events copied")', selector)
+        self.assertIn('CopyPreviousFile(previousMetadataPath, "Previous metadata copied")', selector)
+        self.assertIn("GUIUtility.systemCopyBuffer = File.ReadAllText(path);", selector)
+        self.assertIn("+ recoveryHeight", selector)
+
     def test_external_copy_uses_player_language_not_internal_phase_labels(self):
         selector = (ROOT / "Assets/Project77/Game/PrototypeVariantSelector.cs").read_text(encoding="utf-8")
         runtime_text = re.sub(
