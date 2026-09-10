@@ -20,10 +20,12 @@ internal static class Program
         var firstInstruction = EnergyRoutingPresentation.Instruction(1, 0, 0);
         AssertContains("first-level touch target", firstInstruction, "touch R1");
         AssertContains("first-level drag gesture", firstInstruction, "keep your finger down");
-        AssertContains("first-level matching target", firstInstruction, "R2");
+        AssertContains("first-level matching target", firstInstruction, "drag to R2");
+        AssertContains("first-level directions", firstInstruction, "up, down, left or right");
 
         var blockedInstruction = EnergyRoutingPresentation.Instruction(3, 1, 0);
-        AssertContains("blocked-cell rule", blockedInstruction, "X squares are blocked");
+        AssertContains("blocked-cell rule", blockedInstruction, "X means blocked");
+        AssertContains("blocked-cell action", blockedInstruction, "route around it");
 
         var clearLegend = EnergyRoutingPresentation.Legend(new[] { "red", "blue" }, false);
         AssertContains("pair redundancy", clearLegend, "R1 <-> R2");
