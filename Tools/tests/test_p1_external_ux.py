@@ -45,6 +45,12 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertEqual(level["payload"]["pairs"][0]["id"], "red")
         self.assertEqual(level["payload"]["blocked"], [])
 
+    def test_board_is_anchored_below_guidance_instead_of_floating_mid_screen(self):
+        controller = (ROOT / "Assets/Project77/Game/EnergyRoutingPrototypeController.cs").read_text(encoding="utf-8")
+
+        self.assertIn("GetBoardTop() + 12f", controller)
+        self.assertNotIn("boardTop + (availableHeight - height) * 0.5f", controller)
+
     def test_external_copy_uses_player_language_not_p0_internal_labels(self):
         selector = (ROOT / "Assets/Project77/Game/PrototypeVariantSelector.cs").read_text(encoding="utf-8")
         runtime_text = re.sub(
