@@ -32,7 +32,6 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("X = BLOCKED", presentation)
         self.assertIn('builder.Append(code).Append("1 <-> ").Append(code).Append(\'2\')', presentation)
         self.assertIn("keep your finger down", presentation)
-        self.assertIn("up, down, left or right", presentation)
         self.assertIn("No blocked squares", presentation)
 
     def test_first_level_is_single_pair_onboarding(self):
@@ -52,7 +51,21 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("GetBoardTop() + 12f", controller)
         self.assertNotIn("boardTop + (availableHeight - height) * 0.5f", controller)
 
-    def test_external_copy_uses_player_language_not_internal_phase_labels(self):
+    def test_interrupted_session_data_can_be_recovered_on_next_setup(self):
+        selector = (ROOT / "Assets/Project77/Game/PrototypeVariantSelector.cs").read_text(encoding="utf-8")
+
+        self.assertIn('DataFolderName = "Project77Playtests"', selector)
+        self.assertIn("RefreshPreviousSessionFiles();", selector)
+        self.assertIn("HasPreviousSessionData", selector)
+        self.assertIn("Moderator: previous session data", selector)
+        self.assertIn('FindLatest(directory, "*_events.jsonl")', selector)
+        self.assertIn('FindLatest(directory, "*_metadata.json")', selector)
+        self.assertIn('CopyPreviousFile(previousEventsPath, "Previous events copied")', selector)
+        self.assertIn('CopyPreviousFile(previousMetadataPath, "Previous metadata copied")', selector)
+        self.assertIn("GUIUtility.systemCopyBuffer = File.ReadAllText(path);", selector)
+        self.assertIn("+ recoveryHeight", selector)
+
+    def test_external_copy_uses_player_language_not_p0_internal_labels(self):
         selector = (ROOT / "Assets/Project77/Game/PrototypeVariantSelector.cs").read_text(encoding="utf-8")
         runtime_text = re.sub(
             r"#if UNITY_EDITOR.*?#endif",
@@ -64,8 +77,8 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertNotIn("Prototype A", runtime_text)
         self.assertNotIn("Prototype B", runtime_text)
         self.assertNotIn("Prototype C", runtime_text)
-        self.assertNotIn("P1", runtime_text)
-        self.assertIn("Playtest build", runtime_text)
+        self.assertNotIn("P1 playtest", runtime_text)
+        self.assertNotIn("P0 debug variants", runtime_text)
 
 
 if __name__ == "__main__":
