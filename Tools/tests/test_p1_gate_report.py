@@ -6,10 +6,18 @@ from pathlib import Path
 import p1_gate_report as report
 
 
-def moderation_record(session_id: str, voluntary: bool, exclude_voluntary: bool = False):
+def moderation_record(
+    session_id: str,
+    voluntary: bool,
+    exclude_voluntary: bool = False,
+    *,
+    cohort: str = "fresh",
+    moderator_id: str = "M",
+    exclusion_reason: str | None = None,
+):
     return report.ModerationRecord(
         session_id=session_id,
-        cohort="fresh",
+        cohort=cohort,
         resource_comprehension=True,
         puzzle_reward_comprehension=True,
         repair_world_change_comprehension=True,
@@ -21,8 +29,12 @@ def moderation_record(session_id: str, voluntary: bool, exclude_voluntary: bool 
         exclude_resource=False,
         exclude_repair=False,
         exclude_voluntary=exclude_voluntary,
-        exclusion_reason="" if not exclude_voluntary else "excluded",
-        moderator_id="M",
+        exclusion_reason=(
+            exclusion_reason
+            if exclusion_reason is not None
+            else ("excluded" if exclude_voluntary else "")
+        ),
+        moderator_id=moderator_id,
     )
 
 
@@ -31,6 +43,11 @@ def gate_manifest(target: int = 10):
         "batch_id": "P1-002",
         "build_version": "0.0.1-prototype+abc",
         "commit_sha": "abc",
+        "event_schema_version": 1,
+        "metadata_schema_version": 1,
+        "prototype_variant": "selected_meta",
+        "selected_core": "energy_routing",
+        "levels": [{"id": f"A-{index:03d}", "revision": 1} for index in range(1, 11)],
         "gate_plan": {
             "fresh_sessions_target": target,
             "post_island_voluntary_continuation_min": 0.50,
@@ -39,7 +56,12 @@ def gate_manifest(target: int = 10):
     }
 
 
-def write_moderation_csv(path: Path, *, exclusion_reason: str):
+def write_moderation_csv(
+    path: Path,
+    *,
+    exclusion_reason: str,
+    moderator_id: str = "M",
+):
     row = {column: "" for column in report.MODERATION_COLUMNS}
     row.update(
         {
@@ -51,7 +73,7 @@ def write_moderation_csv(path: Path, *, exclusion_reason: str):
             "exclude_repair": "no",
             "exclude_voluntary": "yes",
             "exclusion_reason": exclusion_reason,
-            "moderator_id": "M",
+            "moderator_id": moderator_id,
         }
     )
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -206,6 +228,18 @@ class P1GateReportTests(unittest.TestCase):
         self.assertTrue(records["s1"].exclude_voluntary)
         self.assertEqual(records["s1"].exclusion_reason, "moderator prompted continuation")
 
+    def test_moderator_id_is_required_for_formal_observation_rows(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "moderation.csv"
+            write_moderation_csv(
+                path,
+                exclusion_reason="moderator prompted continuation",
+                moderator_id="",
+            )
+
+            with self.assertRaisesRegex(report.P1ReportError, "moderator_id is required"):
+                report.load_moderation(path)
+
     def test_render_report_marks_incomplete_sample(self):
         session = report.SessionData(
             Path("s1_metadata.json"),
@@ -226,6 +260,52 @@ class P1GateReportTests(unittest.TestCase):
         self.assertIn("Fresh sample: INCOMPLETE", rendered)
         self.assertIn("Post-island voluntary continuation: **INSUFFICIENT DATA**", rendered)
         self.assertIn("100.0% (1/1)", rendered)
+
+    def test_render_report_preserves_protocol_audit_context(self):
+        fresh = valid_session("fresh")
+        returning = valid_session("returning")
+        returning.metadata["device_model"] = "Pixel 8"
+        returning.metadata["operating_system"] = "Android 15"
+        returning.metadata["android_api"] = 35
+        returning.metadata["session_started_utc"] = "2026-09-11T07:00:00Z"
+
+        manifest = gate_manifest(target=2)
+        manifest["test_plan"] = {
+            "orientation": "portrait",
+            "help_threshold_seconds": 30,
+            "device_targets": ["Joy 4", "Pixel 8"],
+        }
+        moderation = {
+            "fresh": moderation_record(
+                "fresh",
+                True,
+                exclude_voluntary=True,
+                exclusion_reason="moderator prompted continuation",
+            ),
+            "returning": moderation_record(
+                "returning",
+                True,
+                cohort="returning",
+                moderator_id="R",
+            ),
+        }
+
+        summary = report.summarize([fresh, returning], moderation, manifest)
+        rendered = report.render_report(summary, manifest)
+
+        self.assertEqual(summary["fresh_sessions_with_moderation"], 1)
+        self.assertEqual(summary["returning_sessions_with_moderation"], 1)
+        self.assertEqual(summary["formal"]["post_island_voluntary_continuation"]["total"], 0)
+        self.assertIn("Event schema version: 1", rendered)
+        self.assertIn("Prototype variant: `selected_meta`", rendered)
+        self.assertIn("Fresh / returning split: 1 / 1", rendered)
+        self.assertIn("Joy 4 | Android OS 10 / API-29 | API 29 | portrait: 1 session(s)", rendered)
+        self.assertIn("Pixel 8 | Android 15 | API 35 | portrait: 1 session(s)", rendered)
+        self.assertIn("`A-001` r1", rendered)
+        self.assertIn("post_island_voluntary_continuation; reason: moderator prompted continuation", rendered)
+        self.assertIn("moderator: `M`", rendered)
+        self.assertIn("Telemetry reach (all loaded sessions)", rendered)
+        self.assertIn("Formal P1 observations (fresh moderated sessions)", rendered)
 
     def test_valid_android_environment_and_orientation_are_accepted(self):
         report.validate_session(valid_session())
