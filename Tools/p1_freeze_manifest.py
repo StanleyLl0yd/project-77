@@ -239,6 +239,8 @@ def _artifact_record(
         "size_bytes": result["size_bytes"],
         "abis": result["abis"],
         "native_library_count": result["native_library_count"],
+        "unity_player_library_present": result["unity_player_library_present"],
+        "il2cpp_library_present": result["il2cpp_library_present"],
         "arm64_elf_16kb_compatible": result["arm64_elf_16kb_compatible"],
         "apk_uncompressed_libs_16kb_zip_aligned": result["apk_uncompressed_libs_16kb_zip_aligned"],
         "signature_marker_present": result["signature_marker_present"],
