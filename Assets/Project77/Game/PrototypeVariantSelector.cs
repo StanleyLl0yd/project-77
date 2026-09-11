@@ -8,6 +8,8 @@ namespace Project77.Game
     public sealed class PrototypeVariantSelector : MonoBehaviour
     {
         private const string DataFolderName = "Project77Playtests";
+        private const string EventsSuffix = "_events.jsonl";
+        private const string MetadataSuffix = "_metadata.json";
 
         private PrototypePlaytestRuntime playtestRuntime;
         private string playtestId;
@@ -153,7 +155,7 @@ namespace Project77.Game
         }
 
         private bool HasPreviousSessionData =>
-            IsReadableFile(previousEventsPath) || IsReadableFile(previousMetadataPath);
+            IsReadableFile(previousEventsPath) && IsReadableFile(previousMetadataPath);
 
         private void DrawPreviousSessionData(float contentWidth, ref float y, GUIStyle bodyStyle)
         {
@@ -220,26 +222,47 @@ namespace Project77.Game
                 return;
             }
 
-            previousEventsPath = FindLatest(directory, "*_events.jsonl");
-            previousMetadataPath = FindLatest(directory, "*_metadata.json");
+            FindLatestSessionPair(directory, out previousEventsPath, out previousMetadataPath);
         }
 
-        private static string FindLatest(string directory, string pattern)
+        private static void FindLatestSessionPair(
+            string directory,
+            out string latestEventsPath,
+            out string latestMetadataPath)
         {
-            var files = Directory.GetFiles(directory, pattern, SearchOption.TopDirectoryOnly);
-            string latest = null;
+            latestEventsPath = null;
+            latestMetadataPath = null;
             var latestWrite = DateTime.MinValue;
-            foreach (var file in files)
-            {
-                var write = File.GetLastWriteTimeUtc(file);
-                if (write > latestWrite)
-                {
-                    latestWrite = write;
-                    latest = file;
-                }
-            }
 
-            return latest;
+            var eventFiles = Directory.GetFiles(
+                directory,
+                "*" + EventsSuffix,
+                SearchOption.TopDirectoryOnly);
+            foreach (var eventPath in eventFiles)
+            {
+                var filename = Path.GetFileName(eventPath);
+                if (string.IsNullOrEmpty(filename) || filename.Length <= EventsSuffix.Length)
+                {
+                    continue;
+                }
+
+                var stem = filename.Substring(0, filename.Length - EventsSuffix.Length);
+                var metadataPath = Path.Combine(directory, stem + MetadataSuffix);
+                if (!File.Exists(metadataPath))
+                {
+                    continue;
+                }
+
+                var write = File.GetLastWriteTimeUtc(eventPath);
+                if (write <= latestWrite)
+                {
+                    continue;
+                }
+
+                latestWrite = write;
+                latestEventsPath = eventPath;
+                latestMetadataPath = metadataPath;
+            }
         }
 
         private void CopyPreviousFile(string path, string successStatus)
