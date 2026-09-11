@@ -60,6 +60,54 @@ def write_moderation_csv(path: Path, *, exclusion_reason: str):
         writer.writerow(row)
 
 
+def valid_session(session_id: str = "s1") -> report.SessionData:
+    build_version = "0.0.1-prototype+abcdef123456"
+    playtest_id = "p1-test"
+    orientation = "portrait"
+    levels = [{"id": f"A-{index:03d}", "revision": 1} for index in range(1, 11)]
+    metadata = {
+        "metadata_schema_version": 1,
+        "event_schema_version": 1,
+        "session_id": session_id,
+        "playtest_id": playtest_id,
+        "build_version": build_version,
+        "commit_sha": "a" * 40,
+        "app_version": "0.0.1-prototype",
+        "unity_version": "6000.3.22f1",
+        "prototype_variant": "selected_meta",
+        "core_variant": "energy_routing",
+        "device_model": "Joy 4",
+        "operating_system": "Android OS 10 / API-29",
+        "android_api": 29,
+        "screen_orientation": orientation,
+        "session_started_utc": "2026-09-11T06:00:00Z",
+        "levels": levels,
+    }
+    events = [
+        {
+            "event_schema_version": 1,
+            "event_name": "prototype_start",
+            "timestamp_utc_ms": 1_000,
+            "session_id": session_id,
+            "playtest_id": playtest_id,
+            "build_version": build_version,
+            "prototype_variant": "selected_meta",
+            "level_id": None,
+            "level_revision": None,
+            "device_tier": "unknown",
+            "screen_orientation": orientation,
+            "entry_point": "variant_select",
+            "core_variant": "energy_routing",
+        }
+    ]
+    return report.SessionData(
+        Path(f"{session_id}_metadata.json"),
+        Path(f"{session_id}_events.jsonl"),
+        metadata,
+        events,
+    )
+
+
 class P1GateReportTests(unittest.TestCase):
     def test_incomplete_sample_keeps_observed_rate_but_does_not_claim_target(self):
         metadata = {
@@ -178,6 +226,37 @@ class P1GateReportTests(unittest.TestCase):
         self.assertIn("Fresh sample: INCOMPLETE", rendered)
         self.assertIn("Post-island voluntary continuation: **INSUFFICIENT DATA**", rendered)
         self.assertIn("100.0% (1/1)", rendered)
+
+    def test_valid_android_environment_and_orientation_are_accepted(self):
+        report.validate_session(valid_session())
+
+    def test_android_api_is_required_and_must_be_positive_integer(self):
+        missing = valid_session("missing-api")
+        missing.metadata.pop("android_api")
+        with self.assertRaisesRegex(report.P1ReportError, "missing android_api"):
+            report.validate_session(missing)
+
+        for value in (0, -1, True):
+            with self.subTest(android_api=value):
+                invalid = valid_session(f"invalid-api-{value}")
+                invalid.metadata["android_api"] = value
+                with self.assertRaisesRegex(report.P1ReportError, "android_api must be a positive integer"):
+                    report.validate_session(invalid)
+
+    def test_device_and_operating_system_identity_must_be_non_empty(self):
+        for field in ("device_model", "operating_system"):
+            with self.subTest(field=field):
+                session = valid_session(f"blank-{field}")
+                session.metadata[field] = "   "
+                with self.assertRaisesRegex(report.P1ReportError, field):
+                    report.validate_session(session)
+
+    def test_mid_session_orientation_drift_is_rejected(self):
+        session = valid_session("rotated")
+        session.events[0]["screen_orientation"] = "landscape"
+
+        with self.assertRaisesRegex(report.P1ReportError, "screen_orientation does not match metadata"):
+            report.validate_session(session)
 
     def test_freeze_rejects_mismatched_session_orientation(self):
         levels = [{"id": f"A-{index:03d}", "revision": 1} for index in range(1, 11)]
