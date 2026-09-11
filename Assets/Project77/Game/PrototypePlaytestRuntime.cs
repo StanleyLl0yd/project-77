@@ -176,7 +176,8 @@ namespace Project77.Game
             }
 
             var properties = analyticsEvent.Properties;
-            if (analyticsEvent.EventName == PrototypeAnalyticsEventName.PrototypeStart)
+            if (analyticsEvent.EventName == PrototypeAnalyticsEventName.PrototypeStart &&
+                selectedVariant != PrototypeVariant.SelectedMeta)
             {
                 var corrected = new Dictionary<string, object>(analyticsEvent.Properties)
                 {
