@@ -26,32 +26,50 @@ def elf64(load_alignment: int) -> bytes:
     return bytes(data)
 
 
-def write_aab(path: Path, alignment: int = 0x4000, extra_abi: bool = False) -> None:
+def write_aab(
+    path: Path,
+    alignment: int = 0x4000,
+    extra_abi: bool = False,
+    include_il2cpp: bool = True,
+) -> None:
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("base/lib/arm64-v8a/libunity.so", elf64(alignment))
+        if include_il2cpp:
+            archive.writestr("base/lib/arm64-v8a/libil2cpp.so", elf64(alignment))
         if extra_abi:
             archive.writestr("base/lib/x86_64/libunity.so", elf64(alignment))
         archive.writestr("META-INF/KEY0.SF", b"signature file")
         archive.writestr("META-INF/KEY0.RSA", b"signature block")
 
 
-def write_apk(path: Path, payload: bytes = b"") -> None:
+def write_apk(path: Path, payload: bytes = b"", include_il2cpp: bool = True) -> None:
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("lib/arm64-v8a/libunity.so", elf64(0x4000))
+        if include_il2cpp:
+            archive.writestr("lib/arm64-v8a/libil2cpp.so", elf64(0x4000))
         archive.writestr("assets/bin/Data/build-info", payload)
 
 
 class VerifyAndroidArtifactTests(unittest.TestCase):
-    def test_signed_aab_with_arm64_16kb_elf_passes(self) -> None:
+    def test_signed_aab_with_arm64_il2cpp_and_16kb_elf_passes(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "project77.aab"
             write_aab(path)
             result = verify.inspect_artifact(path)
         self.assertEqual(["arm64-v8a"], result["abis"])
+        self.assertTrue(result["unity_player_library_present"])
+        self.assertTrue(result["il2cpp_library_present"])
         self.assertTrue(result["arm64_elf_16kb_compatible"])
         self.assertTrue(result["signature_marker_present"])
         self.assertFalse(result["signature_marker_is_cryptographic_verification"])
         self.assertEqual({}, result["embedded_text_markers"])
+
+    def test_artifact_without_il2cpp_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "mono-like.apk"
+            write_apk(path, include_il2cpp=False)
+            with self.assertRaisesRegex(verify.ArtifactError, "libil2cpp.so"):
+                verify.inspect_artifact(path, require_signature_marker=False)
 
     def test_aab_with_4kb_pt_load_alignment_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -72,6 +90,7 @@ class VerifyAndroidArtifactTests(unittest.TestCase):
             path = Path(temp_dir) / "unsigned.aab"
             with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
                 archive.writestr("base/lib/arm64-v8a/libunity.so", elf64(0x4000))
+                archive.writestr("base/lib/arm64-v8a/libil2cpp.so", elf64(0x4000))
             with self.assertRaises(verify.ArtifactError):
                 verify.inspect_artifact(path)
 
@@ -80,6 +99,7 @@ class VerifyAndroidArtifactTests(unittest.TestCase):
             path = Path(temp_dir) / "unaligned.apk"
             with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
                 archive.writestr("lib/arm64-v8a/libunity.so", elf64(0x4000))
+                archive.writestr("lib/arm64-v8a/libil2cpp.so", elf64(0x4000))
             with self.assertRaises(verify.ArtifactError):
                 verify.inspect_artifact(path, require_signature_marker=False)
 
@@ -90,6 +110,7 @@ class VerifyAndroidArtifactTests(unittest.TestCase):
             result = verify.inspect_artifact(path, require_signature_marker=False)
         self.assertTrue(result["arm64_elf_16kb_compatible"])
         self.assertTrue(result["apk_uncompressed_libs_16kb_zip_aligned"])
+        self.assertTrue(result["il2cpp_library_present"])
 
     def test_exact_embedded_text_markers_pass(self) -> None:
         commit = "a" * 40

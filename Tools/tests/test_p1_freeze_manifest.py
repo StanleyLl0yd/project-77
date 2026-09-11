@@ -23,9 +23,17 @@ def elf64(load_alignment: int = 0x4000) -> bytes:
     return bytes(data)
 
 
-def write_marked_apk(path: Path, commit: str, build_version: str) -> None:
+def write_marked_apk(
+    path: Path,
+    commit: str,
+    build_version: str,
+    *,
+    include_il2cpp: bool = True,
+) -> None:
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("lib/arm64-v8a/libunity.so", elf64())
+        if include_il2cpp:
+            archive.writestr("lib/arm64-v8a/libil2cpp.so", elf64())
         archive.writestr(
             "assets/bin/Data/build-info",
             f"commit_sha={commit}\nbuild_version={build_version}\n".encode("utf-8"),
@@ -108,7 +116,7 @@ class P1FreezeManifestTests(unittest.TestCase):
         with self.assertRaises(freeze.FreezeError):
             freeze.verify_manifest(changed, commit)
 
-    def test_bound_manifest_verifies_exact_embedded_source_identity(self):
+    def test_bound_manifest_verifies_exact_embedded_source_identity_and_il2cpp(self):
         commit = "e" * 40
         build_version = "0.0.1-prototype+" + commit[:12]
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -124,11 +132,34 @@ class P1FreezeManifestTests(unittest.TestCase):
             )
             freeze.verify_manifest(manifest, commit, artifact_path=artifact)
 
+        self.assertTrue(manifest["artifact"]["unity_player_library_present"])
+        self.assertTrue(manifest["artifact"]["il2cpp_library_present"])
         self.assertTrue(manifest["artifact"]["embedded_commit_sha_verified"])
         self.assertTrue(manifest["artifact"]["embedded_build_version_verified"])
         self.assertFalse(
             manifest["artifact"]["embedded_text_marker_verification_is_cryptographic"]
         )
+
+    def test_bound_manifest_rejects_artifact_without_il2cpp(self):
+        commit = "3" * 40
+        build_version = "0.0.1-prototype+" + commit[:12]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            artifact = Path(temp_dir) / "not-il2cpp.apk"
+            write_marked_apk(
+                artifact,
+                commit,
+                build_version,
+                include_il2cpp=False,
+            )
+            with self.assertRaisesRegex(freeze.FreezeError, "libil2cpp.so"):
+                freeze.build_manifest(
+                    "P1-CI",
+                    commit,
+                    build_version,
+                    "2026-09-08T00:00:00Z",
+                    test_plan=freeze.build_test_plan("portrait", ["Primary device"]),
+                    artifact_path=artifact,
+                )
 
     def test_stale_apk_commit_is_rejected(self):
         expected_commit = "f" * 40
