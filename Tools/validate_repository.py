@@ -206,11 +206,14 @@ def main() -> None:
     _require_fragments(
         "Tools/p1_freeze_manifest.py",
         {
-            "P1 freeze schema v2": "MANIFEST_SCHEMA_VERSION = 2",
+            "P1 freeze schema v3": "MANIFEST_SCHEMA_VERSION = 3",
             "frozen orientation": "\"orientation\"",
             "frozen device matrix": "\"device_targets\"",
             "frozen help threshold": "\"help_threshold_seconds\"",
             "P1 plan contract": "Docs/34_P1_EXTERNAL_PLAYTEST_PLAN.md",
+            "embedded commit verification": "embedded_commit_sha_verified",
+            "embedded build verification": "embedded_build_version_verified",
+            "artifact marker expectations": "expected_text_markers",
         },
     )
 
