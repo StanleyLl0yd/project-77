@@ -217,6 +217,7 @@ def validate_session(session: SessionData) -> None:
         "core_variant",
         "device_model",
         "operating_system",
+        "android_api",
         "screen_orientation",
         "session_started_utc",
         "levels",
@@ -233,6 +234,19 @@ def validate_session(session: SessionData) -> None:
         raise P1ReportError(f"{path}: P1 requires prototype_variant={freeze.PROTOTYPE_VARIANT}")
     if metadata["core_variant"] != freeze.SELECTED_CORE:
         raise P1ReportError(f"{path}: P1 requires core_variant={freeze.SELECTED_CORE}")
+
+    for name in ("device_model", "operating_system"):
+        value = metadata[name]
+        if not isinstance(value, str) or not value.strip():
+            raise P1ReportError(f"{path}: {name} must be a non-empty string")
+
+    android_api = metadata["android_api"]
+    if not isinstance(android_api, int) or isinstance(android_api, bool) or android_api < 1:
+        raise P1ReportError(f"{path}: android_api must be a positive integer")
+
+    orientation = metadata["screen_orientation"]
+    if orientation not in {"portrait", "landscape"}:
+        raise P1ReportError(f"{path}: screen_orientation must be portrait or landscape")
 
     levels = metadata["levels"]
     if not isinstance(levels, list) or len(levels) != 10:
@@ -254,7 +268,13 @@ def validate_session(session: SessionData) -> None:
     last_timestamp = -1
     for index, event in enumerate(session.events, start=1):
         prefix = f"{session.events_path}:{index}"
-        for key in ("session_id", "playtest_id", "build_version", "prototype_variant"):
+        for key in (
+            "session_id",
+            "playtest_id",
+            "build_version",
+            "prototype_variant",
+            "screen_orientation",
+        ):
             if event.get(key) != metadata[key]:
                 raise P1ReportError(f"{prefix}: {key} does not match metadata")
 
