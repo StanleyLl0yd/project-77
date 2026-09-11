@@ -73,6 +73,19 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("GUIUtility.systemCopyBuffer = File.ReadAllText(path);", selector)
         self.assertIn("+ recoveryHeight", selector)
 
+    def test_selected_meta_preserves_fresh_launch_entry_point(self):
+        runtime = (ROOT / "Assets/Project77/Game/PrototypePlaytestRuntime.cs").read_text(encoding="utf-8")
+        controller = (ROOT / "Assets/Project77/Game/EnergyRoutingPrototypeController.cs").read_text(encoding="utf-8")
+
+        self.assertIn('["entry_point"] = "fresh_launch"', controller)
+        self.assertRegex(
+            runtime,
+            r"analyticsEvent\.EventName == PrototypeAnalyticsEventName\.PrototypeStart\s*&&\s*"
+            r"selectedVariant != PrototypeVariant\.SelectedMeta",
+        )
+        self.assertIn('["entry_point"] = "variant_select"', runtime)
+        self.assertIn('WritePrototypeStart("restart");', runtime)
+
     def test_external_copy_uses_player_language_not_internal_phase_labels(self):
         selector = (ROOT / "Assets/Project77/Game/PrototypeVariantSelector.cs").read_text(encoding="utf-8")
         runtime_text = re.sub(
