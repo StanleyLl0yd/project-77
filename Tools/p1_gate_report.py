@@ -384,6 +384,37 @@ def _post_77_click_within_window(session: SessionData, window_ms: int) -> bool:
     return False
 
 
+def validate_moderation_against_sessions(
+    sessions: list[SessionData],
+    moderation: dict[str, ModerationRecord],
+    manifest: dict[str, Any],
+) -> None:
+    sessions_by_id = {session.session_id: session for session in sessions}
+    window = int(manifest["gate_plan"]["voluntary_window_ms"])
+    for session_id, record in moderation.items():
+        session = sessions_by_id.get(session_id)
+        if session is None:
+            continue
+        if (
+            record.cohort == "fresh"
+            and not record.exclude_voluntary
+            and record.post_island_voluntary_continuation is None
+        ):
+            raise P1ReportError(
+                f"moderation session {session_id!r}: fresh non-excluded "
+                "post_island_voluntary_continuation must be yes/no"
+            )
+        if (
+            not record.exclude_voluntary
+            and record.post_island_voluntary_continuation is True
+            and not _post_77_click_within_window(session, window)
+        ):
+            raise P1ReportError(
+                f"moderation session {session_id!r}: formal voluntary continuation requires "
+                "post_77_discovery click telemetry inside the frozen window"
+            )
+
+
 def _environment_profiles(sessions: list[SessionData]) -> list[dict[str, Any]]:
     counts: dict[tuple[str, str, str, str], int] = {}
     for session in sessions:
@@ -700,6 +731,7 @@ def main(argv: list[str] | None = None) -> int:
         sessions = discover_sessions(args.data_dir)
         validate_sessions_against_freeze(sessions, manifest)
         moderation = load_moderation(args.moderation)
+        validate_moderation_against_sessions(sessions, moderation, manifest)
         summary = summarize(sessions, moderation, manifest)
         report = render_report(summary, manifest)
     except (P1ReportError, freeze.FreezeError) as exc:
