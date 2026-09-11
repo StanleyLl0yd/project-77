@@ -119,6 +119,9 @@ def load_moderation(path: Path | None) -> dict[str, ModerationRecord]:
                 raise P1ReportError(
                     f"moderation row {line_no}: exclusion_reason is required when any exclusion flag is yes"
                 )
+            moderator_id = (row["moderator_id"] or "").strip()
+            if not moderator_id:
+                raise P1ReportError(f"moderation row {line_no}: moderator_id is required")
 
             result[session_id] = ModerationRecord(
                 session_id=session_id,
@@ -139,7 +142,7 @@ def load_moderation(path: Path | None) -> dict[str, ModerationRecord]:
                 exclude_repair=exclude_repair,
                 exclude_voluntary=exclude_voluntary,
                 exclusion_reason=exclusion_reason,
-                moderator_id=(row["moderator_id"] or "").strip(),
+                moderator_id=moderator_id,
             )
         return result
 
@@ -291,9 +294,8 @@ def validate_session(session: SessionData) -> None:
 
         level_id = event.get("level_id")
         revision = event.get("level_revision")
-        if level_id is not None:
-            if level_map.get(level_id) != revision:
-                raise P1ReportError(f"{prefix}: level identity is not in frozen metadata")
+        if level_id is not None and level_map.get(level_id) != revision:
+            raise P1ReportError(f"{prefix}: level identity is not in frozen metadata")
 
     audit = p1_event_audit.audit_p1_event_sequence(session.events)
     if audit.errors:
@@ -382,6 +384,65 @@ def _post_77_click_within_window(session: SessionData, window_ms: int) -> bool:
     return False
 
 
+def _environment_profiles(sessions: list[SessionData]) -> list[dict[str, Any]]:
+    counts: dict[tuple[str, str, str, str], int] = {}
+    for session in sessions:
+        metadata = session.metadata
+        device = str(metadata.get("device_model") or "unknown")
+        operating_system = str(metadata.get("operating_system") or "unknown")
+        api = metadata.get("android_api")
+        api_text = str(api) if isinstance(api, int) and not isinstance(api, bool) else "unknown"
+        orientation = str(metadata.get("screen_orientation") or "unknown")
+        key = (device, operating_system, api_text, orientation)
+        counts[key] = counts.get(key, 0) + 1
+
+    return [
+        {
+            "device_model": key[0],
+            "operating_system": key[1],
+            "android_api": key[2],
+            "screen_orientation": key[3],
+            "sessions": count,
+        }
+        for key, count in sorted(counts.items())
+    ]
+
+
+def _session_time_range(sessions: list[SessionData]) -> dict[str, str | None]:
+    values = sorted(
+        str(session.metadata.get("session_started_utc"))
+        for session in sessions
+        if session.metadata.get("session_started_utc")
+    )
+    return {
+        "first": values[0] if values else None,
+        "last": values[-1] if values else None,
+    }
+
+
+def _exclusion_records(moderation: dict[str, ModerationRecord]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for session_id in sorted(moderation):
+        record = moderation[session_id]
+        metrics: list[str] = []
+        if record.exclude_resource:
+            metrics.extend(("resource_comprehension", "puzzle_reward_comprehension"))
+        if record.exclude_repair:
+            metrics.append("repair_world_change_comprehension")
+        if record.exclude_voluntary:
+            metrics.append("post_island_voluntary_continuation")
+        if not metrics:
+            continue
+        records.append({
+            "session_id": session_id,
+            "cohort": record.cohort,
+            "metrics": metrics,
+            "reason": record.exclusion_reason,
+            "moderator_id": record.moderator_id,
+        })
+    return records
+
+
 def summarize(
     sessions: list[SessionData],
     moderation: dict[str, ModerationRecord],
@@ -396,6 +457,14 @@ def summarize(
         1 for session in sessions
         if moderation.get(session.session_id) is not None
         and moderation[session.session_id].cohort == "fresh"
+    )
+    returning_count = sum(
+        1 for session in sessions
+        if moderation.get(session.session_id) is not None
+        and moderation[session.session_id].cohort == "returning"
+    )
+    missing_moderation = sorted(
+        session.session_id for session in sessions if session.session_id not in moderation
     )
     fresh_target = int(manifest["gate_plan"]["fresh_sessions_target"])
     window = int(manifest["gate_plan"]["voluntary_window_ms"])
@@ -459,20 +528,34 @@ def summarize(
         "commit_sha": manifest["commit_sha"],
         "sessions_total": len(sessions),
         "fresh_sessions_with_moderation": fresh_count,
+        "returning_sessions_with_moderation": returning_count,
+        "sessions_without_moderation": len(missing_moderation),
         "fresh_sessions_target": fresh_target,
         "fresh_sample_complete": fresh_sample_complete,
+        "environment_profiles": _environment_profiles(sessions),
+        "session_time_range": _session_time_range(sessions),
+        "moderator_ids": sorted({record.moderator_id for record in moderation.values()}),
+        "exclusions": _exclusion_records(moderation),
         "telemetry": telemetry,
         "formal": formal,
         "post_island_voluntary_gate_state": gate_state,
-        "missing_moderation_session_ids": sorted(
-            session.session_id for session in sessions if session.session_id not in moderation
-        ),
+        "missing_moderation_session_ids": missing_moderation,
     }
 
 
 def _pct(metric: dict[str, Any]) -> str:
     value = metric["rate"]
     return "n/a" if value is None else f"{value * 100:.1f}% ({metric['yes']}/{metric['total']})"
+
+
+def _frozen_levels(manifest: dict[str, Any]) -> str:
+    levels = manifest.get("levels") or []
+    if not levels:
+        return "unknown"
+    return ", ".join(
+        f"`{item.get('id', 'unknown')}` r{item.get('revision', 'unknown')}"
+        for item in levels
+    )
 
 
 def render_report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
@@ -489,27 +572,69 @@ def render_report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
 
     test_plan = manifest.get("test_plan") or {}
     device_targets = test_plan.get("device_targets") or []
+    time_range = summary["session_time_range"]
+    time_text = "none"
+    if time_range["first"] is not None:
+        time_text = time_range["first"]
+        if time_range["last"] != time_range["first"]:
+            time_text += " -> " + str(time_range["last"])
+
     lines = [
         "# Project 77 — P1 Batch Report",
         "",
         f"- Batch: `{summary['batch_id']}`",
         f"- Build: `{summary['build_version']}`",
         f"- Commit: `{summary['commit_sha']}`",
+        f"- Event schema version: {manifest.get('event_schema_version', 'unknown')}",
+        f"- Metadata schema version: {manifest.get('metadata_schema_version', 'unknown')}",
+        f"- Prototype variant: `{manifest.get('prototype_variant', 'unknown')}`",
+        f"- Selected core: `{manifest.get('selected_core', 'unknown')}`",
+        "- Hypothesis: the integrated island meta loop increases desire to continue after Energy Routing.",
         *artifact_lines,
         f"- Frozen orientation: {test_plan.get('orientation', 'unknown')}",
         f"- Frozen help threshold: {test_plan.get('help_threshold_seconds', 'unknown')} s",
         f"- Frozen device targets: {'; '.join(str(value) for value in device_targets) if device_targets else 'none'}",
+        f"- Frozen level set + revisions: {_frozen_levels(manifest)}",
+        f"- Session time range: {time_text}",
         f"- Sessions: {summary['sessions_total']}",
+        f"- Fresh / returning split: {summary['fresh_sessions_with_moderation']} / {summary['returning_sessions_with_moderation']}",
+        f"- Sessions without moderation: {summary['sessions_without_moderation']}",
         f"- Fresh sessions with moderation: {summary['fresh_sessions_with_moderation']}/{summary['fresh_sessions_target']}",
         f"- Fresh sample: {'COMPLETE' if summary['fresh_sample_complete'] else 'INCOMPLETE'}",
         "",
-        "## Telemetry reach",
+        "## Actual session environment coverage",
         "",
     ]
+
+    profiles = summary["environment_profiles"]
+    if profiles:
+        for profile in profiles:
+            lines.append(
+                "- "
+                f"{profile['device_model']} | {profile['operating_system']} | "
+                f"API {profile['android_api']} | {profile['screen_orientation']}: "
+                f"{profile['sessions']} session(s)"
+            )
+    else:
+        lines.append("- No session environments loaded.")
+
+    lines.extend(["", "## Exclusions", ""])
+    exclusions = summary["exclusions"]
+    if exclusions:
+        for record in exclusions:
+            lines.append(
+                f"- `{record['session_id']}` ({record['cohort']}): "
+                f"{', '.join(record['metrics'])}; reason: {record['reason']}; "
+                f"moderator: `{record['moderator_id']}`"
+            )
+    else:
+        lines.append("- No formal metric exclusions recorded.")
+
+    lines.extend(["", "## Telemetry reach (all loaded sessions)", ""])
     for name, metric in summary["telemetry"].items():
         lines.append(f"- {name}: {_pct(metric)}")
 
-    lines.extend(["", "## Formal P1 observations", ""])
+    lines.extend(["", "## Formal P1 observations (fresh moderated sessions)", ""])
     for name, metric in summary["formal"].items():
         lines.append(f"- {name}: {_pct(metric)}")
 
@@ -532,6 +657,14 @@ def render_report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
         lines.append("- Formal comprehension/voluntary rates exclude sessions without moderation records.")
     else:
         lines.append("- Every loaded session has a moderation record.")
+
+    moderators = summary["moderator_ids"]
+    lines.append(
+        "- Moderators represented: " +
+        (", ".join(f"`{value}`" for value in moderators) if moderators else "none")
+    )
+    lines.append("- Returning sessions are reported separately and are not included in fresh formal rates.")
+    lines.append("- Telemetry reach above is explicitly scoped to all loaded sessions and does not replace formal moderation.")
 
     return "\n".join(lines)
 
