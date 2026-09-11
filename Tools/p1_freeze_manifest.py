@@ -14,7 +14,7 @@ from typing import Any
 import verify_android_artifact as android_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_SCHEMA_VERSION = 2
+MANIFEST_SCHEMA_VERSION = 3
 EVENT_SCHEMA_VERSION = 1
 METADATA_SCHEMA_VERSION = 1
 SELECTED_CORE = "energy_routing"
@@ -208,15 +208,31 @@ def build_repository_snapshot(root: Path = ROOT) -> dict[str, Any]:
     }
 
 
-def _artifact_record(path: Path | None) -> dict[str, Any] | None:
+def _artifact_record(
+    path: Path | None,
+    *,
+    commit_sha: str | None = None,
+    build_version: str | None = None,
+) -> dict[str, Any] | None:
     if path is None:
         return None
+    if not commit_sha or not build_version:
+        raise FreezeError("artifact binding requires expected commit_sha and build_version")
+
     try:
-        result = android_artifact.inspect_artifact(path)
+        result = android_artifact.inspect_artifact(
+            path,
+            expected_text_markers={
+                "commit_sha": commit_sha,
+                "build_version": build_version,
+            },
+        )
     except android_artifact.ArtifactError as exc:
         raise FreezeError(f"playtest artifact failed Android acceptance checks: {exc}") from exc
     if result["kind"] != "apk":
         raise FreezeError("P1 external playtest freeze requires an installable APK")
+
+    markers = result["embedded_text_markers"]
     return {
         "filename": path.name,
         "sha256": result["sha256"],
@@ -228,6 +244,11 @@ def _artifact_record(path: Path | None) -> dict[str, Any] | None:
         "signature_marker_present": result["signature_marker_present"],
         "signature_marker_is_cryptographic_verification": result[
             "signature_marker_is_cryptographic_verification"
+        ],
+        "embedded_commit_sha_verified": markers.get("commit_sha") is True,
+        "embedded_build_version_verified": markers.get("build_version") is True,
+        "embedded_text_marker_verification_is_cryptographic": result[
+            "embedded_text_marker_verification_is_cryptographic"
         ],
     }
 
@@ -274,7 +295,11 @@ def build_manifest(
         "commit_sha": commit_sha,
         "gate_plan": GATE_PLAN,
         "test_plan": normalized_test_plan,
-        "artifact": _artifact_record(artifact_path),
+        "artifact": _artifact_record(
+            artifact_path,
+            commit_sha=commit_sha,
+            build_version=build_version,
+        ),
         **build_repository_snapshot(root),
     }
     manifest["batch_fingerprint"] = _canonical_hash(_batch_identity(manifest))
@@ -289,7 +314,13 @@ def verify_artifact_binding(manifest: dict[str, Any], artifact_path: Path | None
         return
     if artifact_path is None:
         raise FreezeError("freeze is bound to an APK; --artifact is required")
-    if _artifact_record(artifact_path) != expected:
+
+    actual = _artifact_record(
+        artifact_path,
+        commit_sha=manifest.get("commit_sha"),
+        build_version=manifest.get("build_version"),
+    )
+    if actual != expected:
         raise FreezeError("playtest APK does not match the frozen artifact record")
 
 
