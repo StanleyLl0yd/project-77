@@ -13,6 +13,8 @@ from typing import Any
 PAGE_SIZE = 16 * 1024
 MARKER_SCAN_CHUNK_SIZE = 64 * 1024
 APK_SIGNING_BLOCK_MAGIC = b"APK Sig Block 42"
+UNITY_PLAYER_LIBRARY = "libunity.so"
+IL2CPP_LIBRARY = "libil2cpp.so"
 
 
 class ArtifactError(ValueError):
@@ -82,6 +84,25 @@ def _native_members(kind: str, infos: list[zipfile.ZipInfo]) -> list[tuple[str, 
             if len(parts) >= 4 and parts[0] == "base" and parts[1] == "lib" and info.filename.endswith(".so"):
                 result.append((parts[2], info.filename, info))
     return result
+
+
+def _required_unity_libraries(native: list[tuple[str, str, zipfile.ZipInfo]]) -> tuple[bool, bool]:
+    arm64_names = {
+        member.rsplit("/", 1)[-1]
+        for abi, member, _ in native
+        if abi == "arm64-v8a"
+    }
+    unity_present = UNITY_PLAYER_LIBRARY in arm64_names
+    il2cpp_present = IL2CPP_LIBRARY in arm64_names
+    if not unity_present:
+        raise ArtifactError(
+            f"arm64-v8a/{UNITY_PLAYER_LIBRARY} is missing; expected Unity player library"
+        )
+    if not il2cpp_present:
+        raise ArtifactError(
+            f"arm64-v8a/{IL2CPP_LIBRARY} is missing; Project 77 Android baseline requires IL2CPP"
+        )
+    return unity_present, il2cpp_present
 
 
 def _aab_signature_marker(infos: list[zipfile.ZipInfo]) -> bool:
@@ -182,6 +203,8 @@ def inspect_artifact(
             if require_arm64_only and abis != ["arm64-v8a"]:
                 raise ArtifactError(f"unexpected ABI set {abis}; P0/release baseline is arm64-v8a only")
 
+            unity_player_present, il2cpp_present = _required_unity_libraries(native)
+
             libraries: list[dict[str, Any]] = []
             with path.open("rb") as raw_handle:
                 for abi, member, info in native:
@@ -239,6 +262,8 @@ def inspect_artifact(
         "size_bytes": path.stat().st_size,
         "abis": abis,
         "native_library_count": len(libraries),
+        "unity_player_library_present": unity_player_present,
+        "il2cpp_library_present": il2cpp_present,
         "arm64_elf_16kb_compatible": all(
             library["elf_16kb_compatible"] is True
             for library in libraries
@@ -263,7 +288,7 @@ def inspect_artifact(
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Verify Project 77 APK/AAB ABI and native 16 KB page-size readiness."
+        description="Verify Project 77 APK/AAB ABI, IL2CPP and native 16 KB page-size readiness."
     )
     parser.add_argument("artifact", type=Path)
     parser.add_argument("--allow-extra-abis", action="store_true")
@@ -291,6 +316,7 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"Android artifact verified: {result['artifact']} · {result['kind'].upper()} · "
         f"ABIs={','.join(result['abis'])} · native={result['native_library_count']} · "
+        f"IL2CPP={'yes' if result['il2cpp_library_present'] else 'no'} · "
         f"ELF16K={'yes' if result['arm64_elf_16kb_compatible'] else 'no'}"
     )
     if result["kind"] == "apk":
