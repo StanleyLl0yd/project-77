@@ -30,6 +30,7 @@ def _elf64(load_alignment: int = 0x4000) -> bytes:
 def _write_test_apk(path: Path, marker: bytes = b"APK Sig Block 42") -> None:
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("lib/arm64-v8a/libunity.so", _elf64())
+        archive.writestr("lib/arm64-v8a/libil2cpp.so", _elf64())
         info = zipfile.ZipInfo("META-INF/project77-signature-marker.bin")
         info.compress_type = zipfile.ZIP_STORED
         archive.writestr(info, marker)
@@ -172,6 +173,7 @@ class P0FreezeManifestTests(unittest.TestCase):
             aab_path = Path(temp) / "Project77.aab"
             with zipfile.ZipFile(aab_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
                 archive.writestr("base/lib/arm64-v8a/libunity.so", _elf64())
+                archive.writestr("base/lib/arm64-v8a/libil2cpp.so", _elf64())
                 archive.writestr("META-INF/KEY0.SF", b"signature")
                 archive.writestr("META-INF/KEY0.RSA", b"signature")
             with self.assertRaises(freeze.FreezeError):
