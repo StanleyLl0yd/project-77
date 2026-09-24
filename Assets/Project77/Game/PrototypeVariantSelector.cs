@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Project77.Localization;
 using Project77.Puzzle;
 using Project77.Save;
 using UnityEngine;
@@ -103,24 +104,30 @@ namespace Project77.Game
             };
 
             var y = 8f;
-            GUI.Label(new Rect(0f, y, contentWidth, 48f), "Project 77", titleStyle);
+            GUI.Label(new Rect(0f, y, contentWidth, 48f), PlayerText.Get(PlayerTextKey.AppTitle), titleStyle);
             y += 48f;
-            GUI.Label(new Rect(0f, y, contentWidth, 34f), "Playtest build", titleStyle);
+            GUI.Label(new Rect(0f, y, contentWidth, 34f), PlayerText.Get(PlayerTextKey.SliceSubtitle), titleStyle);
             y += 48f;
 
             GUI.Label(
                 new Rect(8f, y, contentWidth - 16f, 82f),
-                "Restore the island's energy network, recover resources, repair the generator and investigate what wakes up.",
+                PlayerText.Get(PlayerTextKey.SliceSetupDescription),
                 bodyStyle);
             y += 92f;
 
             GUI.Label(
                 new Rect(8f, y, contentWidth - 16f, 42f),
-                $"Build {playtestRuntime.BuildVersion}\nSchema v{Project77.Analytics.PrototypeAnalyticsEvent.CurrentSchemaVersion}",
+                PlayerText.Format(
+                    PlayerTextKey.SliceBuildInfo,
+                    playtestRuntime.BuildVersion,
+                    Project77.Analytics.PrototypeAnalyticsEvent.CurrentSchemaVersion),
                 captionStyle);
             y += 54f;
 
-            GUI.Label(new Rect(0f, y, contentWidth, 28f), "Anonymous playtest ID", bodyStyle);
+            GUI.Label(
+                new Rect(0f, y, contentWidth, 28f),
+                PlayerText.Get(PlayerTextKey.SlicePlaytestIdLabel),
+                bodyStyle);
             y += 32f;
             playtestId = GUI.TextField(
                 new Rect(8f, y, contentWidth - 16f, 48f),
@@ -136,7 +143,7 @@ namespace Project77.Game
 
             if (GUI.Button(
                     new Rect(8f, y, contentWidth - 16f, 68f),
-                    "Start playtest",
+                    PlayerText.Get(PlayerTextKey.SliceStart),
                     buttonStyle))
             {
                 StartSelectedMeta();
@@ -184,24 +191,31 @@ namespace Project77.Game
             GUI.Box(new Rect(8f, y, panelWidth, 124f), string.Empty);
             GUI.Label(
                 new Rect(18f, y + 8f, panelWidth - 20f, 26f),
-                "Moderator: previous session data",
+                PlayerText.Get(PlayerTextKey.RecoveryTitle),
                 titleStyle);
 
             var gap = 8f;
             var buttonWidth = (panelWidth - 28f - gap) * 0.5f;
             GUI.enabled = IsReadableFile(previousEventsPath);
-            if (GUI.Button(new Rect(18f, y + 40f, buttonWidth, 44f), "Copy events", buttonStyle))
+            if (GUI.Button(
+                    new Rect(18f, y + 40f, buttonWidth, 44f),
+                    PlayerText.Get(PlayerTextKey.RecoveryCopyEvents),
+                    buttonStyle))
             {
-                CopyPreviousFile(previousEventsPath, "Previous events copied");
+                CopyPreviousFile(
+                    previousEventsPath,
+                    PlayerText.Get(PlayerTextKey.RecoveryEventsCopied));
             }
 
             GUI.enabled = IsReadableFile(previousMetadataPath);
             if (GUI.Button(
                     new Rect(18f + buttonWidth + gap, y + 40f, buttonWidth, 44f),
-                    "Copy metadata",
+                    PlayerText.Get(PlayerTextKey.RecoveryCopyMetadata),
                     buttonStyle))
             {
-                CopyPreviousFile(previousMetadataPath, "Previous metadata copied");
+                CopyPreviousFile(
+                    previousMetadataPath,
+                    PlayerText.Get(PlayerTextKey.RecoveryMetadataCopied));
             }
             GUI.enabled = true;
 
@@ -232,7 +246,7 @@ namespace Project77.Game
                     }
                     catch (Exception)
                     {
-                        setupError = "Recovered local progress, but the primary save could not be repaired.";
+                        setupError = PlayerText.Get(PlayerTextKey.SaveRecoveredRepairFailed);
                     }
                 }
                 return;
@@ -243,7 +257,7 @@ namespace Project77.Game
                     "no local save exists",
                     StringComparison.Ordinal))
             {
-                setupError = "Local progress could not be loaded. Existing save files were left untouched.";
+                setupError = PlayerText.Get(PlayerTextKey.SaveLoadFailed);
                 return;
             }
 
@@ -256,7 +270,7 @@ namespace Project77.Game
             catch (Exception)
             {
                 verticalSliceSaveState = null;
-                setupError = "Local progress could not be created. Check device storage and try again.";
+                setupError = PlayerText.Get(PlayerTextKey.SaveCreateFailed);
             }
         }
 
@@ -320,7 +334,7 @@ namespace Project77.Game
             {
                 if (!IsReadableFile(path))
                 {
-                    recoveryStatus = "Previous session file is unavailable";
+                    recoveryStatus = PlayerText.Get(PlayerTextKey.RecoveryUnavailable);
                 }
                 else
                 {
@@ -330,7 +344,7 @@ namespace Project77.Game
             }
             catch (Exception)
             {
-                recoveryStatus = "Could not copy previous session data";
+                recoveryStatus = PlayerText.Get(PlayerTextKey.RecoveryCopyFailed);
             }
 
             recoveryStatusUntil = Time.realtimeSinceStartup + 3f;
@@ -386,7 +400,7 @@ namespace Project77.Game
         {
             if (verticalSliceSaveStore == null || verticalSliceSaveState == null)
             {
-                setupError = "Local progress is unavailable. Existing save data was not reset.";
+                setupError = PlayerText.Get(PlayerTextKey.SaveUnavailable);
                 return;
             }
 
