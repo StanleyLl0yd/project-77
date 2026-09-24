@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Project77.Puzzle;
+using Project77.Save;
 using UnityEngine;
 
 namespace Project77.Game
@@ -10,8 +11,11 @@ namespace Project77.Game
         private const string DataFolderName = "Project77Playtests";
         private const string EventsSuffix = "_events.jsonl";
         private const string MetadataSuffix = "_metadata.json";
+        private const string SaveFolderName = "Project77Save";
 
         private PrototypePlaytestRuntime playtestRuntime;
+        private AtomicLocalSaveStore verticalSliceSaveStore;
+        private VerticalSliceSaveState verticalSliceSaveState;
         private string playtestId;
         private string setupError = string.Empty;
         private string previousEventsPath;
@@ -28,7 +32,8 @@ namespace Project77.Game
                 playtestRuntime = gameObject.AddComponent<PrototypePlaytestRuntime>();
             }
 
-            playtestId = "p1-" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            InitializeVerticalSliceSave();
+            playtestId = "p2-" + Guid.NewGuid().ToString("N").Substring(0, 8);
             RefreshPreviousSessionFiles();
         }
 
@@ -211,6 +216,50 @@ namespace Project77.Game
             y += 138f;
         }
 
+        private void InitializeVerticalSliceSave()
+        {
+            var directory = Path.Combine(Application.persistentDataPath, SaveFolderName);
+            verticalSliceSaveStore = new AtomicLocalSaveStore(directory);
+            var loaded = verticalSliceSaveStore.Load();
+            if (loaded.Found)
+            {
+                verticalSliceSaveState = loaded.State;
+                if (!string.Equals(loaded.Source, "primary", StringComparison.Ordinal))
+                {
+                    try
+                    {
+                        verticalSliceSaveStore.Save(verticalSliceSaveState);
+                    }
+                    catch (Exception)
+                    {
+                        setupError = "Recovered local progress, but the primary save could not be repaired.";
+                    }
+                }
+                return;
+            }
+
+            if (!string.Equals(
+                    loaded.Error,
+                    "no local save exists",
+                    StringComparison.Ordinal))
+            {
+                setupError = "Local progress could not be loaded. Existing save files were left untouched.";
+                return;
+            }
+
+            verticalSliceSaveState = VerticalSliceSaveState.CreateNew(
+                Guid.NewGuid().ToString("N"));
+            try
+            {
+                verticalSliceSaveStore.Save(verticalSliceSaveState);
+            }
+            catch (Exception)
+            {
+                verticalSliceSaveState = null;
+                setupError = "Local progress could not be created. Check device storage and try again.";
+            }
+        }
+
         private void RefreshPreviousSessionFiles()
         {
             previousEventsPath = null;
@@ -335,6 +384,12 @@ namespace Project77.Game
 
         private void StartSelectedMeta()
         {
+            if (verticalSliceSaveStore == null || verticalSliceSaveState == null)
+            {
+                setupError = "Local progress is unavailable. Existing save data was not reset.";
+                return;
+            }
+
             if (!playtestRuntime.TryBeginSelectedMeta(
                     playtestId,
                     PrototypeVariant.EnergyRouting,
@@ -345,7 +400,10 @@ namespace Project77.Game
 
             enabled = false;
             var controller = gameObject.AddComponent<EnergyRoutingPrototypeController>();
-            controller.ConfigureSelectedMeta(playtestId);
+            controller.ConfigureSelectedMeta(
+                playtestId,
+                verticalSliceSaveStore,
+                verticalSliceSaveState);
         }
 
 #if UNITY_EDITOR
