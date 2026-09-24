@@ -32,6 +32,28 @@ namespace Project77.Tests
         }
 
         [Test]
+        public void CaptureRestore_PreservesResourcesFlagsAndClaimedRewards()
+        {
+            var original = new PrototypeMetaProgression();
+            original.ClaimReward(original.RewardForLevel(1));
+            original.ClaimReward(original.RewardForLevel(2));
+            Assert.That(original.RepairGenerator().Accepted, Is.True);
+            Assert.That(original.UnlockFirstArea(), Is.True);
+            Assert.That(original.DiscoverRobot77(), Is.True);
+
+            var restored = PrototypeMetaProgression.Restore(original.CaptureState());
+
+            Assert.That(restored.Scrap, Is.EqualTo(0));
+            Assert.That(restored.Energy, Is.EqualTo(0));
+            Assert.That(restored.GeneratorRepaired, Is.True);
+            Assert.That(restored.AreaUnlocked, Is.True);
+            Assert.That(restored.Robot77Discovered, Is.True);
+            Assert.That(restored.HasClaimedReward("p1-level-001"), Is.True);
+            Assert.That(restored.HasClaimedReward("p1-level-002"), Is.True);
+            Assert.That(restored.ClaimReward(restored.RewardForLevel(1)), Is.False);
+        }
+
+        [Test]
         public void RepairUnlockDiscovery_FollowsRequiredOrder()
         {
             var meta = new PrototypeMetaProgression();
