@@ -89,8 +89,9 @@ namespace Project77.Tests
             try
             {
                 var store = new AtomicLocalSaveStore(directory);
-                var first = BuildState(levelIndex: 2);
-                var second = BuildState(levelIndex: 5);
+                var playerId = Guid.NewGuid().ToString("N");
+                var first = BuildState(levelIndex: 2, playerId: playerId);
+                var second = BuildState(levelIndex: 5, playerId: playerId);
 
                 store.Save(first);
                 store.Save(second);
@@ -100,6 +101,33 @@ namespace Project77.Tests
                 Assert.That(loaded.Found, Is.True, loaded.Error);
                 Assert.That(loaded.Source, Is.EqualTo("backup"));
                 Assert.That(loaded.State.EnergyRoutingLevelIndex, Is.EqualTo(2));
+            }
+            finally
+            {
+                DeleteDirectory(directory);
+            }
+        }
+
+        [Test]
+        public void Store_RejectsChangingExistingPlayerId()
+        {
+            var directory = CreateTempDirectory();
+            try
+            {
+                var store = new AtomicLocalSaveStore(directory);
+                store.Save(BuildState(playerId: Guid.NewGuid().ToString("N")));
+
+                var rejected = false;
+                try
+                {
+                    store.Save(BuildState(playerId: Guid.NewGuid().ToString("N")));
+                }
+                catch (InvalidOperationException)
+                {
+                    rejected = true;
+                }
+
+                Assert.That(rejected, Is.True);
             }
             finally
             {
@@ -137,11 +165,12 @@ namespace Project77.Tests
             try
             {
                 var store = new AtomicLocalSaveStore(directory);
-                store.Save(BuildState(levelIndex: 1));
-                store.Save(BuildState(levelIndex: 2));
+                var playerId = Guid.NewGuid().ToString("N");
+                store.Save(BuildState(levelIndex: 1, playerId: playerId));
+                store.Save(BuildState(levelIndex: 2, playerId: playerId));
                 File.WriteAllText(store.PrimaryPath, "corrupt");
 
-                store.Save(BuildState(levelIndex: 3));
+                store.Save(BuildState(levelIndex: 3, playerId: playerId));
                 File.WriteAllText(store.PrimaryPath, "corrupt again");
 
                 var loaded = store.Load();
@@ -155,11 +184,13 @@ namespace Project77.Tests
             }
         }
 
-        private static VerticalSliceSaveState BuildState(int levelIndex = 4)
+        private static VerticalSliceSaveState BuildState(
+            int levelIndex = 4,
+            string playerId = null)
         {
             return new VerticalSliceSaveState(
                 VerticalSliceSaveState.CurrentSchemaVersion,
-                Guid.NewGuid().ToString("N"),
+                playerId ?? Guid.NewGuid().ToString("N"),
                 levelIndex,
                 scrap: 3,
                 energy: 1,
