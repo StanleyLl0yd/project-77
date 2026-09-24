@@ -20,12 +20,13 @@ If a required decision is genuinely unresolved, keep it OPEN/PROVISIONAL and imp
 ## 2. Current phase
 
 - Pre-production: **COMPLETE**.
-- Active phase: **Prototype 0.1**.
+- Prototype 0.1 / Gate P0 + Gate P1: **CLOSED with owner-authorized CONTINUE decisions**.
+- Active phase: **Gate P2 — Vertical Slice 0.1**.
 - Working principle: **data over speculation**.
-- Production scope may expand only after both Gate P0 and Gate P1 return **CONTINUE**.
-- Active loop under test: `Puzzle -> Reward -> Island Change / Discovery -> Next Puzzle`.
+- P1 evidence limitation: Build #12 / P1-002 passed artifact and physical-device acceptance, but raw per-session telemetry/moderation exports were not retained; the P1 numeric threshold is therefore **not quantitatively evaluated**.
+- Active slice loop: `Puzzle -> Reward -> Island Change / 77 / Mystery Beat -> Next Objective`.
 
-Before coding, read `Docs/28_PROTOTYPE_01_SPEC.md`, `Docs/29_PROTOTYPE_PLAYTEST_PROTOCOL.md`, and `Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`.
+Before coding, read `Docs/37_VERTICAL_SLICE_01_SPEC.md`, `Docs/38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`, `Docs/18_PRODUCT_GATES.md`, `Docs/31_ENGINEERING_CONVENTIONS.md`, and the relevant specialized document for the workstream.
 
 ## 3. Locked product invariants
 
@@ -69,17 +70,20 @@ Platform services live behind narrow interfaces/adapters only when the current s
 
 Do not add dependency-injection frameworks, service locators, global event buses, repository layers, generic plugin systems, or speculative abstractions merely for hypothetical future use.
 
-## 6. Prototype discipline
+## 6. Vertical Slice discipline
 
-Until P0 + P1 return CONTINUE:
+The P0 + P1 owner CONTINUE condition is satisfied. This **does not** authorize unrestricted production scope.
 
-- use placeholder graphics/UI freely;
-- do not build production backend, IAP/store, ads, subscription, Season Pass, planet/ship gameplay, mass art, or mass content;
-- build only what is required to test the active hypotheses;
-- prefer small throwaway presentation code over premature production architecture;
-- preserve reusable deterministic domain logic, validation, telemetry contracts, and tests where useful.
+During Gate P2:
 
-The build running is not sufficient. The product criterion is that an external tester understands the loop and voluntarily wants to continue.
+- build one coherent 20–30 minute vertical slice, not the whole game;
+- use the selected Energy Routing core and one island sector;
+- implement only the save/load, analytics, UI, narrative, art/audio and performance work required by the P2 gate;
+- do not jump to mass content, other planets, ship gameplay, full production backend, full monetization, Season Pass, subscription, or LiveOps production;
+- keep platform/vendor services behind narrow interfaces only when the slice truly needs them;
+- preserve deterministic puzzle logic, validation, save migrations, analytics contracts, and regression tests.
+
+A polished build alone is not Gate P2 success. New players must understand the loop, remember 77/the mystery, and want to know what happens next.
 
 ## 7. Data-driven prototype content
 
