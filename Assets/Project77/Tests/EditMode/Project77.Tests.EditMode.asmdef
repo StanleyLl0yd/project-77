@@ -5,7 +5,8 @@
     "Project77.Puzzle",
     "Project77.Analytics",
     "Project77.Meta",
-    "Project77.Save"
+    "Project77.Save",
+    "Project77.Localization"
   ],
   "includePlatforms": [
     "Editor"
