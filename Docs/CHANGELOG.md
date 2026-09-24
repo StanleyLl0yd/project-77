@@ -1,5 +1,17 @@
 # Project 77 — Documentation Changelog
 
+## v0.7 — Gate P2 Vertical Slice 0.1 — 2026-09-24
+
+- Gate P1 closed with an owner-authorized **CONTINUE** decision; the permanent evidence limitation is explicit: raw per-session telemetry/moderation exports were not retained, so the preregistered P1 numeric threshold was **not quantitatively evaluated**.
+- Added `36_P1_GATE_DECISION.md`, `37_VERTICAL_SLICE_01_SPEC.md` and `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`.
+- Active phase moved from Prototype 0.1 to **Gate P2 / Vertical Slice 0.1**.
+- P2 scope is bounded to a coherent 20–30 minute slice: Energy Routing, one near-final island sector, 77, one mystery beat, versioned local save/load, analytics and reference-device performance evidence.
+- P77-101 implemented versioned local save v1 with validation, migration boundary and primary/temp/backup recovery.
+- P77-102 connected selected-meta progression to persistent local save/resume without duplicating one-time rewards/repair/unlock/77 discovery.
+- P77-103 introduced stable player-facing localization keys, default offline English, culture-aware formatting and visible missing-key markers.
+- Root agent contract, compact AI context, master index, machine-readable manifest and repository validator synchronized to the Gate P2 baseline.
+- Historical P0/P1 specs, tooling and evidence remain preserved and continue to be validated; they are no longer the active implementation contract.
+
 ## v0.6.1 — Build 11 first-use UX iteration — 2026-09-10
 
 - Physical-device review of Unity Build #11 found a blocking first-use comprehension problem before the protocol-grade P1 fresh-tester batch.
