@@ -4,6 +4,7 @@ using Project77.Analytics;
 using Project77.Meta;
 using Project77.Puzzle;
 using Project77.Puzzle.EnergyRouting;
+using Project77.Save;
 using UnityEngine;
 
 namespace Project77.Game
@@ -27,7 +28,7 @@ namespace Project77.Game
         private readonly EnergyRoutingRunner runner = new EnergyRoutingRunner();
         private readonly List<GridCell> dragPath = new List<GridCell>();
         private readonly InMemoryPrototypeAnalyticsSink analytics = new InMemoryPrototypeAnalyticsSink();
-        private readonly PrototypeMetaProgression meta = new PrototypeMetaProgression();
+        private PrototypeMetaProgression meta = new PrototypeMetaProgression();
 
         private PrototypeAnalyticsContext analyticsContext;
         private EnergyRoutingPayload payload;
@@ -49,10 +50,44 @@ namespace Project77.Game
         private bool continuationOffered;
         private bool setComplete;
         private bool metaLoopEnabled;
+        private AtomicLocalSaveStore saveStore;
+        private VerticalSliceSaveState restoredSaveState;
+        private string playerId;
+        private int narrativeStep;
+        private bool hapticsEnabled = true;
+        private bool reducedMotionEnabled;
+        private string persistenceError;
 
-        public void ConfigureSelectedMeta(string anonymousPlaytestId)
+        public void ConfigureSelectedMeta(
+            string anonymousPlaytestId,
+            AtomicLocalSaveStore selectedSaveStore,
+            VerticalSliceSaveState savedState)
         {
+            if (selectedSaveStore == null)
+            {
+                throw new ArgumentNullException(nameof(selectedSaveStore));
+            }
+            if (savedState == null)
+            {
+                throw new ArgumentNullException(nameof(savedState));
+            }
+
             metaLoopEnabled = true;
+            saveStore = selectedSaveStore;
+            restoredSaveState = savedState;
+            playerId = savedState.PlayerId;
+            narrativeStep = savedState.NarrativeStep;
+            hapticsEnabled = savedState.HapticsEnabled;
+            reducedMotionEnabled = savedState.ReducedMotionEnabled;
+            meta = PrototypeMetaProgression.Restore(
+                new PrototypeMetaProgressionState(
+                    savedState.Scrap,
+                    savedState.Energy,
+                    savedState.GeneratorRepaired,
+                    savedState.AreaUnlocked,
+                    savedState.Robot77Discovered,
+                    savedState.ClaimedRewardIds));
+
             if (!string.IsNullOrWhiteSpace(anonymousPlaytestId))
             {
                 playtestId = anonymousPlaytestId;
@@ -76,13 +111,18 @@ namespace Project77.Game
                 null,
                 new Dictionary<string, object>
                 {
-                    ["entry_point"] = "fresh_launch",
+                    ["entry_point"] =
+                        metaLoopEnabled &&
+                        restoredSaveState != null &&
+                        restoredSaveState.EnergyRoutingLevelIndex > 0
+                            ? "restart"
+                            : "fresh_launch",
                     ["core_variant"] = PrototypeVariant.EnergyRouting
                 });
 
             if (metaLoopEnabled)
             {
-                view = PrototypeView.Intro;
+                ResumeSelectedMeta();
                 return;
             }
 
@@ -155,7 +195,7 @@ namespace Project77.Game
             }
         }
 
-        private void LoadLevel(int number)
+        private void LoadLevel(int number, bool trackStart = true)
         {
             levelNumber = number;
             var levelId = $"A-{number:000}";
@@ -176,16 +216,19 @@ namespace Project77.Game
             levelStartMs = NowMs();
             feedback = levelNumber == FirstLevel ? "Start with the labeled nodes." : "Ready.";
 
-            Track(
-                PrototypeAnalyticsEventName.LevelStart,
-                level.Id,
-                level.Revision,
-                new Dictionary<string, object>
-                {
-                    ["attempt_index"] = attemptIndex,
-                    ["core_variant"] = PrototypeVariant.EnergyRouting,
-                    ["level_sequence_index"] = levelNumber
-                });
+            if (trackStart)
+            {
+                Track(
+                    PrototypeAnalyticsEventName.LevelStart,
+                    level.Id,
+                    level.Revision,
+                    new Dictionary<string, object>
+                    {
+                        ["attempt_index"] = attemptIndex,
+                        ["core_variant"] = PrototypeVariant.EnergyRouting,
+                        ["level_sequence_index"] = levelNumber
+                    });
+            }
         }
 
         private void BeginDrag(Vector2 screenPosition)
@@ -420,6 +463,11 @@ namespace Project77.Game
                 ? "You now have enough material and stored power to repair the generator."
                 : "The recovered resources can be used to repair the island generator.";
 
+            if (!PersistProgress(levelNumber))
+            {
+                islandNotice = persistenceError;
+            }
+
             if ((!meta.GeneratorRepaired && !meta.CanRepairGenerator) ||
                 meta.Robot77Discovered)
             {
@@ -480,6 +528,10 @@ namespace Project77.Game
                 });
 
             islandNotice = "POWER RESTORED. Lights come on and the sealed annex receives power.";
+            if (!PersistProgress(levelNumber))
+            {
+                islandNotice = persistenceError;
+            }
         }
 
         private void UnlockArea()
@@ -510,6 +562,10 @@ namespace Project77.Game
                 });
 
             islandNotice = "ANNEX OPEN. A weak signal is now detectable inside.";
+            if (!PersistProgress(levelNumber))
+            {
+                islandNotice = persistenceError;
+            }
         }
 
         private void DiscoverRobot77()
@@ -530,7 +586,12 @@ namespace Project77.Game
                     ["levels_completed_before_discovery"] = levelNumber
                 });
 
+            narrativeStep = Math.Max(narrativeStep, 1);
             islandNotice = "SIGNAL FOUND: 77. The damaged robot reacts to the restored power.";
+            if (!PersistProgress(levelNumber))
+            {
+                islandNotice = persistenceError;
+            }
             OfferContinuation("post_77_discovery");
         }
 
@@ -553,13 +614,22 @@ namespace Project77.Game
                     ["offer_sequence_index"] = levelNumber
                 });
 
+            var nextLevelIndex = levelNumber >= LastLevel
+                ? LastLevel + 1
+                : levelNumber + 1;
+            if (!PersistProgress(nextLevelIndex))
+            {
+                islandNotice = persistenceError;
+                return;
+            }
+
             if (levelNumber >= LastLevel)
             {
                 setComplete = true;
                 return;
             }
 
-            LoadLevel(levelNumber + 1);
+            LoadLevel(nextLevelIndex);
         }
 
         private void OfferContinuation(string offerContext)
@@ -678,6 +748,116 @@ namespace Project77.Game
                 legendStyle);
         }
 
+        private void ResumeSelectedMeta()
+        {
+            if (restoredSaveState == null ||
+                restoredSaveState.EnergyRoutingLevelIndex <= 0)
+            {
+                view = PrototypeView.Intro;
+                return;
+            }
+
+            if (restoredSaveState.EnergyRoutingLevelIndex > LastLevel)
+            {
+                levelNumber = LastLevel;
+                setComplete = true;
+                view = PrototypeView.Island;
+                return;
+            }
+
+            levelNumber = restoredSaveState.EnergyRoutingLevelIndex;
+            var reward = meta.RewardForLevel(levelNumber);
+            if (!meta.HasClaimedReward(reward.RewardId))
+            {
+                LoadLevel(levelNumber);
+                return;
+            }
+
+            LoadLevel(levelNumber, trackStart: false);
+            view = PrototypeView.Island;
+            continuationOffered = false;
+
+            if (!meta.GeneratorRepaired)
+            {
+                islandNotice = meta.CanRepairGenerator
+                    ? "Recovered progress. The generator can now be repaired."
+                    : "Recovered progress. More resources are needed for the generator.";
+                if (!meta.CanRepairGenerator)
+                {
+                    OfferContinuation("post_reward");
+                }
+                return;
+            }
+
+            if (!meta.AreaUnlocked)
+            {
+                islandNotice = "Recovered progress. The generator is online and the annex has power.";
+                return;
+            }
+
+            if (!meta.Robot77Discovered)
+            {
+                islandNotice = "Recovered progress. The annex is open and a weak signal is waiting.";
+                return;
+            }
+
+            islandNotice = "Recovered progress. Signal 77 is active.";
+            OfferContinuation(levelNumber <= 2 ? "post_77_discovery" : "post_reward");
+        }
+
+        private void BeginFirstLevel()
+        {
+            if (!PersistProgress(FirstLevel))
+            {
+                feedback = persistenceError;
+                return;
+            }
+
+            LoadLevel(FirstLevel);
+        }
+
+        private bool PersistProgress(int energyRoutingLevelIndex)
+        {
+            if (!metaLoopEnabled)
+            {
+                return true;
+            }
+
+            if (saveStore == null || string.IsNullOrWhiteSpace(playerId))
+            {
+                persistenceError = "SAVE ERROR: local progress is unavailable.";
+                return false;
+            }
+
+            var state = meta.CaptureState();
+            var saveState = new VerticalSliceSaveState(
+                VerticalSliceSaveState.CurrentSchemaVersion,
+                playerId,
+                energyRoutingLevelIndex,
+                state.Scrap,
+                state.Energy,
+                state.GeneratorRepaired,
+                state.AreaUnlocked,
+                state.Robot77Discovered,
+                narrativeStep,
+                hapticsEnabled,
+                reducedMotionEnabled,
+                state.ClaimedRewardIds);
+
+            try
+            {
+                saveStore.Save(saveState);
+                restoredSaveState = saveState;
+                persistenceError = null;
+                return true;
+            }
+            catch (Exception)
+            {
+                persistenceError = "SAVE ERROR: progress could not be written. Do not close the app.";
+                return false;
+            }
+        }
+
         private void DrawIntro()
         {
             var width = PrototypeGuiLayout.ContentWidth(620f, 20f);
@@ -698,7 +878,7 @@ namespace Project77.Game
 
             if (GUI.Button(new Rect(x + 24f, 400f, width - 48f, 60f), "Begin restoration"))
             {
-                LoadLevel(FirstLevel);
+                BeginFirstLevel();
             }
         }
 
