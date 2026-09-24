@@ -13,6 +13,7 @@
     <Compile Include="../../Assets/Project77/Puzzle/**/*.cs" />
     <Compile Include="../../Assets/Project77/Analytics/**/*.cs" />
     <Compile Include="../../Assets/Project77/Meta/**/*.cs" />
+    <Compile Include="../../Assets/Project77/Save/**/*.cs" />
     <Compile Include="../../Assets/Project77/Tests/EditMode/*.cs" />
   </ItemGroup>
 </Project>
