@@ -9,7 +9,7 @@ When instructions conflict:
 1. project owner's current explicit instruction;
 2. root `AGENTS.md`;
 3. `13_DECISION_LOG.md` for product/high-level decision state;
-4. `28_PROTOTYPE_01_SPEC.md` for active Prototype 0.1 scope;
+4. `37_VERTICAL_SLICE_01_SPEC.md` for active Gate P2 scope;
 5. relevant specialized docs;
 6. `11_BACKLOG_IDEAS.md` only as uncommitted ideas.
 
@@ -17,88 +17,127 @@ Do not treat backlog ideas as committed features.
 
 ## Current phase
 
-**Pre-production is complete. Active phase: Prototype 0.1.**
+**Pre-production and Prototype 0.1 are complete. Active phase: Gate P2 — Vertical Slice 0.1.**
 
-Do not expand into production art, large backend, store/monetization, ads, subscription, Season Pass, other planets, ship gameplay, or mass content production until Gate P0 + P1 return CONTINUE.
+Gate P0 and Gate P1 both have owner-authorized **CONTINUE** decisions. Energy Routing is the selected core.
 
-The prototype is not successful merely because it runs. The critical outcome is that an external player understands `puzzle -> reward -> island change/discovery` and voluntarily wants to continue.
+P1 evidence limitation is permanent and explicit:
 
-Questions that can be cheaply tested remain OPEN/PROVISIONAL until evidence exists.
+- corrected Build #12 / P1-002 passed artifact and physical-device acceptance;
+- testers were reported by the owner as finding the corrected experience simple and understandable;
+- raw per-session telemetry/moderation exports were not retained;
+- the preregistered P1 numeric threshold was therefore **not quantitatively evaluated** and must not be reconstructed from memory.
+
+Closure record: `36_P1_GATE_DECISION.md`.
+
+## Active Gate P2 goal
+
+Build one coherent **20–30 minute** Android-first vertical slice:
+
+`arrival/island context -> Energy Routing -> reward -> repair/world change -> 77 -> exploration/restoration -> mystery beat -> clear next objective`.
+
+Required evidence/capabilities:
+
+- one near-final island sector visual language;
+- Energy Routing as the selected core;
+- robot 77 as a memorable product element;
+- one complete mystery/narrative beat;
+- versioned local save/load;
+- FTUE + level analytics;
+- reference-device performance evidence.
+
+A polished build alone is not enough. Fresh players must understand the loop, remember 77/the mystery, and want to know what happens next.
+
+## Current implementation status
+
+Completed P2 foundation work:
+
+- P77-100 — P2 phase transition and active contract/backlog;
+- P77-101 — versioned local save v1 with validation, migration boundary and primary/temp/backup recovery;
+- P77-102 — selected-meta state persistence/resume across app relaunch;
+- P77-103 — player-facing localization-key baseline with visible missing-key behavior.
+
+Active implementation documents:
+
+- `37_VERTICAL_SLICE_01_SPEC.md` — Gate P2 implementation contract;
+- `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md` — ordered P2 backlog;
+- `31_ENGINEERING_CONVENTIONS.md` — Unity/C# conventions;
+- `18_PRODUCT_GATES.md` — product gate authority;
+- `19_ACCOUNT_SAVE_SPEC.md` — save/account constraints;
+- `25_QA_DEVICE_PERFORMANCE.md` — device/performance baseline;
+- `10_UX_ONBOARDING.md` and `17_ART_AUDIO_DIRECTION.md` — UX/art direction.
+
+Historical prototype docs remain valid as evidence/history, not active scope:
+
+- `28_PROTOTYPE_01_SPEC.md`;
+- `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`;
+- `30_PROTOTYPE_ANALYTICS_CONTRACT.md`;
+- `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`;
+- `33_P0_GATE_DECISION.md`;
+- `34_P1_EXTERNAL_PLAYTEST_PLAN.md`;
+- `35_P1_BUILD_11_DEVICE_FINDING.md`;
+- `36_P1_GATE_DECISION.md`.
+
+## Gate P2 scope discipline
+
+Do not jump directly to the whole production roadmap.
+
+First Vertical Slice 0.1 intentionally defers:
+
+- mass content;
+- other planets;
+- ship gameplay;
+- full production backend;
+- full store/IAP/ads/subscription implementation;
+- Season Pass;
+- LiveOps production stack;
+- social production stack.
+
+A narrow sandbox is allowed only when a concrete P2 question requires it.
 
 ## Product invariants
 
 - Project 77 is the internal codename, not a cleared commercial title.
 - Companion/mascot: robot 77.
 - Macro arc: abandoned island -> underground complex -> ancient vessel -> space -> other planets -> world network.
-- Cosmic scale is deliberately hidden early; early marketing sells the island mystery.
+- Cosmic scale is deliberately hidden early.
 - The island remains the player's permanent home.
 - Main story is free.
-- Monetization direction: Season Pass, optional subscription, cosmetics, convenience IAP, rewarded ads.
-- No pay-to-win core, no paid story ending, no paid-loot-box launch dependency.
-- Core session target is one-finger, roughly 30–90 seconds.
-- Social is asynchronous first; launch excludes free-form chat/DM/comments/user-uploaded UGC.
+- Monetization direction remains later-stage: Season Pass, optional subscription, cosmetics, convenience IAP, rewarded ads.
+- Core puzzle interaction remains one-finger and short-session friendly.
+- Social is asynchronous first; no launch dependence on free-form UGC/chat.
 - Intended product positioning: teens/adults (13+ direction), not child-directed.
-- Product stages use CONTINUE / ITERATE / PIVOT / STOP gates; sunk cost is not a reason to continue.
-
-## Current core decision
-
-Gate P0 has an owner-authorized **CONTINUE** decision. **Energy Routing** is the selected P1 core. The retained quantitative P0 evidence limitation is documented in `33_P0_GATE_DECISION.md`.
-
-Path / Expedition Routing and Flow / Network Restoration remain available as P0/debug implementations; they are not the active P1 path.
-
-## Active Prototype 0.1 flow
-
-Current Gate P1 path:
-
-`Energy Routing -> reward -> Scrap/Energy -> repair generator -> visible island change -> unlock area -> discover 77 -> genuine next-puzzle choice -> Gate P1`
-
-The integrated P1 engineering loop is implemented. Active work is the frozen external P1 test and evidence collection; production scope remains blocked until Gate P1 CONTINUE.
-
-Operational docs:
-
-- `28_PROTOTYPE_01_SPEC.md` — implementation contract;
-- `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` — playtest procedure and voluntary-continue definition;
-- `30_PROTOTYPE_ANALYTICS_CONTRACT.md` — canonical prototype event schema;
-- `31_ENGINEERING_CONVENTIONS.md` — Unity/C# conventions;
-- `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered tasks/DoD;
-- `34_P1_EXTERNAL_PLAYTEST_PLAN.md` — preregistered Gate P1 hypothesis/environment/decision rule.
 
 ## Tech baseline
 
 - Unity 6.3 LTS + C# + URP.
 - Android-first; core remains platform-neutral.
 - min Android API 26.
-- targetSdk 36 baseline; compileSdk >= target and supported by current Unity toolchain.
-- arm64-v8a mandatory for release; representative ARM64 Android path before accepting P1 evidence.
-- AAB primary future store artifact; APK valid for prototype testing/direct install.
-- 16 KB memory-page compatibility required for final native dependencies/artifacts.
-- Gameplay/puzzle rules do not depend on store, ads, analytics vendor, auth, cloud save, notifications, or a specific store.
-- Do not create production platform-service implementations in Prototype 0.1.
+- targetSdk 36 baseline; compileSdk >= target and supported by the current Unity toolchain.
+- arm64-v8a mandatory for Android release artifacts.
+- AAB primary future store artifact; APK valid for development/playtest/direct install.
+- 16 KB memory-page compatibility remains mandatory for native Android artifacts.
+- Gameplay/puzzle rules remain independent from billing, ads, analytics vendors, auth, cloud providers and stores.
 
-## Prototype engineering rules
+## Engineering rules
 
-- deterministic puzzle domain for level + seed(if any) + ordered actions;
-- test puzzle rules independently from MonoBehaviour/rendering where practical;
-- data-driven levels with stable ID + revision + variant + validated payload;
-- namespace convention `Project77.*`;
-- target project-owned tree under `Assets/Project77/`;
+- deterministic puzzle domain;
+- data-driven levels with stable IDs/revisions;
+- versioned save schema with validation/migration tests;
+- localization keys for new player-facing P2 copy;
 - no speculative DI framework/service locator/global event bus/content platform;
-- placeholder UI/art is expected;
-- minimal analytics only; no unnecessary PII.
+- narrow platform adapters only when active scope needs them;
+- no claim that tests/builds/device checks passed unless they actually ran.
 
 ## KPI authority
 
-Prototype P0/P1 thresholds are in `18_PRODUCT_GATES.md`.
+Gate P2 criteria are in `18_PRODUCT_GATES.md`.
 
-Soft-launch initial decision targets from Decision Log P-007 / Gate P4:
+Soft-launch initial decision targets remain later-stage only:
 
 - D1 >= 30%;
 - D7 8–12%+;
 - D30 4–7%+;
 - crash/ANR-free >99.5%.
 
-The older 35% / 12–15% / 5% set is retired as an authoritative second target set.
-
-## Long-term direction, not current implementation scope
-
-Guest-first account, versioned saves, server validation for value/time, Remote Config rollback/killswitches, LiveOps, store providers, cloud/social, incident recovery, content velocity, localization, accessibility, and production performance budgets are documented constraints for later stages. Do not build them now unless the active gate requires a minimal stub.
+Do not import soft-launch KPIs into Gate P2.
