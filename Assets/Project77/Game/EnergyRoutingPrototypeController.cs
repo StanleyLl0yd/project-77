@@ -111,12 +111,7 @@ namespace Project77.Game
                 null,
                 new Dictionary<string, object>
                 {
-                    ["entry_point"] =
-                        metaLoopEnabled &&
-                        restoredSaveState != null &&
-                        restoredSaveState.EnergyRoutingLevelIndex > 0
-                            ? "restart"
-                            : "fresh_launch",
+                    ["entry_point"] = "fresh_launch",
                     ["core_variant"] = PrototypeVariant.EnergyRouting
                 });
 
