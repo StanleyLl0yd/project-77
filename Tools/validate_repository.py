@@ -186,7 +186,7 @@ def main() -> None:
         {
             "selected-meta mode": "PrototypeVariant.SelectedMeta",
             "short P1 intro": "PrototypeView.Intro",
-            "explicit intro continuation": "Begin restoration",
+            "explicit intro continuation": "PlayerTextKey.IntroBegin",
             "reward event": "PrototypeAnalyticsEventName.RewardShown",
             "generator repair event": "PrototypeAnalyticsEventName.GeneratorRepair",
             "area unlock event": "PrototypeAnalyticsEventName.AreaUnlock",
