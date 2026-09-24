@@ -16,7 +16,10 @@ class P1ExternalUxTests(unittest.TestCase):
             flags=re.DOTALL,
         )
 
-        self.assertIn("Start playtest", runtime_text)
+        localization = (ROOT / "Assets/Project77/Localization/LocalizedText.cs").read_text(encoding="utf-8")
+
+        self.assertIn("PlayerTextKey.SliceStart", runtime_text)
+        self.assertIn('"Start playtest"', localization)
         self.assertIn("TryBeginSelectedMeta", runtime_text)
         self.assertNotIn("A — Energy Routing only", runtime_text)
         self.assertNotIn("B — Path / Expedition Routing", runtime_text)
@@ -58,7 +61,9 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn('DataFolderName = "Project77Playtests"', selector)
         self.assertIn("RefreshPreviousSessionFiles();", selector)
         self.assertIn("HasPreviousSessionData", selector)
-        self.assertIn("Moderator: previous session data", selector)
+        localization = (ROOT / "Assets/Project77/Localization/LocalizedText.cs").read_text(encoding="utf-8")
+        self.assertIn("PlayerTextKey.RecoveryTitle", selector)
+        self.assertIn('"Moderator: previous session data"', localization)
         self.assertIn("FindLatestSessionPair(directory, out previousEventsPath, out previousMetadataPath);", selector)
         self.assertIn('EventsSuffix = "_events.jsonl"', selector)
         self.assertIn('MetadataSuffix = "_metadata.json"', selector)
@@ -68,8 +73,10 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertIn("IsReadableFile(previousEventsPath) && IsReadableFile(previousMetadataPath)", selector)
         self.assertNotIn('FindLatest(directory, "*_events.jsonl")', selector)
         self.assertNotIn('FindLatest(directory, "*_metadata.json")', selector)
-        self.assertIn('CopyPreviousFile(previousEventsPath, "Previous events copied")', selector)
-        self.assertIn('CopyPreviousFile(previousMetadataPath, "Previous metadata copied")', selector)
+        self.assertIn("PlayerTextKey.RecoveryEventsCopied", selector)
+        self.assertIn("PlayerTextKey.RecoveryMetadataCopied", selector)
+        self.assertIn('"Previous events copied"', localization)
+        self.assertIn('"Previous metadata copied"', localization)
         self.assertIn("GUIUtility.systemCopyBuffer = File.ReadAllText(path);", selector)
         self.assertIn("+ recoveryHeight", selector)
 
@@ -98,8 +105,10 @@ class P1ExternalUxTests(unittest.TestCase):
         self.assertNotIn("Prototype A", runtime_text)
         self.assertNotIn("Prototype B", runtime_text)
         self.assertNotIn("Prototype C", runtime_text)
+        localization = (ROOT / "Assets/Project77/Localization/LocalizedText.cs").read_text(encoding="utf-8")
         self.assertNotIn("P1", runtime_text)
-        self.assertIn("Playtest build", runtime_text)
+        self.assertIn("PlayerTextKey.SliceSubtitle", runtime_text)
+        self.assertIn('"Playtest build"', localization)
 
 
 if __name__ == "__main__":
