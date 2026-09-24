@@ -520,6 +520,17 @@ namespace Project77.Save
             var payload = VerticalSliceSaveCodec.Serialize(state);
             Directory.CreateDirectory(DirectoryPath);
 
+            var existing = Load();
+            if (existing.Found &&
+                !string.Equals(
+                    existing.State.PlayerId,
+                    state.PlayerId,
+                    StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "local save playerId cannot change for an existing profile");
+            }
+
             File.WriteAllText(TemporaryPath, payload, Utf8);
             if (!TryReadValid(TemporaryPath, out _, out var tempError))
             {
