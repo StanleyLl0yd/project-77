@@ -1,14 +1,12 @@
 # Project 77 — Prototype 0.1 Implementation Backlog
 
-Status: **ACTIVE ordered backlog — Milestone H / P1 UX iteration before external playtest**.
+Status: **COMPLETE / HISTORICAL — Prototype 0.1 closed; Gate P2 active**.
 
-Gate P0 has an owner-authorized **CONTINUE** decision and Energy Routing is the selected P1 core. Quantitative P0 evidence is incomplete and explicitly documented in `33_P0_GATE_DECISION.md`.
+Gate P0 and Gate P1 both have owner-authorized **CONTINUE** decisions. Energy Routing is the selected core.
 
-Unity Build #11 passed technical artifact checks but failed physical-device first-use acceptance before P77-071. The finding is recorded in `35_P1_BUILD_11_DEVICE_FINDING.md`; Build #11 and its freeze are historical only for Gate P1 evidence.
+Build #11 remains historical failed first-use evidence. Corrected Build #12 / P1-002 passed artifact and physical-device acceptance. P1 was closed on 24.09.2026 as qualitative/retrospective evidence because raw per-session telemetry/moderation exports were not retained; the preregistered numeric threshold was not quantitatively evaluated. See `36_P1_GATE_DECISION.md`.
 
-This backlog is executable scope for the current phase. `28_PROTOTYPE_01_SPEC.md` remains the implementation contract; `18_PRODUCT_GATES.md` remains the gate authority.
-
-Do not pull later production work forward merely because an item is easy or interesting.
+This backlog is no longer active. Gate P2 work is defined by `37_VERTICAL_SLICE_01_SPEC.md` and `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`.
 
 ## Milestone A — Bootstrap
 
@@ -281,48 +279,28 @@ DoD:
 - no auto-advance makes voluntary continuation unmeasurable;
 - offer/click timing is logged.
 
-## Milestone H — P1 external playtest — UX ITERATION BEFORE BATCH
+## Milestone H — P1 external playtest — CLOSED / OWNER CONTINUE
 
-### P77-070 — P1 test build freeze
+### P77-070 — P1 test build freeze — COMPLETE
 
-Status: **ITERATING AFTER PHYSICAL-DEVICE FINDING**.
+- Build #11 / P1-001 retained as historical evidence after first-use UX failure.
+- Corrected Build #12 / P1-002 built from `96a0f0ae0ea3788338f6c676342e507e3bdcaf0f`.
+- Artifact binding, ARM64/IL2CPP/16 KB checks and physical-device regression passed.
 
-Build #11 was successfully built, inspected and artifact-bound, but physical-device review exposed a blocking first-use clarity/debug-entry problem before fresh testing. Its freeze is retained as historical technical evidence only. The corrected build must receive a new artifact-bound freeze before P77-071.
+### P77-071 — Run P1 tester batch — COMPLETED QUALITATIVELY
 
-The preregistered test question/decision rule remains unchanged in `34_P1_EXTERNAL_PLAYTEST_PLAN.md`. Orientation, device target, help threshold and gate threshold are not being changed in response to the UX finding.
+Testing was completed and the corrected experience was reported as simple and understandable.
 
-DoD:
+Evidence limitation: raw session telemetry and moderation exports were not retained. Therefore this item does **not** claim protocol-grade completion of the preregistered quantitative measurement.
 
-- corrected build, levels, telemetry schema, orientation, device matrix and help rules recorded before test;
-- external Android launch exposes only the selected P1 path;
-- corrected APK passes physical-device first-use smoke before being admitted to P77-071.
+### P77-072 — Gate P1 report / decision — OWNER CONTINUE RECORDED
 
-### P77-071 — Run P1 fresh-tester batch — BLOCKED BY P77-070
+24.09.2026 owner decision: **CONTINUE** to Gate P2.
 
-DoD:
+The `>=50%` threshold is **not quantitatively evaluated** and no percentage/session count is reconstructed from memory. Closure basis and limitation are recorded in `36_P1_GATE_DECISION.md` and D-040.
 
-- protocol followed;
-- puzzle/resource/repair/world-change/77 comprehension observed;
-- voluntary continuation measured without moderator prompting.
+## Prototype-phase production block — SATISFIED
 
-### P77-072 — Gate P1 report
+The P0 + P1 owner CONTINUE condition is satisfied. Gate P2 is now active.
 
-DoD:
-
-- report follows the standard template;
-- decision is CONTINUE / ITERATE / PIVOT / STOP;
-- evidence and exclusions are explicit;
-- documentation is updated from results, not speculation.
-
-## Explicitly not in this backlog before P0 + P1 CONTINUE
-
-- production backend;
-- store/IAP;
-- ads/mediation;
-- subscription;
-- Season Pass;
-- cloud/social production stack;
-- production island art/content;
-- planets;
-- ship gameplay;
-- mass narrative/localization/content production.
+This does not make every deferred production feature immediate scope. The next allowed work is the bounded Vertical Slice 0.1 in `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`; mass content, planets, ship gameplay, full monetization/backend and LiveOps production remain outside that first slice unless explicitly justified.

@@ -8,17 +8,13 @@ The game begins as a small mystery about restoring an abandoned island. Over tim
 
 ## Current status
 
-**Prototype Phase — Prototype 0.1 / Gate P1 UX iteration**
+**Gate P2 — Vertical Slice 0.1**
 
-Pre-production is complete. Gate P0 has an owner-authorized **CONTINUE** decision. **Energy Routing** is the selected core for the integrated P1 prototype; the retained P0 evidence limitation is documented in `Docs/33_P0_GATE_DECISION.md`.
+Pre-production and Prototype 0.1 are closed. Gate P0 and Gate P1 both have owner-authorized **CONTINUE** decisions; **Energy Routing** remains the selected core.
 
-Active test flow:
+P1 closure is deliberately evidence-limited: corrected Unity Build #12 / P1-002 passed artifact and physical-device acceptance and testers reported the experience as simple and understandable, but raw per-session telemetry/moderation exports were not retained. The preregistered P1 numeric threshold is therefore **not quantitatively evaluated** and is not reconstructed from memory.
 
-`Energy Routing -> Reward -> Generator Repair -> Island Change -> Area Unlock -> Discover 77 -> Voluntary Next Puzzle`
-
-Unity Build #11 passed technical artifact checks but exposed a blocking first-use clarity/debug-entry problem on the physical Android device before the protocol-grade P1 fresh-tester batch. The finding is recorded in `Docs/35_P1_BUILD_11_DEVICE_FINDING.md`. Build #11 remains historical evidence only; a corrected APK and new freeze are required before P77-071.
-
-Path / Expedition Routing and Flow / Network Restoration remain editor/debug P0 implementations and are not part of the external Android P1 path.
+Active P2 goal: a coherent 20–30 minute slice with one near-final island sector, 77, one complete mystery/narrative beat, versioned local save/load, FTUE + level analytics, and reference-device performance evidence.
 
 ## Start here
 
@@ -26,8 +22,11 @@ Coding agents must read [`AGENTS.md`](AGENTS.md) first.
 
 Current implementation documents:
 
-- [`Docs/28_PROTOTYPE_01_SPEC.md`](Docs/28_PROTOTYPE_01_SPEC.md) — active implementation contract
-- [`Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`](Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md) — ordered tasks and Definition of Done
+- [`Docs/37_VERTICAL_SLICE_01_SPEC.md`](Docs/37_VERTICAL_SLICE_01_SPEC.md) — active Gate P2 implementation contract
+- [`Docs/38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`](Docs/38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md) — ordered P2 tasks and Definition of Done
+- [`Docs/36_P1_GATE_DECISION.md`](Docs/36_P1_GATE_DECISION.md) — P1 retrospective owner decision and evidence limitation
+- [`Docs/28_PROTOTYPE_01_SPEC.md`](Docs/28_PROTOTYPE_01_SPEC.md) — completed Prototype 0.1 contract
+- [`Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`](Docs/32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md) — completed Prototype 0.1 backlog
 - [`Docs/31_ENGINEERING_CONVENTIONS.md`](Docs/31_ENGINEERING_CONVENTIONS.md) — Unity/C# conventions
 - [`Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md`](Docs/30_PROTOTYPE_ANALYTICS_CONTRACT.md) — prototype event schema
 - [`Docs/29_PROTOTYPE_PLAYTEST_PROTOCOL.md`](Docs/29_PROTOTYPE_PLAYTEST_PROTOCOL.md) — external playtest protocol
@@ -54,11 +53,11 @@ Full documentation index: [`Docs/README.md`](Docs/README.md).
 
 Gameplay/puzzle rules stay independent from billing, ads, analytics providers, auth, cloud save, notifications, and a specific store.
 
-## Prototype scope rule
+## Vertical Slice scope rule
 
-Until both Gate P0 and Gate P1 return **CONTINUE**, do not build production art, production backend, IAP/store, ads/mediation, subscription, Season Pass, other planets, ship gameplay, or mass content production.
+P0 + P1 owner CONTINUE decisions allow Project 77 to enter Gate P2. P2 remains deliberately narrow: one coherent slice, one island sector, the selected core, 77, one mystery beat, basic save/load, analytics and performance validation.
 
-Placeholder visuals are expected. A running build is not enough: external players must understand the loop and **voluntarily choose to continue**.
+Do not treat P1 closure as permission to build the entire production roadmap at once. Mass content, planets, ship gameplay, full monetization/backend and LiveOps production remain later-stage work unless a specific P2 test requires a small sandbox.
 
 ## Commercial name
 
