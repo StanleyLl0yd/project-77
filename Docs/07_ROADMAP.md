@@ -40,9 +40,9 @@ Roadmap разбит по продуктовым воротам, а не тол�
 
 ---
 
-# Phase 1 — Core Prototype — ACTIVE
+# Phase 1 — Core Prototype — COMPLETE
 
-Активная спецификация: `28_PROTOTYPE_01_SPEC.md`. Исполняемый порядок задач: `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`. Playtests и telemetry: `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` + `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
+Prototype 0.1 закрыт owner-authorized CONTINUE по P0 и P1. Исторические спецификация/backlog: `28_PROTOTYPE_01_SPEC.md` и `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`. P1 quantitative threshold не оценён из-за несохранённых raw session exports; limitation зафиксирован в `36_P1_GATE_DECISION.md`.
 
 Ориентир: 4–6 недель для маленькой команды, но gate важнее срока.
 
@@ -114,13 +114,15 @@ Tests:
 
 ---
 
-# Phase 2 — Vertical Slice
+# Phase 2 — Vertical Slice — ACTIVE
 
-Ориентир: 8–12 недель.
+Активная спецификация: `37_VERTICAL_SLICE_01_SPEC.md`. Исполняемый backlog: `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`.
+
+Ориентир: 8–12 недель; gate важнее календаря.
 
 ## Scope
 
-Игровой отрезок 20–40 минут, показывающий финальное качество:
+Игровой отрезок **20–30 минут** для первого Gate P2 slice, показывающий близкое к финальному качество одного сектора:
 
 - прибытие на остров;
 - 77;
