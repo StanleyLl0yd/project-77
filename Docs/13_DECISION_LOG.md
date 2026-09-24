@@ -164,6 +164,33 @@ Accessibility (readability, color independence, touch targets, text/subtitles, r
 
 Полный protocol-grade количественный P0 dataset не был сохранён, поэтому решение не трактуется как доказательство прохождения каждого initial numeric threshold или статистического превосходства A над B/C. Ограничение и basis решения зафиксированы в `33_P0_GATE_DECISION.md`. P1 обязан собирать полноценную telemetry/moderation evidence для следующего gate.
 
+### D-040 — Gate P1 owner CONTINUE and evidence limitation
+
+24.09.2026 владелец проекта закрыл Gate P1 решением **CONTINUE** и перевёл Project 77 в Gate P2 / Vertical Slice.
+
+Основание решения:
+
+- исправленный Build #12 / P1-002 прошёл technical artifact acceptance и physical-device regression;
+- после исправления first-use UX тестировщики описаны владельцем как прошедшие сценарий без существенной путаницы: «всё просто, понятно»;
+- блокирующих проблем в цепочке `Energy Routing -> reward -> repair -> visible island change -> 77 -> continuation` не заявлено.
+
+Ограничение evidence:
+
+- raw `*_events.jsonl`, `*_metadata.json` и protocol moderation records не были сохранены/выгружены;
+- preregistered P1 threshold `>=50%` **не был количественно оценён**;
+- решение CONTINUE является owner product decision на основе качественного/ретроспективного тестирования, а не protocol-grade statistical pass;
+- запрещено позднее реконструировать проценты или session counts по памяти.
+
+Подробная closure-запись: `36_P1_GATE_DECISION.md`.
+
+### D-041 — Gate P2 scope boundary
+
+После P0 + P1 owner CONTINUE активная стадия — **Gate P2 / Vertical Slice 0.1**.
+
+P2 строит один цельный 20–30-минутный отрезок: Energy Routing, один island sector с near-final visual language, 77, один narrative/mystery beat, basic versioned local save/load, FTUE/level analytics и reference-device performance evidence.
+
+Разблокировка P2 не означает немедленное производство всей игры. Mass content, planets, ship gameplay, full production backend, full monetization, Season Pass/subscription и LiveOps production не входят в первый Vertical Slice 0.1 без отдельной объективной необходимости.
+
 ## PROVISIONAL — рабочая гипотеза
 
 ### P-002 — Art direction
