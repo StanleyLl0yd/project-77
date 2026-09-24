@@ -1,28 +1,55 @@
 {
   "project": "Project 77",
-  "status": "prototype_phase",
-  "documentation_version": "0.6.1",
-  "active_milestone": "Prototype 0.1",
+  "status": "vertical_slice_phase",
+  "documentation_version": "0.7",
+  "active_milestone": "Vertical Slice 0.1",
+  "active_stage": "Gate P2 / Vertical Slice 0.1",
   "source_hierarchy": [
     "owner_current_instruction",
     "../AGENTS.md",
     "13_DECISION_LOG.md",
-    "28_PROTOTYPE_01_SPEC.md",
+    "37_VERTICAL_SLICE_01_SPEC.md",
     "specialized_docs",
     "11_BACKLOG_IDEAS.md (uncommitted)"
   ],
   "decision_source_of_truth": "13_DECISION_LOG.md",
-  "active_implementation_contract": "28_PROTOTYPE_01_SPEC.md",
-  "playtest_protocol": "29_PROTOTYPE_PLAYTEST_PROTOCOL.md",
-  "prototype_analytics_contract": "30_PROTOTYPE_ANALYTICS_CONTRACT.md",
+  "active_implementation_contract": "37_VERTICAL_SLICE_01_SPEC.md",
+  "implementation_backlog": "38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md",
   "engineering_conventions": "31_ENGINEERING_CONVENTIONS.md",
-  "implementation_backlog": "32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md",
-  "core_hypotheses": [
-    "Energy Routing",
-    "Path / Expedition Routing",
-    "Flow / Network Restoration"
+  "product_gates": "18_PRODUCT_GATES.md",
+  "save_spec": "19_ACCOUNT_SAVE_SPEC.md",
+  "performance_spec": "25_QA_DEVICE_PERFORMANCE.md",
+  "historical_prototype_contract": "28_PROTOTYPE_01_SPEC.md",
+  "historical_playtest_protocol": "29_PROTOTYPE_PLAYTEST_PROTOCOL.md",
+  "historical_prototype_analytics_contract": "30_PROTOTYPE_ANALYTICS_CONTRACT.md",
+  "p0_decision": "CONTINUE",
+  "p1_decision": "CONTINUE_OWNER_QUALITATIVE",
+  "p1_quantitative_gate": "NOT_EVALUATED",
+  "p1_closure_record": "36_P1_GATE_DECISION.md",
+  "selected_core": "energy_routing",
+  "p2_target_duration_minutes": [
+    20,
+    30
   ],
-  "core_favorite": "Energy Routing",
+  "p2_required_capabilities": [
+    "one_near_final_island_sector",
+    "energy_routing",
+    "robot_77",
+    "one_complete_mystery_beat",
+    "versioned_local_save",
+    "ftue_and_level_analytics",
+    "reference_device_performance"
+  ],
+  "deferred_from_vertical_slice_0_1": [
+    "mass_content",
+    "planets",
+    "ship_gameplay",
+    "full_production_backend",
+    "full_store_iap_ads_subscription",
+    "season_pass",
+    "liveops_production_stack",
+    "social_production_stack"
+  ],
   "macro_arc": [
     "abandoned island",
     "underground complex",
@@ -31,33 +58,11 @@
     "other planets",
     "world network"
   ],
-  "monetization": [
+  "monetization_direction": [
     "season_pass",
     "subscription",
     "cosmetics",
     "convenience_iap",
     "rewarded_ads"
-  ],
-  "forbidden_before_p0_p1_continue": [
-    "production_backend",
-    "store_iap",
-    "ads_mediation",
-    "subscription",
-    "season_pass",
-    "production_art_scaleup",
-    "planets",
-    "ship_gameplay",
-    "mass_content_production"
-  ],
-  "active_stage": "Prototype 0.1 / Gate P1 UX iteration before external playtest",
-  "p0_decision": "CONTINUE",
-  "selected_core": "energy_routing",
-  "p1_external_playtest_plan": "34_P1_EXTERNAL_PLAYTEST_PLAN.md",
-  "p1_latest_device_finding": "35_P1_BUILD_11_DEVICE_FINDING.md",
-  "p1_external_batch_state": "blocked_pending_corrected_android_build",
-  "superseded_p1_build": {
-    "unity_build_number": 11,
-    "commit_sha": "357356a9fdf34052cc666bf6ac16abec9e419848",
-    "reason": "first-use clarity and external debug-entry blocker"
-  }
+  ]
 }
