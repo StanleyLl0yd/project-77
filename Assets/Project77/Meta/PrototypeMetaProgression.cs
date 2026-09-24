@@ -54,6 +54,70 @@ namespace Project77.Meta
         }
     }
 
+    public sealed class PrototypeMetaProgressionState
+    {
+        private readonly IReadOnlyList<string> claimedRewardIds;
+
+        public PrototypeMetaProgressionState(
+            int scrap,
+            int energy,
+            bool generatorRepaired,
+            bool areaUnlocked,
+            bool robot77Discovered,
+            IEnumerable<string> claimedRewardIds)
+        {
+            if (scrap < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(scrap));
+            }
+            if (energy < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(energy));
+            }
+            if (areaUnlocked && !generatorRepaired)
+            {
+                throw new ArgumentException("Area unlock requires generator repair.");
+            }
+            if (robot77Discovered && !areaUnlocked)
+            {
+                throw new ArgumentException("Robot 77 discovery requires area unlock.");
+            }
+
+            var rewards = new List<string>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var rewardId in claimedRewardIds ?? Array.Empty<string>())
+            {
+                if (string.IsNullOrWhiteSpace(rewardId))
+                {
+                    throw new ArgumentException("Claimed reward ids cannot be blank.", nameof(claimedRewardIds));
+                }
+                if (!seen.Add(rewardId))
+                {
+                    throw new ArgumentException(
+                        $"Duplicate claimed reward id '{rewardId}'.",
+                        nameof(claimedRewardIds));
+                }
+
+                rewards.Add(rewardId);
+            }
+
+            rewards.Sort(StringComparer.Ordinal);
+            Scrap = scrap;
+            Energy = energy;
+            GeneratorRepaired = generatorRepaired;
+            AreaUnlocked = areaUnlocked;
+            Robot77Discovered = robot77Discovered;
+            this.claimedRewardIds = rewards.AsReadOnly();
+        }
+
+        public int Scrap { get; }
+        public int Energy { get; }
+        public bool GeneratorRepaired { get; }
+        public bool AreaUnlocked { get; }
+        public bool Robot77Discovered { get; }
+        public IReadOnlyList<string> ClaimedRewardIds => claimedRewardIds;
+    }
+
     public sealed class PrototypeMetaProgression
     {
         public const int GeneratorScrapCost = 4;
@@ -71,10 +135,54 @@ namespace Project77.Meta
         public bool AreaUnlocked { get; private set; }
         public bool Robot77Discovered { get; private set; }
 
+        public PrototypeMetaProgression()
+        {
+        }
+
+        private PrototypeMetaProgression(PrototypeMetaProgressionState state)
+        {
+            if (state == null)
+            {
+                throw new ArgumentNullException(nameof(state));
+            }
+
+            Scrap = state.Scrap;
+            Energy = state.Energy;
+            GeneratorRepaired = state.GeneratorRepaired;
+            AreaUnlocked = state.AreaUnlocked;
+            Robot77Discovered = state.Robot77Discovered;
+            foreach (var rewardId in state.ClaimedRewardIds)
+            {
+                claimedRewardIds.Add(rewardId);
+            }
+        }
+
         public bool CanRepairGenerator =>
             !GeneratorRepaired &&
             Scrap >= GeneratorScrapCost &&
             Energy >= GeneratorEnergyCost;
+
+        public static PrototypeMetaProgression Restore(PrototypeMetaProgressionState state)
+        {
+            return new PrototypeMetaProgression(state);
+        }
+
+        public PrototypeMetaProgressionState CaptureState()
+        {
+            return new PrototypeMetaProgressionState(
+                Scrap,
+                Energy,
+                GeneratorRepaired,
+                AreaUnlocked,
+                Robot77Discovered,
+                claimedRewardIds);
+        }
+
+        public bool HasClaimedReward(string rewardId)
+        {
+            return !string.IsNullOrWhiteSpace(rewardId) &&
+                claimedRewardIds.Contains(rewardId);
+        }
 
         public PrototypeLevelReward RewardForLevel(int levelSequenceIndex)
         {
