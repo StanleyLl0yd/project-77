@@ -1,8 +1,8 @@
 # Project 77 — Project Documentation
 
-Версия документации: **0.6.1 Build 11 First-Use UX Iteration**.
+Версия документации: **0.7 Gate P2 Vertical Slice 0.1**.
 
-Статус: **pre-production завершён; активная фаза — Prototype 0.1 / Gate P1 UX iteration**. Build #11 технически валиден, но не допущен к fresh-tester batch после physical-device finding.
+Статус: **Prototype 0.1 закрыт; активная фаза — Gate P2 / Vertical Slice 0.1**. Gate P1 закрыт owner-authorized CONTINUE с явным ограничением: raw quantitative session evidence не сохранён.
 
 Project 77 — мобильная free-to-play adventure/puzzle-игра с долгой метапрогрессией. Игрок начинает с восстановления заброшенного острова, постепенно раскрывает тайну подземного исследовательского комплекса, находит древний корабль, выходит в космос, исследует другие планеты и в перспективе открывает сеть миров.
 
@@ -20,21 +20,21 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 - Монетизация строится вокруг косметики, Season Pass, подписки, удобства, ускорений и добровольной рекламы, а не вокруг обязательной оплаты сюжета.
 - Остров остаётся домом игрока навсегда, даже после открытия космоса.
 - Основной игровой цикл должен быть простым, управляться одним пальцем и занимать примерно 30–90 секунд.
-- Gate P0 принят как CONTINUE для реализации; **Energy Routing** выбран текущим P1 core. Ограничения количественной P0 evidence зафиксированы отдельно.
+- Gate P0 и Gate P1 закрыты owner-authorized **CONTINUE**; **Energy Routing** остаётся выбранным core.
 - Production stack: **Unity 6.3 LTS + C# + URP**.
 - Первая целевая платформа: **Android**, архитектура сразу cross-platform.
-- Текущий milestone: **Project 77 Prototype 0.1 / Gate P1** — интегрированный Energy Routing путь → ресурсы → восстановление генератора → visible island change → area unlock → обнаружение 77 → voluntary continuation.
-- Unity Build #11 выявил first-use UX blocker до P77-071; finding зафиксирован в `35_P1_BUILD_11_DEVICE_FINDING.md`, исправленный Android build обязателен до fresh-tester batch.
-- Красивый production-art, магазин и большой backend не делаются до доказательства core/meta loop.
+- Текущий milestone: **Gate P2 / Vertical Slice 0.1** — цельный 20–30-минутный отрезок с Energy Routing, одним island sector, 77, mystery beat, save/load, analytics и performance evidence.
+- Corrected Build #12 / P1-002 прошёл artifact/device acceptance; P1 closure и evidence limitation зафиксированы в `36_P1_GATE_DECISION.md`.
+- P2 разрешает near-final art только для одного Vertical Slice sector; full production backend/monetization/mass content остаются вне первого slice.
 - Целевая product-аудитория: подростки и взрослые (13+ direction), не child-directed.
 - Launch social: visits/likes/predefined reactions; без free-form chat/UGC.
 - Saves, Remote Config, server authority, incident recovery и performance budgets проектируются до soft launch.
 - Pre-production считается завершённым; дальнейшие неизвестные закрываются прототипами и данными, а не дополнительным speculative design.
-- Активный implementation contract: `28_PROTOTYPE_01_SPEC.md`.
+- Активный implementation contract: `37_VERTICAL_SLICE_01_SPEC.md`.
 - Standardized P0/P1 playtests: `29_PROTOTYPE_PLAYTEST_PROTOCOL.md`.
 - Prototype telemetry schema: `30_PROTOTYPE_ANALYTICS_CONTRACT.md`.
-- Minimal Unity engineering rules/backlog: `31_ENGINEERING_CONVENTIONS.md` + `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md`.
-- Gate P1 preregistered execution plan: `34_P1_EXTERNAL_PLAYTEST_PLAN.md`.
+- Minimal Unity engineering rules + active backlog: `31_ENGINEERING_CONVENTIONS.md` + `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`.
+- P1 closure record: `36_P1_GATE_DECISION.md`; active P2 scope: `37_VERTICAL_SLICE_01_SPEC.md` + `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`.
 
 ## Структура пакета
 
@@ -67,31 +67,36 @@ Project 77 — мобильная free-to-play adventure/puzzle-игра с до
 27. `25_QA_DEVICE_PERFORMANCE.md` — device tiers, performance/stability budgets, test matrix.
 28. `26_INCIDENT_ROLLBACK_PLAN.md` — incident severity, containment, rollback/recovery playbooks.
 29. `27_IP_BRAND_NAMING.md` — codename status, commercial naming/IP clearance and asset provenance.
-30. `28_PROTOTYPE_01_SPEC.md` — активный контракт Prototype 0.1: scope, DoD, out-of-scope и gate.
+30. `28_PROTOTYPE_01_SPEC.md` — завершённый historical contract Prototype 0.1.
 31. `29_PROTOTYPE_PLAYTEST_PROTOCOL.md` — operational rules, voluntary-continuation definition and batch-report template.
 32. `30_PROTOTYPE_ANALYTICS_CONTRACT.md` — canonical P0/P1 event names, properties, types and schema version.
 33. `31_ENGINEERING_CONVENTIONS.md` — minimal Unity/C# structure, deterministic-domain/config/test rules.
-34. `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — ordered implementation tasks and Definition of Done.
+34. `32_PROTOTYPE_IMPLEMENTATION_BACKLOG.md` — завершённый historical backlog Prototype 0.1.
 35. `33_P0_GATE_DECISION.md` — basis/limitations owner-authorized Gate P0 CONTINUE.
 36. `34_P1_EXTERNAL_PLAYTEST_PLAN.md` — preregistered Gate P1 hypothesis, environment and decision rule.
 37. `35_P1_BUILD_11_DEVICE_FINDING.md` — physical-device finding that superseded Build #11 for the fresh P1 batch.
-38. `CHANGELOG.md` — история версий проектной документации.
+38. `36_P1_GATE_DECISION.md` — qualitative/retrospective Gate P1 owner CONTINUE and evidence limitation.
+39. `37_VERTICAL_SLICE_01_SPEC.md` — active Gate P2 Vertical Slice 0.1 implementation contract.
+40. `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md` — active ordered Gate P2 backlog.
+41. `CHANGELOG.md` — история версий проектной документации.
 
 ## Текущая рабочая фаза
 
-**Prototype 0.1 / Gate P1 UX iteration.** Интегрированный core/meta loop существует, но P77-071 ещё не начат. Physical-device smoke Build #11 показал, что первый puzzle и внешний entry point недостаточно понятны без знания прототипа.
+**Gate P2 / Vertical Slice 0.1.**
 
-Последовательность ближайшей работы:
+Prototype 0.1 закрыт owner-authorized CONTINUE по P0 и P1. P1 decision остаётся качественным/ретроспективным: corrected Build #12 / P1-002 прошёл artifact/device acceptance, тестировщики описаны владельцем как понимающие опыт без существенной путаницы, но raw per-session telemetry/moderation exports не были сохранены, поэтому preregistered numeric threshold не оценён.
 
-`first-use UX fix -> repository CI -> corrected Android build -> physical-device smoke -> new artifact-bound P1 freeze -> P1 fresh-tester batch -> Gate P1 report`.
+Ближайшая последовательность:
 
-Gate P0 has CONTINUE for implementation purposes; Energy Routing remains the selected P1 core. Build #11 и его freeze сохраняются только как historical technical evidence и не используются для fresh P1 metrics.
+`phase transition -> versioned local save v1 -> persistent slice state -> Energy Routing polish -> one island sector -> 77 -> mystery beat -> analytics/performance -> Gate P2 fresh sessions`.
 
-До успешного Gate P1 production-art, большой backend, store, Season Pass, subscription, планеты и массовое производство контента не являются допустимым приоритетом.
+Первый executable engineering item: **P77-101 — Versioned local save v1**.
+
+Mass content, planets, ship gameplay, full backend/monetization и LiveOps production не являются scope первого Vertical Slice 0.1.
 
 ## Как пользоваться документацией
 
-Для coding/AI work сначала применяется root `../AGENTS.md`. `13_DECISION_LOG.md` остаётся источником истины по product/high-level decision status; `28_PROTOTYPE_01_SPEC.md` — active implementation contract. `11_BACKLOG_IDEAS.md` — только неутверждённые идеи и **не committed scope**. Новая идея становится реализацией только через hypothesis/test/decision flow.
+Для coding/AI work сначала применяется root `../AGENTS.md`. `13_DECISION_LOG.md` остаётся источником истины по product/high-level decision status; `37_VERTICAL_SLICE_01_SPEC.md` — active implementation contract. `11_BACKLOG_IDEAS.md` — только неутверждённые идеи и **не committed scope**. Новая идея становится реализацией только через hypothesis/test/decision flow.
 
 GDD не должен превращаться в архив всех идей. В нём хранится только текущая версия игры.
 
