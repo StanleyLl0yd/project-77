@@ -1,6 +1,6 @@
 # Project 77 — Prototype 0.1 Specification
 
-Status: **ACTIVE IMPLEMENTATION CONTRACT**.
+Status: **COMPLETED / HISTORICAL IMPLEMENTATION CONTRACT**.
 
 This document defines the nearest mandatory scope after conceptual pre-production. It exists to answer whether the fundamental Project 77 experience works, not to prove final art, monetization, backend, or the size of the future universe.
 
@@ -14,11 +14,13 @@ Related operational documents:
 
 ## 1. Phase status
 
-**Pre-production is complete. Project 77 is in Prototype Phase — Gate P1.**
+**Prototype 0.1 is closed. Project 77 is now in Gate P2 — Vertical Slice.**
 
-Gate P0 has an owner-authorized **CONTINUE** decision dated 2026-09-08. Energy Routing is the selected P1 core. The incomplete retained quantitative P0 evidence is documented in `33_P0_GATE_DECISION.md`.
+Gate P0 has an owner-authorized **CONTINUE** decision dated 2026-09-08. Gate P1 has an owner-authorized **CONTINUE** decision dated 2026-09-24. Energy Routing remains the selected core.
 
-Until P1 returns **CONTINUE**, the project does not expand into production scope.
+P1 closure is qualitative/retrospective: Build #12 / P1-002 passed artifact and physical-device acceptance, but raw per-session telemetry/moderation exports were not retained, so the preregistered P1 numeric threshold was not quantitatively evaluated. See `36_P1_GATE_DECISION.md`.
+
+The active implementation contract is now `37_VERTICAL_SLICE_01_SPEC.md`.
 
 ## 2. Main product hypothesis
 
@@ -323,9 +325,9 @@ These are not documentation defects:
 
 Resolve cheap-to-test questions by experiment, then update Decision Log/specialized docs.
 
-## 18. After successful P0 + P1
+## 18. After P0 + P1 closure
 
-Only then begin Vertical Slice work such as:
+The P0 + P1 owner CONTINUE condition is now satisfied. Gate P2 / Vertical Slice work may begin with:
 
 - one production-quality island sector;
 - finalizing UI language;
@@ -336,4 +338,4 @@ Only then begin Vertical Slice work such as:
 - reference-device profiling;
 - carefully scoped platform-service sandboxes where the Roadmap requires them.
 
-The next documentation baseline must be updated from actual playtest findings rather than additional speculative design.
+The Gate P2 documentation baseline is `37_VERTICAL_SLICE_01_SPEC.md` + `38_VERTICAL_SLICE_IMPLEMENTATION_BACKLOG.md`. P1 evidence limitations remain explicit and must not be silently upgraded into quantitative proof.
