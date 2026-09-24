@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Project77.Analytics;
+using Project77.Localization;
 using Project77.Meta;
 using Project77.Puzzle;
 using Project77.Puzzle.EnergyRouting;
@@ -41,7 +42,7 @@ namespace Project77.Game
         private string activePairId;
         private string activeTargetLabel;
         private string feedback = "Ready.";
-        private string islandNotice = "The generator is dark. The annex has no power.";
+        private string islandNotice = PlayerText.Get(PlayerTextKey.IslandInitialNotice);
         private string playtestId = "local_debug";
         private string continuationContext = "post_level";
         private long levelStartMs;
@@ -455,8 +456,8 @@ namespace Project77.Game
             view = PrototypeView.Island;
             continuationOffered = false;
             islandNotice = meta.CanRepairGenerator
-                ? "You now have enough material and stored power to repair the generator."
-                : "The recovered resources can be used to repair the island generator.";
+                ? PlayerText.Get(PlayerTextKey.IslandResourcesReady)
+                : PlayerText.Get(PlayerTextKey.IslandResourcesNeedMore);
 
             if (!PersistProgress(levelNumber))
             {
@@ -522,7 +523,7 @@ namespace Project77.Game
                     ["caused_by"] = "generator_repair"
                 });
 
-            islandNotice = "POWER RESTORED. Lights come on and the sealed annex receives power.";
+            islandNotice = PlayerText.Get(PlayerTextKey.IslandPowerRestored);
             if (!PersistProgress(levelNumber))
             {
                 islandNotice = persistenceError;
@@ -556,7 +557,7 @@ namespace Project77.Game
                     ["caused_by"] = "area_unlock"
                 });
 
-            islandNotice = "ANNEX OPEN. A weak signal is now detectable inside.";
+            islandNotice = PlayerText.Get(PlayerTextKey.IslandAnnexOpenNotice);
             if (!PersistProgress(levelNumber))
             {
                 islandNotice = persistenceError;
@@ -582,7 +583,7 @@ namespace Project77.Game
                 });
 
             narrativeStep = Math.Max(narrativeStep, 1);
-            islandNotice = "SIGNAL FOUND: 77. The damaged robot reacts to the restored power.";
+            islandNotice = PlayerText.Get(PlayerTextKey.IslandSignalFoundNotice);
             if (!PersistProgress(levelNumber))
             {
                 islandNotice = persistenceError;
@@ -775,8 +776,8 @@ namespace Project77.Game
             if (!meta.GeneratorRepaired)
             {
                 islandNotice = meta.CanRepairGenerator
-                    ? "Recovered progress. The generator can now be repaired."
-                    : "Recovered progress. More resources are needed for the generator.";
+                    ? PlayerText.Get(PlayerTextKey.IslandResumeRepair)
+                    : PlayerText.Get(PlayerTextKey.IslandResumeNeedMore);
                 if (!meta.CanRepairGenerator)
                 {
                     OfferContinuation("post_reward");
@@ -786,17 +787,17 @@ namespace Project77.Game
 
             if (!meta.AreaUnlocked)
             {
-                islandNotice = "Recovered progress. The generator is online and the annex has power.";
+                islandNotice = PlayerText.Get(PlayerTextKey.IslandResumePowered);
                 return;
             }
 
             if (!meta.Robot77Discovered)
             {
-                islandNotice = "Recovered progress. The annex is open and a weak signal is waiting.";
+                islandNotice = PlayerText.Get(PlayerTextKey.IslandResumeAnnex);
                 return;
             }
 
-            islandNotice = "Recovered progress. Signal 77 is active.";
+            islandNotice = PlayerText.Get(PlayerTextKey.IslandResumeSignal);
             OfferContinuation(levelNumber <= 2 ? "post_77_discovery" : "post_reward");
         }
 
@@ -820,7 +821,7 @@ namespace Project77.Game
 
             if (saveStore == null || string.IsNullOrWhiteSpace(playerId))
             {
-                persistenceError = "SAVE ERROR: local progress is unavailable.";
+                persistenceError = PlayerText.Get(PlayerTextKey.SaveUnavailable);
                 return false;
             }
 
@@ -848,7 +849,7 @@ namespace Project77.Game
             }
             catch (Exception)
             {
-                persistenceError = "SAVE ERROR: progress could not be written. Do not close the app.";
+                persistenceError = PlayerText.Get(PlayerTextKey.SaveWriteFailed);
                 return false;
             }
         }
@@ -860,18 +861,23 @@ namespace Project77.Game
             var title = CenteredStyle(30, FontStyle.Bold);
             var body = CenteredStyle(20, FontStyle.Normal);
 
-            GUI.Label(new Rect(x, 72f, width, 48f), "Project 77", title);
+            GUI.Label(
+                new Rect(x, 72f, width, 48f),
+                PlayerText.Get(PlayerTextKey.AppTitle),
+                title);
             GUI.Box(new Rect(x, 138f, width, 244f), string.Empty);
             GUI.Label(
                 new Rect(x + 24f, 164f, width - 48f, 132f),
-                "The island is silent. Its old generator is dead.\n\nA weak energy network still responds beneath the surface.",
+                PlayerText.Get(PlayerTextKey.IntroBody),
                 body);
             GUI.Label(
                 new Rect(x + 24f, 304f, width - 48f, 42f),
-                "Restore a route and see what wakes up.",
+                PlayerText.Get(PlayerTextKey.IntroPrompt),
                 body);
 
-            if (GUI.Button(new Rect(x + 24f, 400f, width - 48f, 60f), "Begin restoration"))
+            if (GUI.Button(
+                    new Rect(x + 24f, 400f, width - 48f, 60f),
+                    PlayerText.Get(PlayerTextKey.IntroBegin)))
             {
                 BeginFirstLevel();
             }
@@ -885,19 +891,30 @@ namespace Project77.Game
             var body = CenteredStyle(18, FontStyle.Normal);
             var resource = CenteredStyle(22, FontStyle.Bold);
 
-            GUI.Label(new Rect(x, 62f, width, 44f), "Route restored", title);
+            GUI.Label(
+                new Rect(x, 62f, width, 44f),
+                PlayerText.Get(PlayerTextKey.RewardTitle),
+                title);
             GUI.Box(new Rect(x, 124f, width, 276f), string.Empty);
-            GUI.Label(new Rect(x + 20f, 144f, width - 40f, 36f), "Recovered resources", body);
+            GUI.Label(
+                new Rect(x + 20f, 144f, width - 40f, 36f),
+                PlayerText.Get(PlayerTextKey.RewardRecovered),
+                body);
             GUI.Label(
                 new Rect(x + 20f, 190f, width - 40f, 74f),
-                $"SCRAP +{pendingReward.ScrapAmount}\nENERGY +{pendingReward.EnergyAmount}",
+                PlayerText.Format(
+                    PlayerTextKey.RewardAmounts,
+                    pendingReward.ScrapAmount,
+                    pendingReward.EnergyAmount),
                 resource);
             GUI.Label(
                 new Rect(x + 20f, 270f, width - 40f, 70f),
-                "Scrap is repair material. Energy is stored power. Both can restore island machinery.",
+                PlayerText.Get(PlayerTextKey.RewardExplanation),
                 body);
 
-            if (GUI.Button(new Rect(x + 20f, 420f, width - 40f, 58f), "Take resources"))
+            if (GUI.Button(
+                    new Rect(x + 20f, 420f, width - 40f, 58f),
+                    PlayerText.Get(PlayerTextKey.RewardTake)))
             {
                 ClaimReward();
             }
@@ -912,24 +929,38 @@ namespace Project77.Game
             var status = CenteredStyle(20, FontStyle.Bold);
             var notice = CenteredStyle(19, FontStyle.Bold);
 
-            GUI.Label(new Rect(x, 24f, width, 44f), "Abandoned Island", title);
+            GUI.Label(
+                new Rect(x, 24f, width, 44f),
+                PlayerText.Get(PlayerTextKey.IslandTitle),
+                title);
             GUI.Label(
                 new Rect(x, 68f, width, 52f),
-                $"SCRAP {meta.Scrap}/{PrototypeMetaProgression.GeneratorScrapCost}   ·   ENERGY {meta.Energy}/{PrototypeMetaProgression.GeneratorEnergyCost}",
+                PlayerText.Format(
+                    PlayerTextKey.IslandResources,
+                    meta.Scrap,
+                    PrototypeMetaProgression.GeneratorScrapCost,
+                    meta.Energy,
+                    PrototypeMetaProgression.GeneratorEnergyCost),
                 status);
 
             GUI.Box(new Rect(x, 126f, width, 246f), string.Empty);
             GUI.Label(
                 new Rect(x + 20f, 144f, width - 40f, 36f),
-                meta.GeneratorRepaired ? "[GENERATOR] ONLINE" : "[GENERATOR] OFFLINE — NEEDS REPAIR",
+                meta.GeneratorRepaired
+                    ? PlayerText.Get(PlayerTextKey.GeneratorOnline)
+                    : PlayerText.Get(PlayerTextKey.GeneratorOffline),
                 status);
             GUI.Label(
                 new Rect(x + 20f, 184f, width - 40f, 34f),
-                meta.AreaUnlocked ? "[ANNEX] OPEN" : "[ANNEX] LOCKED — NO POWER",
+                meta.AreaUnlocked
+                    ? PlayerText.Get(PlayerTextKey.AnnexOpen)
+                    : PlayerText.Get(PlayerTextKey.AnnexLocked),
                 body);
             GUI.Label(
                 new Rect(x + 20f, 222f, width - 40f, 56f),
-                meta.Robot77Discovered ? "[SIGNAL] 77 FOUND" : "[SIGNAL] NONE",
+                meta.Robot77Discovered
+                    ? PlayerText.Get(PlayerTextKey.SignalFound)
+                    : PlayerText.Get(PlayerTextKey.SignalNone),
                 body);
             GUI.Label(
                 new Rect(x + 20f, 286f, width - 40f, 68f),
@@ -940,7 +971,10 @@ namespace Project77.Game
             {
                 if (GUI.Button(
                         new Rect(x + 20f, 394f, width - 40f, 62f),
-                        $"Repair generator — spend {PrototypeMetaProgression.GeneratorScrapCost} Scrap + {PrototypeMetaProgression.GeneratorEnergyCost} Energy"))
+                        PlayerText.Format(
+                            PlayerTextKey.IslandRepair,
+                            PrototypeMetaProgression.GeneratorScrapCost,
+                            PrototypeMetaProgression.GeneratorEnergyCost)))
                 {
                     RepairGenerator();
                 }
@@ -951,12 +985,17 @@ namespace Project77.Game
             {
                 GUI.Label(
                     new Rect(x + 20f, 382f, width - 40f, 50f),
-                    $"Generator repair needs {PrototypeMetaProgression.GeneratorScrapCost} Scrap and {PrototypeMetaProgression.GeneratorEnergyCost} Energy.",
+                    PlayerText.Format(
+                        PlayerTextKey.IslandRepairNeeds,
+                        PrototypeMetaProgression.GeneratorScrapCost,
+                        PrototypeMetaProgression.GeneratorEnergyCost),
                     body);
             }
             else if (!meta.AreaUnlocked)
             {
-                if (GUI.Button(new Rect(x + 20f, 394f, width - 40f, 62f), "Open the powered annex"))
+                if (GUI.Button(
+                        new Rect(x + 20f, 394f, width - 40f, 62f),
+                        PlayerText.Get(PlayerTextKey.IslandOpenAnnex)))
                 {
                     UnlockArea();
                 }
@@ -964,7 +1003,9 @@ namespace Project77.Game
             }
             else if (!meta.Robot77Discovered)
             {
-                if (GUI.Button(new Rect(x + 20f, 394f, width - 40f, 62f), "Investigate the signal"))
+                if (GUI.Button(
+                        new Rect(x + 20f, 394f, width - 40f, 62f),
+                        PlayerText.Get(PlayerTextKey.IslandInvestigate)))
                 {
                     DiscoverRobot77();
                 }
@@ -976,12 +1017,14 @@ namespace Project77.Game
                 GUI.Label(
                     new Rect(x + 20f, 444f, width - 40f, 50f),
                     meta.Robot77Discovered
-                        ? "Another energy route is available."
-                        : "You need more resources. Another energy route is available.",
+                        ? PlayerText.Get(PlayerTextKey.IslandAnotherRoute)
+                        : PlayerText.Get(PlayerTextKey.IslandNeedMoreRoute),
                     body);
                 if (GUI.Button(
                         new Rect(x + 20f, 504f, width - 40f, 62f),
-                        levelNumber < LastLevel ? "Restore another route" : "Finish prototype"))
+                        levelNumber < LastLevel
+                            ? PlayerText.Get(PlayerTextKey.IslandRestoreAnother)
+                            : PlayerText.Get(PlayerTextKey.IslandFinish)))
                 {
                     NextLevel();
                 }
@@ -1060,7 +1103,7 @@ namespace Project77.Game
             GUI.Label(
                 new Rect(30f, 100f, PrototypeGuiLayout.Width - 60f, PrototypeGuiLayout.Height - 200f),
                 metaLoopEnabled
-                    ? "Prototype route complete. Thank you for playing."
+                    ? PlayerText.Get(PlayerTextKey.SliceComplete)
                     : "Prototype A initial set complete.\nThis is an editor-only P0 comparison path.",
                 style);
 
