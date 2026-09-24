@@ -9,7 +9,7 @@ When instructions conflict, use this order:
 1. the project owner's current explicit instruction;
 2. this root `AGENTS.md`;
 3. `Docs/13_DECISION_LOG.md` for product/high-level decision state;
-4. `Docs/28_PROTOTYPE_01_SPEC.md` for the active Prototype 0.1 implementation contract;
+4. `Docs/37_VERTICAL_SLICE_01_SPEC.md` for the active Gate P2 / Vertical Slice implementation contract;
 5. the relevant specialized document in `Docs/`;
 6. `Docs/11_BACKLOG_IDEAS.md` only as uncommitted ideas.
 
@@ -66,7 +66,7 @@ Gameplay/puzzle rules must not depend on:
 - notifications;
 - a specific app store.
 
-Platform services live behind narrow interfaces/adapters only when the current scope needs them. Do not build production implementations for out-of-scope services during Prototype 0.1.
+Platform services live behind narrow interfaces/adapters only when the current scope needs them. Do not build production implementations for out-of-scope services during Gate P2.
 
 Do not add dependency-injection frameworks, service locators, global event buses, repository layers, generic plugin systems, or speculative abstractions merely for hypothetical future use.
 
@@ -107,6 +107,8 @@ Assets/Project77/
   UI/
   Content/
   Analytics/
+  Save/
+  Localization/
   Platform/
   Tests/
 ```
@@ -117,15 +119,17 @@ Use `.asmdef` boundaries only when they materially improve isolation/testability
 
 ## 9. Testing and verification
 
-During Prototype 0.1 prioritize:
+During Gate P2 prioritize:
 
 - deterministic puzzle-rule tests;
 - level/config validation;
-- regression tests for fixed bugs;
-- analytics-contract validation;
-- Android build smoke tests.
+- versioned save/load, migration and corruption-recovery tests;
+- localization-key and missing-key regressions;
+- analytics-contract validation for the slice;
+- Android build/device/performance smoke checks;
+- regression tests for fixed bugs.
 
-Save/economy/purchase tests belong only when those systems enter the active scope.
+Economy/purchase tests belong only when those systems enter the active scope.
 
 Never claim a test, build, lint, static-analysis, or device check passed unless it actually ran.
 
@@ -192,7 +196,7 @@ A previously canonical icon remains canonical until the owner explicitly supplie
 ## 14. Documentation hygiene
 
 - Update `Docs/13_DECISION_LOG.md` when a decision status changes.
-- Keep `Docs/28_PROTOTYPE_01_SPEC.md` focused on the active phase.
+- Keep `Docs/37_VERTICAL_SLICE_01_SPEC.md` focused on the active phase; `Docs/28_PROTOTYPE_01_SPEC.md` remains historical.
 - Keep specialized details in specialized documents; prefer links over duplicated long tables.
 - `Docs/PROJECT_77_MASTER.md` is an index, not a generated duplicate of all documentation.
 - Update `Docs/CHANGELOG.md` and `Docs/project77_manifest.json` for material documentation-baseline changes.
