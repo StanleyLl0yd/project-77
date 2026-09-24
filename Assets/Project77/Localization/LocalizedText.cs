@@ -181,12 +181,12 @@ namespace Project77.Localization
             return new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 [PlayerTextKey.AppTitle] = "Project 77",
-                [PlayerTextKey.SliceSubtitle] = "Vertical Slice",
+                [PlayerTextKey.SliceSubtitle] = "Playtest build",
                 [PlayerTextKey.SliceSetupDescription] =
                     "Restore the island's energy network, recover resources, repair the generator and investigate what wakes up.",
                 [PlayerTextKey.SliceBuildInfo] = "Build {0}\nSchema v{1}",
                 [PlayerTextKey.SlicePlaytestIdLabel] = "Anonymous playtest ID",
-                [PlayerTextKey.SliceStart] = "Start",
+                [PlayerTextKey.SliceStart] = "Start playtest",
                 [PlayerTextKey.RecoveryTitle] = "Moderator: previous session data",
                 [PlayerTextKey.RecoveryCopyEvents] = "Copy events",
                 [PlayerTextKey.RecoveryCopyMetadata] = "Copy metadata",
